@@ -28,3 +28,12 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 ### Training LLMs with HF
 
 - [InstructGPT](https://arxiv.org/pdf/2203.02155.pdf) Model for aligning AI outputs with human feedback
+
+### Hidden Identity Game Strategy
+
+- [Percival Strategy](http://www.cs.cmu.edu/~ynakamur/fun/avalonstats.pdf) Analysis of strategy for percival
+
+## Data
+
+- [AvalonLogs](https://github.com/WhoaWhoa/avalonlogs) Logs of quantitative (voting, successes, etc.) data for human players for around 12k games
+- [ProAvalon](https://www.proavalon.com/statistics) Logs can be availiable on request

@@ -14,11 +14,11 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 
 - [CAMEL](https://arxiv.org/pdf/2303.17760.pdf) Introduces a framework where two LLMs interact with each other to complete a task
 - [Generative Society](https://arxiv.org/abs/2304.03442) Simulates LLMs in a fictional virtual village
-- [Socially Aligned LLMs in Society](https://arxiv.org/pdf/2305.16960.pdf) 
+- [Socially Aligned LLMs in Society](https://arxiv.org/pdf/2305.16960.pdf) Aligning LLMs through social interactions
 
 ### Playing games with LLMS
 
-- [Repeated Gameplay with LLMs](https://arxiv.org/pdf/2203.02155.pdf)
+- [Repeated Gameplay with LLMs](https://arxiv.org/pdf/2305.16867.pdf) 
 
 ### AI Multi-agent Gameplay
 
@@ -37,3 +37,6 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 
 - [AvalonLogs](https://github.com/WhoaWhoa/avalonlogs) Logs of quantitative (voting, successes, etc.) data for human players for around 12k games
 - [ProAvalon](https://www.proavalon.com/statistics) Logs can be availiable on request
+
+## Questions
+- What other alternatives to RLHF exist currently?

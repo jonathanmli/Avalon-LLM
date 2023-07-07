@@ -18,7 +18,7 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 
 ### Playing games with LLMS
 
-- [Repeated Gameplay with LLMs](https://arxiv.org/pdf/2305.16867.pdf) 
+- [Repeated Gameplay with LLMs](https://arxiv.org/pdf/2305.16867.pdf) Let GPTs play repeated games with each other
 
 ### AI Multi-agent Gameplay
 

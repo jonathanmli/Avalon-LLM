@@ -24,6 +24,7 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 
 - [Diplomacy](https://arxiv.org/pdf/2010.02923.pdf) Presents an algorithm for effective play of diplomacy agents human and AI opponents
 - [Avalon Assasin](https://arxiv.org/pdf/2209.09331.pdf) Training an AI to assassinate in Avalon
+- [Diplomacy with LLMs](https://noambrown.github.io/downloads/diplomacy_science.pdf) combining strategic reasoning with LLMs
 
 ### Training LLMs with HF
 

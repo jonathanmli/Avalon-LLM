@@ -28,6 +28,8 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 ### Training LLMs with HF
 
 - [InstructGPT](https://arxiv.org/pdf/2203.02155.pdf) Model for aligning AI outputs with human feedback
+- [Self-Instruct](https://arxiv.org/pdf/2212.10560.pdf) Aligning LLMS using self generated instructions
+- [Negotiation and Self-Play](https://arxiv.org/pdf/2305.10142.pdf) Can LLMS improve each other through a negotiation game?
 
 ### Hidden Identity Game Strategy
 

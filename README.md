@@ -26,11 +26,12 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 - [Avalon Assasin](https://arxiv.org/pdf/2209.09331.pdf) Training an AI to assassinate in Avalon
 - [Diplomacy with LLMs](https://noambrown.github.io/downloads/diplomacy_science.pdf) combining strategic reasoning with LLMs
 
-### Training LLMs with HF
+### LLM alignment
 
 - [InstructGPT](https://arxiv.org/pdf/2203.02155.pdf) Model for aligning AI outputs with human feedback
 - [Self-Instruct](https://arxiv.org/pdf/2212.10560.pdf) Aligning LLMS using self generated instructions
 - [Negotiation and Self-Play](https://arxiv.org/pdf/2305.10142.pdf) Can LLMS improve each other through a negotiation game?
+- [Principle-Driven Self-Alignment](https://arxiv.org/pdf/2305.03047.pdf) New self-alignment method
 
 ### Hidden Identity Game Strategy
 

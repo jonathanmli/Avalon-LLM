@@ -41,6 +41,7 @@ The literature is relatively new in this area, and there is a lot of enthusiasm 
 
 - [AvalonLogs](https://github.com/WhoaWhoa/avalonlogs) Logs of quantitative (voting, successes, etc.) data for human players for around 12k games
 - [ProAvalon](https://www.proavalon.com/statistics) Logs can be availiable on request
+- [Avalon and ONUW Recordings](https://aclanthology.org/2023.findings-acl.411.pdf) Contains 8 games of Avalon videos, audio, and dialogue transcript
 
 ## Questions
 - What other alternatives to RLHF exist currently?

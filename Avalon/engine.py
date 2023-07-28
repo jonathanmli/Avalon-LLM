@@ -132,10 +132,16 @@ class AvalonGameEnvironment():
         '''
         return self.quest_leader
     
+    def get_team_size(self):
+        '''
+        returns team size
+        '''
+        return self.num_players_for_quest[self.turn]
+    
     def choose_quest_team(self, team, leader):
         '''
         chooses quest team
-        team: list of true/false, true if player is on team
+        team: list of players on team
         returns: (next phase, whether game is done, next quest leader)
         '''
         # check if game ended or not
@@ -164,6 +170,12 @@ class AvalonGameEnvironment():
         self.quest_leader = (self.quest_leader + 1) % self.num_players
 
         return (self.phase, self.done, self.quest_leader)
+    
+    def get_current_quest_team(self):
+        '''
+        returns list of players on quest team
+        '''
+        return self.quest_team
 
     def vote_on_team(self, votes):
         '''
@@ -188,14 +200,12 @@ class AvalonGameEnvironment():
         if self.round == self.MAX_ROUNDS -1:
             self.phase += 1
             self.round = 0
-            self.turn += 1
             return (self.phase, self.done, True)
 
         # if strict majority accepts, move to next phase. Otherwise back to team selection
         if sum(votes) > self.num_players / 2:
             self.phase += 1
             self.round = 0
-            self.turn += 1
             return (self.phase, self.done, True)
         else:
             self.phase = 0
@@ -231,6 +241,7 @@ class AvalonGameEnvironment():
         if (len(votes) - sum(votes)) >= self.num_fails_for_quest[self.turn]:
             
             self.quest_results.append(False)
+            self.turn += 1
 
             # end game if 3 quests failed. Otherwise go to team selection phase
             if len(self.quest_results) - sum(self.quest_results) == 3:
@@ -243,6 +254,7 @@ class AvalonGameEnvironment():
 
         else:
             self.quest_results.append(True)
+            self.turn += 1
 
             # go to assassination phase if 3 quests succeeded. Otherwise go to team selection phase
             if sum(self.quest_results) == 3:

@@ -15,6 +15,7 @@ def main():
         
         # if phase is team selection phase, ask for team
         if phase == 0:
+            print(f"Please choose {env.get_team_size()} players in this round.")
             leader = env.get_quest_leader()
             team = [int(x) for x in input(f"Enter team player {leader}: ").split()]
             env.choose_quest_team(team, leader)

@@ -32,6 +32,13 @@ class player:
     def assign_role(self, role):
         self.role = role
 
+    def assassinate(self, player):
+        if player >= self.num_players:
+            raise ValueError(f"Player {player} does not exist.")
+        if self.role != 7:
+            raise ValueError("Only assassin can assassinate.")
+        return random.randint(0, self.num_players-1)
+
 
 
 def main():
@@ -59,6 +66,7 @@ def main():
         if phase == 0:
             leader = env.get_quest_leader()
             team = player_list[leader].propose_team(env.get_team_size())
+            print(f"Please choose {env.get_team_size()} players in this round.")
             env.choose_quest_team(team, leader)
             print(f"{player_list[leader]} proposed team {team}")
         
@@ -77,7 +85,9 @@ def main():
         # if phase is assassination phase, ask for assassination
         elif phase == 3:
             assassin = env.get_assassin()
-            target = int(input(f"Enter assassination target: "))
+            target = assassin.assassinate()
+            # target = int(input(f"Enter assassination target: "))
+            print(f"Assassination target: {target}")
             env.choose_assassination_target(assassin, target)
 
     # print whether good or evil won

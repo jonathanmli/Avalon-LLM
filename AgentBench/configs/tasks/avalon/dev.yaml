@@ -1,0 +1,5 @@
+module: "src.tasks.avalon.Avalon"
+parameters:
+    name: "Avalon-Evaluation"
+    num_players: 5
+    seed: 42

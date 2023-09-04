@@ -1,0 +1,23 @@
+module: "Multiagent"
+parameters:
+- module: "src.agents.DoNothingAgent"
+  parameters:
+      name: "Do-Nothing-Agent"
+      sleep: 0.05
+- module: "src.agents.DoNothingAgent"
+  parameters:
+      name: "Do-Nothing-Agent"
+      sleep: 0.01
+- module: "src.agents.DoNothingAgent"
+  parameters:
+      name: "Do-Nothing-Agent"
+      sleep: 0.03
+- module: "src.agents.DoNothingAgent"
+  parameters:
+      name: "Do-Nothing-Agent"
+      sleep: 0.03
+- module: "src.agents.DoNothingAgent"
+  parameters:
+      name: "Do-Nothing-Agent"
+      sleep: 0.03
+    

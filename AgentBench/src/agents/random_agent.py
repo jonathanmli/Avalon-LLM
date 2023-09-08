@@ -40,6 +40,12 @@ class RandomAgent(Agent):
             return str(side)
         elif mode == "assassination":
             return str(random.randint(0, self.num_players-1))
+        elif mode == "strategy":
+            return "None"
+        elif mode == "discuss_on_team":
+            return "No idea."
+        elif mode == "system":
+            return "Okay"
         else:
             raise NotImplementedError(
                 "There should not be other situations."

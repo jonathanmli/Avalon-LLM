@@ -142,6 +142,7 @@ class Task(Generic[T_INPUT, T_OUTPUT, T_TARGET]):
         self.save_metrics_all(metrics)
 
     def save_metrics_all(self, metrics: Dict[str, Any]):
+        print(metrics)
         if not os.path.exists(self.get_output_dir()):
             try: os.makedirs(self.get_output_dir())
             except: pass

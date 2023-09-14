@@ -18,9 +18,7 @@ class RandomAgent(Agent):
     def __init__(self, num_players=None, seed=None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.num_players = num_players
-        self.seed = seed
         self.name = kwargs.pop("name")
-        random.seed(self.seed, version=1)
 
     def inference(self, history: List[dict]) -> str:
         '''
@@ -31,6 +29,8 @@ class RandomAgent(Agent):
         '''
         # print(history)
         mode = history[-1]["mode"]
+        seed = history[-1]["seed"]
+        random.seed(seed, version=1)
         if mode == "choose_quest_team":
             team_size = history[-1]["team_size"]
             return str(random.sample(range(0, self.num_players), team_size))

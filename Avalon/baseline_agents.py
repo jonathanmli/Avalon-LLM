@@ -45,7 +45,7 @@ class Agent:
     def assignHistory(self, history):
         self.history = history
 
-    def observeMission(self, team, mission_id, num_fails):
+    def observe_mission(self, team, mission_id, num_fails):
         pass
 
     def assassinate(self):
@@ -226,7 +226,7 @@ class NaiveServant(Agent):
         # propose random team in most preferred teams
         return random.choice(self.find_most_prefered_teams(self.team_preferences))
     
-    def observeMission(self, team, mission_id, num_fails):
+    def observe_mission(self, team, mission_id, num_fails):
         # if mission succeeded, update largest_successful_team
         if num_fails == 0:
             if self.largest_successful_team is None or len(team) > len(self.largest_successful_team):

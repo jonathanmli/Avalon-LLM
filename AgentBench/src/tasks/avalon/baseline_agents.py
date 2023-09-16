@@ -1,5 +1,5 @@
 import random
-from engine import AvalonConfig
+from .engine import AvalonConfig
 import itertools
 
 class Agent:
@@ -12,6 +12,7 @@ class Agent:
         self.team = None
         self.side = side # 1 for good, 0 for evil
         self.history = None
+        self.num_players = config.num_players
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
@@ -45,7 +46,7 @@ class Agent:
     def assignHistory(self, history):
         self.history = history
 
-    def observe_mission(self, team, mission_id, num_fails):
+    def observeMission(self, team, mission_id, num_fails):
         pass
 
     def assassinate(self):
@@ -85,6 +86,9 @@ class NaiveMinion(Agent):
         evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
+        print("Testing...")
+        print([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1])
+        print(self.config.num_players_for_quest[mission_id] - num_fails)
         return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
         
 class NaiveAssassin(Agent):
@@ -99,6 +103,7 @@ class NaiveAssassin(Agent):
     def vote_on_mission(self, mission_id, team):
         num_fails = self.config.num_fails_for_quest[mission_id]
 
+        print("Team: ", team)
         # if less than num_fails evil players on the team, vote success
         if sum([self.player_sides[i] == 0 for i in team]) < num_fails:
             return 1
@@ -133,6 +138,9 @@ class NaiveMerlin(Agent):
     
     def vote_on_team(self, mission_id, team):
         # approve if there are no evil players on the team
+        print("Testing Any...")
+        print([self.player_sides[i] == 0 for i in team])
+        print("Player sides: ", self.player_sides)
         if any([self.player_sides[i] == 0 for i in team]):
             return 0
         else:
@@ -224,9 +232,16 @@ class NaiveServant(Agent):
     
     def propose_team(self, mission_id):
         # propose random team in most preferred teams
-        return random.choice(self.find_most_prefered_teams(self.team_preferences))
+        print("Servant Choosing the team...")
+        most_preferred_teams = self.find_most_prefered_teams(self.team_preferences)
+        final_team = set()
+        while len(final_team) < self.config.num_players_for_quest[mission_id]:
+            random_team = random.choice(most_preferred_teams)
+            for id in random_team:
+                final_team.add(id)
+        return random.sample(final_team, self.config.num_players_for_quest[mission_id])
     
-    def observe_mission(self, team, mission_id, num_fails):
+    def observeMission(self, team, mission_id, num_fails):
         # if mission succeeded, update largest_successful_team
         if num_fails == 0:
             if self.largest_successful_team is None or len(team) > len(self.largest_successful_team):

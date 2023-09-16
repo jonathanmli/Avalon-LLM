@@ -1,7 +1,21 @@
 # import random
 import numpy as np
 
-class AvalonGameEnvironment():
+# QUEST_PRESET      = {5 : [[3,2] , [2,3,2,3,3], [1,1,1,1,1], ] , 
+#                         6 : [[4,2] , [2,3,4,3,4], [1,1,1,1,1],] , 
+#                         7 : [[4,3] , [2,3,3,4,4], [1,1,1,2,1],] , 
+#                         8 : [[5,3] , [3,4,4,5,5], [1,1,1,2,1],] , 
+#                         9 : [[6,3] , [3,4,4,5,5], [1,1,1,2,1],] , 
+#                         10 : [[6,4] , [3,4,4,5,5], [1,1,1,2,1],]}
+
+# MAX_ROUNDS = 5
+# PHASES = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
+# ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
+
+class AvalonConfig():
+    '''
+    Avalon game configuration
+    '''
 
     # usage: creationAndQuests[num_players][[num_good, num_evil], [num_players_for_quest], [num_fails_for_quest]]
     QUEST_PRESET      = {5 : [[3,2] , [2,3,2,3,3], [1,1,1,1,1], ] , 
@@ -13,11 +27,8 @@ class AvalonGameEnvironment():
     
     MAX_ROUNDS = 5
     PHASES = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
-    ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Loyal Servant of Arthur's", 6 : "Minion of Modred", 7 : "Assassin"}
-    
-    '''
-    Avalon game environment, call methods to access environment
-    '''
+    ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
+
     def __init__(self, num_players, seed, merlin = True, percival = False, morgana = False, mordred = False, oberon = False) -> None:
         '''
         num_players: number of players in the game
@@ -39,11 +50,49 @@ class AvalonGameEnvironment():
         self.num_good = num_players - self.num_evil
         self.num_players_for_quest = self.QUEST_PRESET[num_players][1]
         self.num_fails_for_quest = self.QUEST_PRESET[num_players][2]
+
+        self.seed = seed
+    
+class AvalonGameEnvironment():
+    
+    '''
+    Avalon game environment, call methods to access environment
+    '''
+    def __init__(self, config: AvalonConfig) -> None:
+        '''
+        num_players: number of players in the game
+        merlin: whether Merlin is in the game
+        percival: whether Percival is in the game
+        morgana: whether Morgana is in the game
+        mordred: whether Mordred is in the game
+        oberon: whether Oberon is in the game
+        '''
+        self.num_players = config.num_players
+        self.merlin = config.merlin
+        self.percival = config.percival
+        self.morgana = config.morgana
+        self.mordred = config.mordred
+        self.oberon = config.oberon
+
+        # load game presets
+        self.num_evil = config.num_evil
+        self.num_good = config.num_good
+        self.num_players_for_quest = config.num_players_for_quest
+        self.num_fails_for_quest = config.num_fails_for_quest
+
+        self.QUEST_PRESET = config.QUEST_PRESET
+        self.MAX_ROUNDS = config.MAX_ROUNDS
+        self.PHASES = config.PHASES
+        self.ROLES = config.ROLES
+
+        self.seed = config.seed
         
-        np.random.seed(seed)
+        np.random.seed(self.seed)
+
+        self.mission_id = 0
+
         # initialize game
         self.reset()
-
 
     def reset(self):
         '''
@@ -63,6 +112,8 @@ class AvalonGameEnvironment():
         self.quest_team = []
         self.team_votes = []
         self.quest_votes = []
+
+        self.mission_id = 0
 
         # reassign roles
         return self.assign_roles()
@@ -122,6 +173,18 @@ class AvalonGameEnvironment():
         '''
         return [(role, self.ROLES[role], self.is_good[player]) for player, role in enumerate(self.roles)]
     
+    def get_partial_sides(self, player):
+        '''
+        returns list of the sides of other players that player knows
+        '''
+        
+        # if player is Merlin or evil, return all sides
+        if self.roles[player] == 0 or not self.is_good[player]:
+            return self.is_good
+        # otherwise return list of -1 for unknown
+        else:
+            return [-1 if i != player else 1 for i in range(self.num_players)]
+    
     def get_phase(self):
         '''
         returns tuple of phase index and phase name
@@ -164,7 +227,6 @@ class AvalonGameEnvironment():
         # check if leader is quest leader
         if leader != self.quest_leader:
             raise ValueError("Not quest leader")
-        
 
         self.quest_team = team
 

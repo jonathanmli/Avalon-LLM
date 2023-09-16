@@ -167,7 +167,7 @@ the Assassin can assassinate you and you will immediately lose the game.
 
 3. Defense: When other players accuse you of being Merlin, try to defend yourself.""",
                "Okay, I understand"],
-    'Minion of Modred': ["""Tutorial on strategies:
+    'Minion': ["""Tutorial on strategies:
 
 As you are playing the role of Minion of Modred in this game, here are some aspects you can consider when formulating strategies for making decisions.
 
@@ -178,7 +178,7 @@ As you are playing the role of Minion of Modred in this game, here are some aspe
 3. Defense: When accused of being from the Evil side, insist that you are actually from the Good side.
                         """,
                         "Okay, I understand"],
-    'Loyal Servant of Arthur\'s': ["""Tutorial on strategies:
+    'Servant': ["""Tutorial on strategies:
 
 As you are playing the role of Loyal Servant of Arthur\'s in this game, here are some aspects you can consider when formulating strategies for making decisions.
 

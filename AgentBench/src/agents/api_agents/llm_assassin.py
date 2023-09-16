@@ -95,13 +95,17 @@ class OpenAIChatCompletionAssassin(Agent):
         function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', message)
         print(function_names)
         function_executed = False
+        wrapped_message = {
+            "role": "assistant",
+            "content": message
+        }
         while len(function_names) != 1:
             rectify_message = {
                 "role": "user",
                 "content": "You are using the tools in a wrong way. Please try again"
             }
             rectify_result = openai_wrapper(
-                            messages=history + [message] + [rectify_message],
+                            messages=history + [wrapped_message] + [rectify_message],
                             temperature=0,
                             **self.api_args
             )
@@ -122,7 +126,7 @@ class OpenAIChatCompletionAssassin(Agent):
                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
                         }
                         rectify_result = openai_wrapper(
-                                        messages=history + [message] + [rectify_message],
+                                        messages=history + [wrapped_message] + [rectify_message],
                                         temperature=0,
                                         **self.api_args
                         )
@@ -133,13 +137,15 @@ class OpenAIChatCompletionAssassin(Agent):
 
                         result = eval(function_name)
                 elif "assassinate" in function_name:
-                    assert int(result) in [0, 4]  # Hardcode the number of players
+                    print("Result type: ", type(result))
+                    assert int(result) in [0, 1, 2, 3, 4]  # Hardcode the number of players
                 else:
                     assert int(result) in [0, 1]
 
                 function_executed = True
                 return result
-            except:
+            except Exception as e:
+                print(e)
                 function_names = []
                 while len(function_names) != 1:
                     rectify_message = {
@@ -147,7 +153,7 @@ class OpenAIChatCompletionAssassin(Agent):
                         "content": "You are using the tools in a wrong way. Please try again"
                     }
                     rectify_result = openai_wrapper(
-                                    messages=history + [message] + [rectify_message],
+                                    messages=history + [wrapped_message] + [rectify_message],
                                     temperature=0,
                                     **self.api_args
                     )

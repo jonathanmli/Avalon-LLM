@@ -11,7 +11,7 @@ from copy import deepcopy
 from typing import Dict, Callable, Type, Tuple, List, Any, Union, Iterable, Generic, TypeVar
 
 from ...agent import Agent, Session
-from .baseline_agents import NaiveAssassin, NaiveMerlin, NaiveMinion
+from .baseline_agents import NaiveAssassin, NaiveMerlin, NaiveMinion, NaiveServant
 
 from .api import *
 from .prompts import *
@@ -120,7 +120,7 @@ class player:
         print(message)
         return eval(message)
     
-    def propose_team(self, team_size, discussion_history, mode):
+    def propose_team(self, team_size, discussion_history, mission_id, mode):
         if mode == "discussion":
             content_prompt = f"Discussion Phase. Please make statements about the team proposal. "
         elif mode == "action":
@@ -129,20 +129,25 @@ class player:
                 content_prompt = ' '.join(discussion_history) + ' ' + f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
             else:
                 content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
+
+        if self.strategy is not None:
+            naive_result = self.strategy.propose_team(mission_id=mission_id)
+
         proposed_team = self.session.action({
             "role": "user",
             "content": content_prompt,
             "team_size": team_size,
             "mode": "choose_quest_team",
             "seed": self.seed,
-            "role_name": self.role_name
+            "role_name": self.role_name,
+            "naive_result": naive_result
         })
         print(proposed_team)
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
         # return proposed_team, get_statement(proposed_team)
         return eval(proposed_team), None
     
-    def vote_on_team(self, team, statement_history, mode="statement"):
+    def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
             content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please vote on the team {team}."
         elif mode == "action":
@@ -152,14 +157,19 @@ class player:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
             )
+        
+        if self.strategy is not None:
+            naive_result = self.strategy.vote_on_team(mission_id=mission_id, team=team)
+
         print("Content Prompt: ", content_prompt)
         vote_result = self.session.action({
             "role": "user",
             "content": content_prompt,
             "side": int(self.side),
-            "mode": "vote",
+            "mode": "vote_on_team",
             "seed": self.seed,
-            "role_name": self.role_name
+            "role_name": self.role_name,
+            "naive_result": naive_result
         })
         if mode == "statement":
             statement_history.append(f"Statements from {self.name}: {get_statement(vote_result)}")
@@ -178,7 +188,6 @@ class player:
                 f"Unexpected Mode {mode}."
             )
         
-        naive_result = 1
         if self.strategy is not None:
             naive_result = self.strategy.vote_on_mission(mission_id=mission_id, team=team)
 
@@ -186,7 +195,7 @@ class player:
             "role": "user",
             "content": content_prompt,
             "side": int(self.side),
-            "mode": "vote",
+            "mode": "vote_on_mission",
             "seed": self.seed,
             "role_name": self.role_name,
             "naive_result": naive_result
@@ -222,7 +231,7 @@ class player:
         elif role_name == "Assassin":
             self.strategy = NaiveAssassin(id=self.id, name=self.name, config=self.config)
         elif role_name == "Servant":
-            self.strategy = None
+            self.strategy = NaiveServant(id=self.id, name=self.name, config=self.config)
 
         """
         Instruction Prompt
@@ -402,7 +411,6 @@ class player:
             "mode": "assassination",
             "seed": self.seed,
             "role_name": self.role_name,
-            "strategy": self.strategy
         })
         # return self.execute_tool(assassinate_result)
         # return self.parse_result(assassinate_result)
@@ -580,7 +588,7 @@ class Avalon(Task):
                 """
                 Choose a team
                 """
-                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, mode="action")
+                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, self.mission_id, mode="action")
                 print(team)
                 env.choose_quest_team(team, leader)
                 print(f"{player_list[leader]} proposed team {team}")
@@ -590,7 +598,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
-                votes = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="action"
+                votes = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, self.mission_id, mode="action"
                                                     ) for i in range(num_players)]
                 print(votes)
                 outcome = env.vote_on_team(votes)
@@ -608,7 +616,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_mission(discussion_history, mode="statement"
                 #                                                     ) for i in env.get_current_quest_team()]
-                votes = [player_list[i].vote_on_mission(discussion_history, self.mission_id, outcome[2], mode="action"
+                votes = [player_list[i].vote_on_mission(discussion_history, self.mission_id, team, mode="action"
                                                         ) for i in env.get_current_quest_team()]
                 outcome = env.vote_on_quest(votes)
                 print(f"Quest votes: {votes}, mission outcome: {outcome[2]}")

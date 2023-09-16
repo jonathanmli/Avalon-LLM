@@ -15,7 +15,8 @@ def openai_wrapper(messages, temperature, **kwargs):
                             **kwargs
             )
             executed = True
-        except:
+        except Exception as e:
+            print(e)
             print("Sleep for 5 seconds zzZ")
             time.sleep(5)
 

@@ -148,7 +148,7 @@ class NaiveServant(Agent):
         super().__init__(id, name, config, side, role, sides)
 
         # maintain a list of all possible combinations of player sides
-        self.possible_player_sides = self.generate_possible_player_sides(self.sides)
+        self.possible_player_sides = self.generate_possible_player_sides(self.player_sides)
         self.player_side_probabilities = [1/len(self.possible_player_sides)] * len(self.possible_player_sides)
 
         # generate team preferences for first mission

@@ -236,6 +236,12 @@ class NaiveServant(Agent):
         for sides, prob in zip(self.possible_player_sides, self.player_side_probabilities):
             if sum([sides[i] == 0 for i in team]) >= num_fails:
                 self.player_side_probabilities[self.possible_player_sides.index(sides)] = 0
+
+        # normalize probabilities
+        self.player_side_probabilities = [prob / sum(self.player_side_probabilities) for prob in self.player_side_probabilities]
+
+        # generate team preferences for next mission
+        self.team_preferences = self.generate_team_preferences(mission_id+1)
         pass
     
 

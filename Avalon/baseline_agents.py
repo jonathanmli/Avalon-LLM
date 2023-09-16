@@ -209,7 +209,7 @@ class NaiveServant(Agent):
         max_teams = [team for team, preference in team_to_preferences.items() if preference == max_preference]
         # if there is only one team with maximum preference, return it
         if len(max_teams) == 1:
-            return max_teams[0]
+            return max_teams
         # else return list of teams of max_teams that are subsets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
         else:
             if self.largest_successful_team is not None and self.lexigraphic:
@@ -232,9 +232,9 @@ class NaiveServant(Agent):
             if self.largest_successful_team is None or len(team) > len(self.largest_successful_team):
                 self.largest_successful_team = team
 
-        # set the probability of all sides that have at least num_fails evil players on the team to 0
+        # set the probability of all sides that have less than num_fails evil players on the team to 0
         for sides, prob in zip(self.possible_player_sides, self.player_side_probabilities):
-            if sum([sides[i] == 0 for i in team]) >= num_fails:
+            if sum([sides[i] == 0 for i in team]) < num_fails:
                 self.player_side_probabilities[self.possible_player_sides.index(sides)] = 0
 
         # normalize probabilities

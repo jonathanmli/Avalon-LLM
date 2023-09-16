@@ -220,18 +220,18 @@ class player:
         #     "content": "I understand."
         # })
 
-    def assign_role(self, role, role_name):
+    def assign_role(self, role, role_name, sides):
         self.role = role
         self.role_name = role_name
 
         if role_name == "Merlin":
-            self.strategy = NaiveMerlin(id=self.id, name=self.name, config=self.config)
+            self.strategy = NaiveMerlin(id=self.id, name=self.name, sides=sides, config=self.config)
         elif role_name == "Minion":
-            self.strategy = NaiveMinion(id=self.id, name=self.name, config=self.config)
+            self.strategy = NaiveMinion(id=self.id, name=self.name, sides=sides, config=self.config)
         elif role_name == "Assassin":
-            self.strategy = NaiveAssassin(id=self.id, name=self.name, config=self.config)
+            self.strategy = NaiveAssassin(id=self.id, name=self.name, sides=sides, config=self.config)
         elif role_name == "Servant":
-            self.strategy = NaiveServant(id=self.id, name=self.name, config=self.config)
+            self.strategy = NaiveServant(id=self.id, name=self.name, sides=sides, config=self.config)
 
         """
         Instruction Prompt
@@ -541,7 +541,7 @@ class Avalon(Task):
         
 
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
-            player_list[i].assign_role(role_i, role_name)
+            player_list[i].assign_role(role_i, role_name, env.get_partial_sides(i))
             player_list[i].assign_side(side)
             print(f"{player_list[i]} is {role_name}")
 

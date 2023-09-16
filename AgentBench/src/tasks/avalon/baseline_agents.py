@@ -12,6 +12,7 @@ class Agent:
         self.team = None
         self.side = side # 1 for good, 0 for evil
         self.history = None
+        self.num_players = config.num_players
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
@@ -137,6 +138,9 @@ class NaiveMerlin(Agent):
     
     def vote_on_team(self, mission_id, team):
         # approve if there are no evil players on the team
+        print("Testing Any...")
+        print([self.player_sides[i] == 0 for i in team])
+        print("Player sides: ", self.player_sides)
         if any([self.player_sides[i] == 0 for i in team]):
             return 0
         else:
@@ -228,7 +232,14 @@ class NaiveServant(Agent):
     
     def propose_team(self, mission_id):
         # propose random team in most preferred teams
-        return random.choice(self.find_most_prefered_teams(self.team_preferences))
+        print("Servant Choosing the team...")
+        most_preferred_teams = self.find_most_prefered_teams(self.team_preferences)
+        final_team = set()
+        while len(final_team) < self.config.num_players_for_quest[mission_id]:
+            random_team = random.choice(most_preferred_teams)
+            for id in random_team:
+                final_team.add(id)
+        return random.sample(final_team, self.config.num_players_for_quest[mission_id])
     
     def observeMission(self, team, mission_id, num_fails):
         # if mission succeeded, update largest_successful_team

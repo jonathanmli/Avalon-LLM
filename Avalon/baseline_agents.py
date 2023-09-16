@@ -56,7 +56,7 @@ class NaiveMinion(Agent):
         super().__init__(id, name, config, side, role, sides)
 
     def vote_on_mission(self, mission_id, team):
-        num_fails = self.config.num_fails_required[mission_id]
+        num_fails = self.config.num_fails_for_quest[mission_id]
 
         # if less than num_fails evil players on the team, vote success
         if sum([self.player_sides[i] == 0 for i in team]) < num_fails:
@@ -91,7 +91,7 @@ class NaiveAssassin(Agent):
     def __init__(self, id, name, config: AvalonConfig, side=0, role=7, sides = None):
         super().__init__(id, name, config, side, role, sides)
 
-    def vote_on_mission(self, team):
+    def vote_on_mission(self, mission_id, team):
         # always fail
         return 0
     
@@ -130,7 +130,7 @@ class NaiveMerlin(Agent):
     def __init__(self, id, name, config: AvalonConfig, side=1, role=0, sides = None):
         super().__init__(id, name, config, side, role, sides)
     
-    def vote_on_team(self, team):
+    def vote_on_team(self, mission_id, team):
         # approve if there are no evil players on the team
         if any([self.player_sides[i] == 0 for i in team]):
             return 0

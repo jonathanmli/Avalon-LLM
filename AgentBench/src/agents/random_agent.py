@@ -30,7 +30,18 @@ class RandomAgent(Agent):
         # print(history)
         mode = history[-1]["mode"]
         seed = history[-1]["seed"]
+        naive_result = None if "naive_result" not in history[-1] else history[-1]["naive_result"]
+
+
         random.seed(seed, version=1)
+        # if role_name == "Assassin":
+        #     agent = NaiveAssassin
+        # elif role_name == "Merlin":
+        #     agent = NaiveMerlin
+        # elif role_name == "Minion":
+        #     agent = NaiveMinion
+        # else:
+            
         if mode == "choose_quest_team":
             team_size = history[-1]["team_size"]
             return str(random.sample(range(0, self.num_players), team_size))
@@ -38,6 +49,8 @@ class RandomAgent(Agent):
             side = history[-1]["side"]
             # return str(random.choice([0, 1]))
             return str(side)
+        elif mode == "vote_on_mission":
+            return str(naive_result)
         elif mode == "assassination":
             return str(random.randint(0, self.num_players-1))
         elif mode == "strategy":

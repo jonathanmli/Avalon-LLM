@@ -14,6 +14,7 @@ from typing import List, Callable
 import dataclasses
 from copy import deepcopy
 from ...tasks.avalon.api import *
+from ...tasks.avalon.utils import openai_wrapper
 
 ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
                     "Okay, please start.",
@@ -99,7 +100,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 "role": "user",
                 "content": "You are using the tools in a wrong way. Please try again"
             }
-            rectify_result = openai.ChatCompletion.create(
+            rectify_result = openai_wrapper(
                             messages=history + [message] + [rectify_message],
                             temperature=0,
                             **self.api_args
@@ -120,7 +121,7 @@ class OpenAIChatCompletionAssassin(Agent):
                             "role": "user",
                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
                         }
-                        rectify_result = openai.ChatCompletion.create(
+                        rectify_result = openai_wrapper(
                                         messages=history + [message] + [rectify_message],
                                         temperature=0,
                                         **self.api_args
@@ -131,6 +132,8 @@ class OpenAIChatCompletionAssassin(Agent):
                         time.sleep(15)
 
                         result = eval(function_name)
+                elif "assassinate" in function_name:
+                    assert int(result) in [0, 4]  # Hardcode the number of players
                 else:
                     assert int(result) in [0, 1]
 
@@ -143,7 +146,7 @@ class OpenAIChatCompletionAssassin(Agent):
                         "role": "user",
                         "content": "You are using the tools in a wrong way. Please try again"
                     }
-                    rectify_result = openai.ChatCompletion.create(
+                    rectify_result = openai_wrapper(
                                     messages=history + [message] + [rectify_message],
                                     temperature=0,
                                     **self.api_args
@@ -169,6 +172,7 @@ class OpenAIChatCompletionAssassin(Agent):
             h.pop("side", None)
             h.pop("seed", None)
             h.pop("role_name", None)
+            h.pop("naive_result", None)
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
 
@@ -213,7 +217,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 "role": "user",
                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
             }
-            summary_result = openai.ChatCompletion.create(
+            summary_result = openai_wrapper(
                 messages=history[:-1] + [summary_prompt],
                 temperature=0.7,
                 **self.api_args
@@ -229,7 +233,7 @@ class OpenAIChatCompletionAssassin(Agent):
 
             print(system_prompts)
             print(action_prompt)
-            resp = openai.ChatCompletion.create(
+            resp = openai_wrapper(
                 messages=system_prompts + [action_prompt],
                 temperature=0,
                 **self.api_args
@@ -238,7 +242,7 @@ class OpenAIChatCompletionAssassin(Agent):
             print(resp)
             result = str(self.execute_tool(resp, system_prompts+[action_prompt], team_size=team_size))
         else:
-            resp = openai.ChatCompletion.create(
+            resp = openai_wrapper(
                 messages=history,
                 temperature=0,
                 **self.api_args

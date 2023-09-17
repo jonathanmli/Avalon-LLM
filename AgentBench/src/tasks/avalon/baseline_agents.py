@@ -11,8 +11,8 @@ class Agent:
         self.role = role
         self.team = None
         self.side = side # 1 for good, 0 for evil
-        self.history = None
         self.num_players = config.num_players
+        self.history = None
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
@@ -46,7 +46,7 @@ class Agent:
     def assignHistory(self, history):
         self.history = history
 
-    def observeMission(self, team, mission_id, num_fails):
+    def observe_mission(self, team, mission_id, num_fails):
         pass
 
     def assassinate(self):
@@ -86,9 +86,6 @@ class NaiveMinion(Agent):
         evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
-        print("Testing...")
-        print([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1])
-        print(self.config.num_players_for_quest[mission_id] - num_fails)
         return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
         
 class NaiveAssassin(Agent):
@@ -103,7 +100,6 @@ class NaiveAssassin(Agent):
     def vote_on_mission(self, mission_id, team):
         num_fails = self.config.num_fails_for_quest[mission_id]
 
-        print("Team: ", team)
         # if less than num_fails evil players on the team, vote success
         if sum([self.player_sides[i] == 0 for i in team]) < num_fails:
             return 1
@@ -138,9 +134,6 @@ class NaiveMerlin(Agent):
     
     def vote_on_team(self, mission_id, team):
         # approve if there are no evil players on the team
-        print("Testing Any...")
-        print([self.player_sides[i] == 0 for i in team])
-        print("Player sides: ", self.player_sides)
         if any([self.player_sides[i] == 0 for i in team]):
             return 0
         else:
@@ -217,7 +210,7 @@ class NaiveServant(Agent):
         max_teams = [team for team, preference in team_to_preferences.items() if preference == max_preference]
         # if there is only one team with maximum preference, return it
         if len(max_teams) == 1:
-            return max_teams[0]
+            return max_teams
         # else return list of teams of max_teams that are subsets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
         else:
             if self.largest_successful_team is not None and self.lexigraphic:
@@ -232,24 +225,17 @@ class NaiveServant(Agent):
     
     def propose_team(self, mission_id):
         # propose random team in most preferred teams
-        print("Servant Choosing the team...")
-        most_preferred_teams = self.find_most_prefered_teams(self.team_preferences)
-        final_team = set()
-        while len(final_team) < self.config.num_players_for_quest[mission_id]:
-            random_team = random.choice(most_preferred_teams)
-            for id in random_team:
-                final_team.add(id)
-        return random.sample(final_team, self.config.num_players_for_quest[mission_id])
+        return random.choice(self.find_most_prefered_teams(self.team_preferences))
     
-    def observeMission(self, team, mission_id, num_fails):
+    def observe_mission(self, team, mission_id, num_fails):
         # if mission succeeded, update largest_successful_team
         if num_fails == 0:
             if self.largest_successful_team is None or len(team) > len(self.largest_successful_team):
                 self.largest_successful_team = team
 
-        # set the probability of all sides that have at least num_fails evil players on the team to 0
+        # set the probability of all sides that have less than num_fails evil players on the team to 0
         for sides, prob in zip(self.possible_player_sides, self.player_side_probabilities):
-            if sum([sides[i] == 0 for i in team]) >= num_fails:
+            if sum([sides[i] == 0 for i in team]) < num_fails:
                 self.player_side_probabilities[self.possible_player_sides.index(sides)] = 0
 
         # normalize probabilities
@@ -257,6 +243,8 @@ class NaiveServant(Agent):
 
         # generate team preferences for next mission
         self.team_preferences = self.generate_team_preferences(mission_id+1)
+
+        print("Obeserve Successfully!")
         pass
     
 

@@ -427,8 +427,6 @@ class Avalon(Task):
 
         self.llm_sides = []
 
-        self.mission_id = 0
-
     def get_current_agents():
         pass
 
@@ -588,7 +586,7 @@ class Avalon(Task):
                 """
                 Choose a team
                 """
-                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, self.mission_id, mode="action")
+                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="action")
                 print(team)
                 env.choose_quest_team(team, leader)
                 print(f"{player_list[leader]} proposed team {team}")
@@ -598,7 +596,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
-                votes = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, self.mission_id, mode="action"
+                votes = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, env.turn, mode="action"
                                                     ) for i in range(num_players)]
                 print(votes)
                 outcome = env.vote_on_team(votes)
@@ -616,7 +614,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_mission(discussion_history, mode="statement"
                 #                                                     ) for i in env.get_current_quest_team()]
-                votes = [player_list[i].vote_on_mission(discussion_history, self.mission_id, team, mode="action"
+                votes = [player_list[i].vote_on_mission(discussion_history, env.turn, team, mode="action"
                                                         ) for i in env.get_current_quest_team()]
                 outcome = env.vote_on_quest(votes)
                 print(f"Quest votes: {votes}, mission outcome: {outcome[2]}")
@@ -642,8 +640,11 @@ class Avalon(Task):
                     #     "role": "agent",
                     #     "content": "I understand."
                     # })
-
-                self.mission_id += 1
+                print(f"Testing Observe Mission at turn {env.turn-1}...")
+                print(np.array(votes) == 0)
+                for idx, good in enumerate(env.is_good):
+                    if good:
+                        player_list[idx].strategy.observe_mission(team, env.turn-1, sum(np.array(votes) == 0))
             
             # if phase is assassination phase, ask for assassination
             elif phase == 3:

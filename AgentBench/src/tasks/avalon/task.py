@@ -122,13 +122,13 @@ class player:
     
     def propose_team(self, team_size, discussion_history, mission_id, mode):
         if mode == "discussion":
-            content_prompt = f"Discussion Phase. Please make statements about the team proposal. "
+            content_prompt = f"You are the leader in this round. Please make some statements with one sentence."
         elif mode == "action":
-            if len(discussion_history) > 0:
-                # content_prompt = ' '.join(discussion_history) + ' ' + f"Action Phase. Please choose {team_size} players from player ids 0 to {self.num_players-1}"
-                content_prompt = ' '.join(discussion_history) + ' ' + f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
-            else:
-                content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
+            # if len(discussion_history) > 0:
+            #     # content_prompt = ' '.join(discussion_history) + ' ' + f"Action Phase. Please choose {team_size} players from player ids 0 to {self.num_players-1}"
+            #     content_prompt = ' '.join(discussion_history) + ' ' + f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
+            # else:
+            content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1} by using `choose` function."
 
         if self.strategy is not None:
             naive_result = self.strategy.propose_team(mission_id=mission_id)
@@ -137,22 +137,26 @@ class player:
             "role": "user",
             "content": content_prompt,
             "team_size": team_size,
-            "mode": "choose_quest_team",
+            "mode": "choose_quest_team_" + mode,
             "seed": self.seed,
             "role_name": self.role_name,
             "naive_result": naive_result
         })
         print(proposed_team)
+
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
         # return proposed_team, get_statement(proposed_team)
-        return eval(proposed_team), None
+        if mode == "action":
+            return eval(proposed_team), None
+        elif mode == "discussion":
+            return None, proposed_team
     
     def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
             content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please vote on the team {team}."
         elif mode == "action":
             # content_prompt = f"Action Phase. Please vote on the team {team}."
-            content_prompt = f"Please vote on the team {team}."
+            content_prompt = f"Please vote on the team {team} by using `vote` function."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -182,7 +186,7 @@ class player:
         if mode == "statement":
             content_prompt = ' '.join(statement_history) + ' ' + f"Please vote on the quest."
         elif mode == "action":
-            content_prompt = f"Please vote on the quest."
+            content_prompt = f"Please vote on the quest by using `vote` function."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -240,30 +244,37 @@ class player:
             INSTRUCTIONS = INSTRUCTIONS_ASSASSIN
         else:
             INSTRUCTIONS = INSTRUCTIONS_NORMAL
+        content_prompt = INSTRUCTIONS + "\n" + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion(s) of Mordred."
+        initialization_prompt = f"You are {self.name}, and you are {role_name}."
+        self.session.inject({
+            "role": "system",
+            "content": content_prompt,
+            "mode": "system",
+        })
         self.session.inject({
             "role": "user",
-            "content": f"You are {self.name}, and you are {role_name}."
+            "content": initialization_prompt
         })
         self.session.inject({
             "role": "agent",
             "content": "I understand."
         })
-        self.session.inject({
-            "role": "user",
-            "content": INSTRUCTIONS
-        })
-        self.session.inject({
-            "role": "agent",
-            "content": "I understand."
-        })
-        self.session.inject({
-            "role": "user",
-            "content": f"There are {self.num_players} players. {self.num_good} players are good, including {int(self.merlin)} Merlin, {int(self.percival)} Percival, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, including {int(self.morgana)} Morgana, {int(self.mordred)} Mordred, {int(self.oberon)} Oberon, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion(s) of Mordred."
-        })
-        self.session.inject({
-            "role": "agent",
-            "content": "I understand, please start."
-        })
+        # self.session.inject({
+        #     "role": "user",
+        #     "content": INSTRUCTIONS
+        # })
+        # self.session.inject({
+        #     "role": "agent",
+        #     "content": "I understand."
+        # })
+        # self.session.inject({
+        #     "role": "user",
+        #     "content": f"There are {self.num_players} players. {self.num_good} players are good, including {int(self.merlin)} Merlin, {int(self.percival)} Percival, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, including {int(self.morgana)} Morgana, {int(self.mordred)} Mordred, {int(self.oberon)} Oberon, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion(s) of Mordred."
+        # })
+        # self.session.inject({
+        #     "role": "agent",
+        #     "content": "I understand, please start."
+        # })
         """
         One-shot Prompts
         """
@@ -364,7 +375,7 @@ class player:
                 reveal_info = REVEAL_PROMPTS['Merlin'][0].format(*minion_list)
             elif len(minion_list) > 1:
                 reveal_info = REVEAL_PROMPTS['Merlin'][1].format(*minion_list)
-        if role_name == "Minion of Modred":
+        if role_name == "Minion":
             minion_list = []
             for idx, player_info in enumerate(self.player_list):
                 if player_info[1] == "Minion of Modred":
@@ -414,7 +425,7 @@ class player:
         })
         # return self.execute_tool(assassinate_result)
         # return self.parse_result(assassinate_result)
-        return assassinate_result
+        return eval(assassinate_result)
 
 
 class Avalon(Task):
@@ -437,7 +448,7 @@ class Avalon(Task):
         '''
         # data = self.env.__dict__
         data = []
-        for i in range(9, 10):
+        for i in range(0, 50):
             data = [i for _ in range(5)]
         # print(data)
             info.append(DataPiece(data, None))
@@ -563,24 +574,32 @@ class Avalon(Task):
                 """
                 Leader speaks
                 """
-                # team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, mode="discussion")
-                # print(f"Please choose {env.get_team_size()} players in this round.")
+                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
+                print(f"Please choose {env.get_team_size()} players in this round.")
 
 
                 """
                 Discussion (sequential, once, in order for now)
                 """
-                # for idx, session in enumerate(sessions):
-                #     discussion = session.action({
-                #         "role": "user",
-                #         "content": f"Statement from {player_list[leader]}: {statement} Please discuss about it.",
-                #         "mode": "discuss_on_team"
-                #     })
-                #     discussion_history.append(f"Player {idx} : " + discussion)
-                    # session.inject({
-                    #     "role": "agent",
-                    #     "content": "I understand."
-                    # })
+                for idx, session in enumerate(sessions):
+                    # if idx == leader:
+                    #     continue
+                    discussion = session.action({
+                        "role": "user",
+                        # "content": 'test',
+                        "content": f"Statement from {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
+                        "mode": "discuss_on_team"
+                    })
+                    discussion_history.append(f"Player {idx} : " + discussion)
+                for idx, session in enumerate(sessions):
+                    session.inject({
+                        "role": "user",
+                        "content": f"Statement from {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
+                    })
+                    session.inject({
+                        "role": "agent",
+                        "content": "I understand."
+                    })
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
                 """
@@ -641,9 +660,8 @@ class Avalon(Task):
                     #     "content": "I understand."
                     # })
                 print(f"Testing Observe Mission at turn {env.turn-1}...")
-                print(np.array(votes) == 0)
                 for idx, good in enumerate(env.is_good):
-                    if good:
+                    if good and env.turn < 5:
                         player_list[idx].strategy.observe_mission(team, env.turn-1, sum(np.array(votes) == 0))
             
             # if phase is assassination phase, ask for assassination

@@ -31,7 +31,7 @@ class Session:
         assert "role" in message and "content" in message
         assert isinstance(message["role"], str)
         assert isinstance(message["content"], str)
-        assert message["role"] in ["user", "agent"]
+        assert message["role"] in ["user", "agent", "system"]
         self.history.append(message)
 
     def action(self, extend_messages: List[dict] = None) -> str:
@@ -43,9 +43,11 @@ class Session:
                 extend.append(extend_messages)
             else:
                 raise Exception("Invalid extend_messages")
-        result = self.model_inference(self.history + extend)
+        result, summary = self.model_inference(self.history + extend)
         self.history.extend(extend)
         self.history.append({"role": "agent", "content": result})
+        if len(summary) > 0:
+            self.history = self.history[:2] + summary
         return result
     
     def _calc_segments(self, msg: str):
@@ -80,6 +82,7 @@ class Session:
             if self.exception_raised:
                 return ""
             messages = self.filter_messages(history)
+            # messages = ''
             try:
                 result = inference_function(messages)
             except Exception as e:
@@ -94,50 +97,51 @@ class Session:
 
     def filter_messages(self, messages: List[Dict]) -> List[Dict]:
         try:
-            assert len(messages) % 2 == 1
+            # assert len(messages) % 2 == 1
             for idx, message in enumerate(messages):
                 assert isinstance(message, dict)
                 assert "role" in message and "content" in message
                 assert isinstance(message["role"], str)
                 assert isinstance(message["content"], str)
-                assert message["role"] in ["user", "agent"]
-                if idx % 2 == 0:
-                    assert message["role"] == "user"
-                else:
-                    assert message["role"] == "agent"
+                assert message["role"] in ["user", "agent", "system"]
+                # if idx % 2 == 0:
+                #     assert message["role"] == "user"
+                # else:
+                #     assert message["role"] == "agent"
         except:
             raise SessionExeption("Invalid messages")
         
-        threashold_segments = 3500
-        return_messages = []
-        # only include the latest {threashold_segments} segments
+        # threashold_segments = 3500
+        # return_messages = []
+        # # only include the latest {threashold_segments} segments
         
-        segments = self._calc_segments(messages[0]["content"])
+        # segments = self._calc_segments(messages[0]["content"])
         
-        for message in messages[:0:-1]:
-            segments += self._calc_segments(message["content"])
-            if segments >= threashold_segments:
-                break
-            return_messages.append(message)
+        # for message in messages[:0:-1]:
+        #     segments += self._calc_segments(message["content"])
+        #     if segments >= threashold_segments:
+        #         break
+        #     return_messages.append(message)
             
-        if len(return_messages) > 0 and return_messages[-1]["role"] == "user":
-            return_messages.pop()
+        # if len(return_messages) > 0 and return_messages[-1]["role"] == "user":
+        #     return_messages.pop()
         
-        instruction = messages[0]["content"]
+        # instruction = messages[0]["content"]
         
-        omit = len(messages) - len(return_messages) - 1
+        # omit = len(messages) - len(return_messages) - 1
         
-        if omit > 0:
-            instruction += f"\n\n[NOTICE] {omit} messages are omitted."
-            print(f"Warning: {omit} messages are omitted.")
+        # if omit > 0:
+        #     instruction += f"\n\n[NOTICE] {omit} messages are omitted."
+        #     print(f"Warning: {omit} messages are omitted.")
         
-        return_messages.append({
-            "role": "user",
-            "content": instruction
-        })
+        # return_messages.append({
+        #     "role": "user",
+        #     "content": instruction,
+        #     "mode": "system"
+        # })
         
-        return_messages.reverse()
-        return return_messages
+        # return_messages.reverse()
+        return messages
         
             
 

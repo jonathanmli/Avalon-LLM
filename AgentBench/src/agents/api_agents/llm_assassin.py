@@ -16,6 +16,8 @@ from copy import deepcopy
 from ...tasks.avalon.api import *
 from ...tasks.avalon.utils import openai_wrapper
 
+from ...task import logger
+
 ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
                     "Okay, please start.",
                     "If the instruction is \"Please choose 3 players from player ids 0 to 4.\" then use",
@@ -99,41 +101,47 @@ class OpenAIChatCompletionAssassin(Agent):
             "role": "assistant",
             "content": message
         }
+        logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
         while len(function_names) != 1:
             rectify_message = {
                 "role": "user",
-                "content": "You are using the tools in a wrong way. Please try again"
+                "content": "You are using the tools in a wrong way. Please strictly follow the tutorial."
             }
             rectify_result = openai_wrapper(
                             messages=history + [wrapped_message] + [rectify_message],
-                            temperature=0,
+                            temperature=0.1,
                             **self.api_args
             )
-            time.sleep(15)
+            time.sleep(10)
             rectify_result = rectify_result["choices"][0]["message"]["content"]
+            print("Rectify result")
+            print(rectify_result)
             function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
         function_name = function_names[-1]
         # for function_name in function_names:
         while not function_executed:
             try:
-                print("test function name: ", function_name)
+                logger.info("test function name: " + str(function_name))
                 result = eval(function_name)
                 # Ensure size of the team chosen is correct
                 if team_size is not None:
                     while len(result) != team_size:
+                        logger.warning(f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}")
                         rectify_message = {
                             "role": "user",
                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
                         }
                         rectify_result = openai_wrapper(
                                         messages=history + [wrapped_message] + [rectify_message],
-                                        temperature=0,
+                                        temperature=0.1,
                                         **self.api_args
                         )
                         rectify_result = rectify_result["choices"][0]["message"]["content"]
+                        logger.info("Rectify Results:")
+                        logger.info(str(rectify_result))
                         function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
                         function_name = function_names[-1]
-                        time.sleep(15)
+                        time.sleep(10)
 
                         result = eval(function_name)
                 elif "assassinate" in function_name:
@@ -143,37 +151,48 @@ class OpenAIChatCompletionAssassin(Agent):
                     assert int(result) in [0, 1]
 
                 function_executed = True
-                return result
+                return result, function_name
             except Exception as e:
-                print(e)
+                logger.warning(str(e))
                 function_names = []
+                logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
                 while len(function_names) != 1:
                     rectify_message = {
                         "role": "user",
-                        "content": "You are using the tools in a wrong way. Please try again"
+                        "content": "You are using the tools in a wrong way. Please strictly follow the tutorial."
                     }
                     rectify_result = openai_wrapper(
                                     messages=history + [wrapped_message] + [rectify_message],
-                                    temperature=0,
+                                    temperature=0.1,
                                     **self.api_args
                     )
-                    time.sleep(15)
+                    time.sleep(5)
                     rectify_result = rectify_result["choices"][0]["message"]["content"]
+                    logger.info("Rectify Results:")
+                    logger.info(str(rectify_result))
                     function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
                 function_name = function_names[-1]
+                return result, function_name
 
 
     def inference(self, history: List[dict]) -> str:
         """
         Summarize-then-action
         """
-        print(history)
+        logger.debug("Current History:")
+        logger.debug(str(history))
         mode = history[-1]["mode"]
-        role_name = history[-1]["role_name"]
+        role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
+        # history_pointer = history
         history = json.loads(json.dumps(history))
+        filtered_history = []
+        # idx = 0
+        # while idx < len(history):
+        #     h = history[idx]
+        last_discuss = False
         for h in history:
-            h.pop("mode", None)
+            h_mode = h.pop("mode", None)
             h.pop("team_size", None)
             h.pop("side", None)
             h.pop("seed", None)
@@ -181,9 +200,26 @@ class OpenAIChatCompletionAssassin(Agent):
             h.pop("naive_result", None)
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
+            # if h['role'] == 'user':
+            #     h['role'] = 'system'
 
-        print("Mode: ", mode)
-        if mode != "system":
+            if last_discuss:
+                last_discuss = False
+                continue
+            if h_mode != "discuss_on_team":
+                filtered_history.append(h)
+            else:
+                last_discuss = True
+        
+        if mode == "discuss_on_team":
+            filtered_history.append(history[-1])
+
+        history = filtered_history
+
+            
+        summary = []
+        logger.info("Mode: " + str(mode))
+        if mode != "system" and mode != "discuss_on_team" and mode != "choose_quest_team_discussion":
             system_prompts = []
             if role_name == "Assassin":
                 system_prompts.append({
@@ -216,41 +252,83 @@ class OpenAIChatCompletionAssassin(Agent):
             #     "content": tutorial_response["choices"][0]["message"]["content"]
             # })
 
-            print("Tutorial Prompt: ", system_prompts)
+            # print("Tutorial Prompt: ", system_prompts)
         
+            # """
             # Summarize
+            # """
+            # summary_prompt = {
+            #     "role": "user",
+            #     "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
+            # }
+            # summary_result = openai_wrapper(
+            #     messages=history[:-1] + [summary_prompt],
+            #     temperature=0.7,
+            #     **self.api_args
+            # )
+            # summary_result = summary_result["choices"][0]["message"]["content"]
+            # summary.append({
+            #     "role": "user",
+            #     "content": "Summary of previous information",
+            #     "mode": "summary"
+            # })
+            # summary.append({
+            #     "role": "agent",
+            #     "content": summary_result,
+            #     "mode": "summary"
+            # })
+
+            # print("History Pointer: ", history_pointer)
+            # print("Summary: ", summary_result)
+
+            """
+            Action
+            """
+            action_prompt = {
+                "role": "user",
+                "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT + '\n' + "Please take only one action using the tools based on the tutorial and your summary" + '\n' + history[-1]['content']
+            }
+
+            print(system_prompts)
+            print(action_prompt)
+
+            logger.info("!!!Input message: " + str(history[:-1] + [action_prompt]))
+            resp = openai_wrapper(
+                messages=history[:-1] + [action_prompt],
+                temperature=0.1,
+                **self.api_args
+            )
+            resp = resp["choices"][0]["message"]["content"]
+            logger.debug(resp)
+            tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
+            result = function_name
+        else:
+            """
+            Summarize
+            """
             summary_prompt = {
                 "role": "user",
                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
             }
             summary_result = openai_wrapper(
                 messages=history[:-1] + [summary_prompt],
-                temperature=0.7,
+                temperature=0.1,
                 **self.api_args
             )
             summary_result = summary_result["choices"][0]["message"]["content"]
-            print("Summary: ", summary_result)
-
-            # Action
-            action_prompt = {
+            summary.append({
                 "role": "user",
-                "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT + '\n' + "The following is your summay:\n" + "\"" + summary_result + "\"\n" + "Please take only one action using the tools based on the tutorial and your summary" + '\n' + history[-1]['content']
-            }
-
-            print(system_prompts)
-            print(action_prompt)
-            resp = openai_wrapper(
-                messages=system_prompts + [action_prompt],
-                temperature=0,
-                **self.api_args
-            )
-            resp = resp["choices"][0]["message"]["content"]
-            print(resp)
-            result = str(self.execute_tool(resp, system_prompts+[action_prompt], team_size=team_size))
-        else:
+                "content": "Summary of previous information",
+                "mode": "summary"
+            })
+            summary.append({
+                "role": "agent",
+                "content": summary_result,
+                "mode": "summary"
+            })
             resp = openai_wrapper(
                 messages=history,
-                temperature=0,
+                temperature=0.1,
                 **self.api_args
             )
 
@@ -275,9 +353,10 @@ class OpenAIChatCompletionAssassin(Agent):
             result = resp
         print(result)
 
-        time.sleep(15)
+        time.sleep(5)
 
-        return result
+
+        return result, summary
 
         # if mode == "choose_quest_team":
         #     team_size = history[-1]["team_size"]

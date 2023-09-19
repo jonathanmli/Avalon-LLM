@@ -5,10 +5,11 @@ import os
 
 
 # TODO: can we wrap all kinds of api in a single function
-def openai_wrapper(messages, temperature, **kwargs):
+def openai_wrapper(messages, temperature=0.1, **kwargs):
     executed = False
     while not executed:
         try:
+            print(messages)
             result = openai.ChatCompletion.create(
                             messages=messages,
                             temperature=temperature,

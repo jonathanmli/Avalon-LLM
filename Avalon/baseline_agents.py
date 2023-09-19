@@ -49,7 +49,7 @@ class Agent:
         pass
 
     def assassinate(self):
-        pass
+        return random.randint(0, self.config.num_players-1)
 
 class NaiveMinion(Agent):
     

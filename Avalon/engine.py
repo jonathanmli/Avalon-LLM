@@ -66,6 +66,8 @@ class AvalonGameEnvironment():
         self.num_good = config.num_good
         self.num_players_for_quest = config.num_players_for_quest
         self.num_fails_for_quest = config.num_fails_for_quest
+
+        self.config = config
         
         # initialize game
         self.reset()
@@ -133,7 +135,7 @@ class AvalonGameEnvironment():
         self.roles[good_players] = np.random.choice(good_roles, self.num_good, replace = False)
 
         # return list of role names
-        return [self.ROLES[role] for role in self.roles]
+        return [self.config.ROLES[role] for role in self.roles]
 
     def get_role(self, player):
         '''
@@ -145,7 +147,7 @@ class AvalonGameEnvironment():
         '''
         returns list of tuples of role index, role name, and whether player is good
         '''
-        return [(role, self.ROLES[role], self.is_good[player]) for player, role in enumerate(self.roles)]
+        return [(role, self.config.ROLES[role], self.is_good[player]) for player, role in enumerate(self.roles)]
     
     def get_partial_sides(self, player):
         '''
@@ -163,7 +165,7 @@ class AvalonGameEnvironment():
         '''
         returns tuple of phase index and phase name
         '''
-        return (self.phase, self.PHASES[self.phase])
+        return (self.phase, self.config.PHASES[self.phase])
     
     def get_quest_leader(self):
         '''
@@ -236,7 +238,7 @@ class AvalonGameEnvironment():
         self.team_votes = votes
 
         # if this is the MAX_ROUNDS round, then team automatically passes
-        if self.round == self.MAX_ROUNDS -1:
+        if self.round == self.config.MAX_ROUNDS -1:
             self.phase += 1
             self.round = 0
             return (self.phase, self.done, True)

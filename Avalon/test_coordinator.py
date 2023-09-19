@@ -1,4 +1,4 @@
-from engine import AvalonGameEnvironment
+from engine import AvalonGameEnvironment, AvalonConfig
 import random
 
 
@@ -44,7 +44,8 @@ class player:
 def main():
     # ask for number of players
     num_players = int(input("Enter number of players: "))
-    env = AvalonGameEnvironment(num_players)
+    config = AvalonConfig(num_players)
+    env = AvalonGameEnvironment(config)
     player_list = []
 
     for i in range(num_players):

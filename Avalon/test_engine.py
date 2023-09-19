@@ -1,9 +1,10 @@
-from engine import AvalonGameEnvironment
+from engine import AvalonGameEnvironment, AvalonConfig
 
 def main():
     # ask for number of players
     num_players = int(input("Enter number of players: "))
-    env = AvalonGameEnvironment(num_players)
+    config = AvalonConfig(num_players)
+    env = AvalonGameEnvironment(config)
     
     # print roles from env
     print(env.get_roles())

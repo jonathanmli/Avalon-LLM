@@ -233,8 +233,9 @@ class NaiveServant(Agent):
         # normalize probabilities
         self.player_side_probabilities = [prob / sum(self.player_side_probabilities) for prob in self.player_side_probabilities]
 
-        # generate team preferences for next mission
-        self.team_preferences = self.generate_team_preferences(mission_id+1)
+        # generate team preferences for next mission, if there is one
+        if mission_id < len(self.config.num_players_for_quest):
+            self.team_preferences = self.generate_team_preferences(mission_id+1)
         pass
     
 

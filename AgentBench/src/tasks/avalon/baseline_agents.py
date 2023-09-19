@@ -66,8 +66,8 @@ class NaiveMinion(Agent):
         # if equal to num_fails evil players on the team, vote fail
         elif sum([self.player_sides[i] == 0 for i in team]) == num_fails:
             return 0
-        # if there are only two evil players in the game, the assassin is on the team, and num_fails == 1, vote success. otherwise, vote fail
-        if self.side == 0 and 7 in team and self.config.num_evil == 2 and num_fails == 1:
+        # if there are only two evil players in the game (ie. the assassin is on the team) and num_fails == 1, vote success. otherwise, vote fail
+        elif self.config.num_evil == 2 and num_fails == 1:
             return 1
         else:
             return 0
@@ -94,18 +94,11 @@ class NaiveAssassin(Agent):
         super().__init__(id, name, config, side, role, sides)
 
     def vote_on_mission(self, mission_id, team):
-        # always fail
-        return 0
-    
-    def vote_on_mission(self, mission_id, team):
         num_fails = self.config.num_fails_for_quest[mission_id]
 
         # if less than num_fails evil players on the team, vote success
         if sum([self.player_sides[i] == 0 for i in team]) < num_fails:
             return 1
-        # if equal to num_fails evil players on the team, vote fail
-        elif sum([self.player_sides[i] == 0 for i in team]) == num_fails:
-            return 0
         # else vote fail
         else:
             return 0
@@ -121,7 +114,7 @@ class NaiveAssassin(Agent):
     def propose_team(self, mission_id):
         num_fails = self.config.num_fails_for_quest[mission_id]
         # choose evil team with x-1 other evil player(s), where x is number of fails required for this mission, plus the assassin
-        evil_team = random.sample([i for i in range(self.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
+        evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
         return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
@@ -243,8 +236,6 @@ class NaiveServant(Agent):
 
         # generate team preferences for next mission
         self.team_preferences = self.generate_team_preferences(mission_id+1)
-
-        print("Obeserve Successfully!")
         pass
     
 

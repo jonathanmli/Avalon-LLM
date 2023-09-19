@@ -16,11 +16,15 @@ from .baseline_agents import NaiveAssassin, NaiveMerlin, NaiveMinion, NaiveServa
 from .api import *
 from .prompts import *
 from .utils import *
+from src.task import logger
 
 T_INPUT = TypeVar('T_INPUT')
 T_OUTPUT = TypeVar('T_OUTPUT')
 T_TARGET = TypeVar('T_TARGET')
 
+
+# Log some messages
+# logger.debug('This is a debug message.')
 
 
 class player:
@@ -447,8 +451,10 @@ class Avalon(Task):
         Plan A: generate data on the fly
         '''
         # data = self.env.__dict__
+        NUM_GAMES = 5
         data = []
-        for i in range(0, 50):
+        logger.info(f"{NUM_GAMES} games in total.")
+        for i in range(0, NUM_GAMES):
             data = [i for _ in range(5)]
         # print(data)
             info.append(DataPiece(data, None))
@@ -552,7 +558,7 @@ class Avalon(Task):
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             player_list[i].assign_role(role_i, role_name, env.get_partial_sides(i))
             player_list[i].assign_side(side)
-            print(f"{player_list[i]} is {role_name}")
+            logger.info(f"{player_list[i]} is {role_name}")
 
         print("Player role: ", player_list[1].role)
         if player_list[1].role in [6, 7]:
@@ -565,7 +571,7 @@ class Avalon(Task):
         while not env.done:
             # print phase from env
             phase = env.get_phase()[0]
-            print(env.get_phase()[1])
+            logger.info(env.get_phase()[1])
             
             # if phase is team selection phase, ask for team
             if phase == 0:
@@ -575,7 +581,7 @@ class Avalon(Task):
                 Leader speaks
                 """
                 team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
-                print(f"Please choose {env.get_team_size()} players in this round.")
+                logger.info(f"Please choose {env.get_team_size()} players in this round.")
 
 
                 """
@@ -608,7 +614,7 @@ class Avalon(Task):
                 team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="action")
                 print(team)
                 env.choose_quest_team(team, leader)
-                print(f"{player_list[leader]} proposed team {team}")
+                logger.info(f"{player_list[leader]} proposed team {team}")
 
             # if phase is team voting phase, ask for votes
             elif phase == 1:
@@ -619,7 +625,7 @@ class Avalon(Task):
                                                     ) for i in range(num_players)]
                 print(votes)
                 outcome = env.vote_on_team(votes)
-                print(f"Team votes: {votes}, team outcome: {outcome[2]}")
+                logger.info(f"Team votes: {votes}, team outcome: {outcome[2]}")
                 # for session in sessions:
                 #     session.action({
                 #         "role": "user",
@@ -636,7 +642,7 @@ class Avalon(Task):
                 votes = [player_list[i].vote_on_mission(discussion_history, env.turn, team, mode="action"
                                                         ) for i in env.get_current_quest_team()]
                 outcome = env.vote_on_quest(votes)
-                print(f"Quest votes: {votes}, mission outcome: {outcome[2]}")
+                logger.info(f"Quest votes: {votes}, mission outcome: {outcome[2]}")
                 outcome_verbal = ["failed", "succeeded"]
                 for idx, session in enumerate(sessions):
                     session.action({
@@ -679,13 +685,13 @@ class Avalon(Task):
                 assassin = env.get_assassin()
                 target = int(player_list[assassin].assassinate(assassin))
                 # target = int(input(f"Enter assassination target: "))
-                print(f"Assassination target: {target}")
+                logger.info(f"Assassination target: {target}")
                 env.choose_assassination_target(assassin, target)
 
         # print whether good or evil won
         if env.good_victory:
-            print("Good wins!")
+            logger.info("Good wins!")
             return 1
         else:
-            print("Evil wins!")
+            logger.info("Evil wins!")
             return -1

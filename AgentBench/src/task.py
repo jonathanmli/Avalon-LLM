@@ -26,6 +26,21 @@ import requests
 from .agent import Agent, Session
 from .utils import serialize
 
+import logging
+# from .tasks.avalon import logger
+logger = logging.getLogger('avalon_logger')
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler
+file_handler = logging.FileHandler('./src/tasks/avalon/logs/example.log')
+
+# Create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
+
 
 T_INPUT = TypeVar('T_INPUT')
 T_OUTPUT = TypeVar('T_OUTPUT')
@@ -60,7 +75,7 @@ class Task(Generic[T_INPUT, T_OUTPUT, T_TARGET]):
         pass
 
     def evaluate(self, agent: Agent, already_runs: List[Any]=None) -> Dict[str, Any]:
-        print(f"Evaluating task '{self.name}' ...")
+        logger.info(f"Evaluating task '{self.name}' ...")
         data = self.get_data()
         inputs = data.get_inputs()
         targets = data.get_targets()
@@ -76,7 +91,7 @@ class Task(Generic[T_INPUT, T_OUTPUT, T_TARGET]):
         return result_dict
 
     def predict_all(self, agent: Agent, inputs: List[T_INPUT], already_runs: List[Any]=None) -> List[T_OUTPUT]:
-        print(f"Start Predicting All ...")
+        logger.info(f"Start Predicting All ...")
         assert already_runs is None or len(already_runs) == len(inputs)
 
         thread_count = self.workers
@@ -100,6 +115,7 @@ class Task(Generic[T_INPUT, T_OUTPUT, T_TARGET]):
             results[index] = result
 
         for idx, item in enumerate(inputs):
+            logger.info(f"Game {idx}")
             if already_runs is not None and already_runs[idx] is not None:
                 results[idx] = already_runs[idx]
                 continue
@@ -142,7 +158,7 @@ class Task(Generic[T_INPUT, T_OUTPUT, T_TARGET]):
         self.save_metrics_all(metrics)
 
     def save_metrics_all(self, metrics: Dict[str, Any]):
-        print(metrics)
+        logger.info(metrics)
         if not os.path.exists(self.get_output_dir()):
             try: os.makedirs(self.get_output_dir())
             except: pass

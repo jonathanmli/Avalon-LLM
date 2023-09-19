@@ -16,6 +16,8 @@ from copy import deepcopy
 from ...tasks.avalon.api import *
 from ...tasks.avalon.utils import openai_wrapper
 
+from ...task import logger
+
 ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
                     "Okay, please start.",
                     "If the instruction is \"Please choose 3 players from player ids 0 to 4.\" then use",
@@ -99,6 +101,7 @@ class OpenAIChatCompletionAssassin(Agent):
             "role": "assistant",
             "content": message
         }
+        logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
         while len(function_names) != 1:
             rectify_message = {
                 "role": "user",
@@ -118,12 +121,12 @@ class OpenAIChatCompletionAssassin(Agent):
         # for function_name in function_names:
         while not function_executed:
             try:
-                print("test function name: ", function_name)
+                logger.info("test function name: " + str(function_name))
                 result = eval(function_name)
                 # Ensure size of the team chosen is correct
                 if team_size is not None:
                     while len(result) != team_size:
-                        print(f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}")
+                        logger.warning(f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}")
                         rectify_message = {
                             "role": "user",
                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
@@ -134,8 +137,8 @@ class OpenAIChatCompletionAssassin(Agent):
                                         **self.api_args
                         )
                         rectify_result = rectify_result["choices"][0]["message"]["content"]
-                        print("Rectify results")
-                        print(rectify_result)
+                        logger.info("Rectify Results:")
+                        logger.info(str(rectify_result))
                         function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
                         function_name = function_names[-1]
                         time.sleep(10)
@@ -150,8 +153,9 @@ class OpenAIChatCompletionAssassin(Agent):
                 function_executed = True
                 return result, function_name
             except Exception as e:
-                print(e)
+                logger.warning(str(e))
                 function_names = []
+                logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
                 while len(function_names) != 1:
                     rectify_message = {
                         "role": "user",
@@ -164,8 +168,8 @@ class OpenAIChatCompletionAssassin(Agent):
                     )
                     time.sleep(5)
                     rectify_result = rectify_result["choices"][0]["message"]["content"]
-                    print("Rectify results")
-                    print(rectify_result)
+                    logger.info("Rectify Results:")
+                    logger.info(str(rectify_result))
                     function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
                 function_name = function_names[-1]
                 return result, function_name
@@ -175,7 +179,8 @@ class OpenAIChatCompletionAssassin(Agent):
         """
         Summarize-then-action
         """
-        print(history)
+        logger.debug("Current History:")
+        logger.debug(str(history))
         mode = history[-1]["mode"]
         role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
@@ -213,7 +218,7 @@ class OpenAIChatCompletionAssassin(Agent):
 
             
         summary = []
-        print("Mode: ", mode)
+        logger.info("Mode: " + str(mode))
         if mode != "system" and mode != "discuss_on_team" and mode != "choose_quest_team_discussion":
             system_prompts = []
             if role_name == "Assassin":
@@ -247,7 +252,7 @@ class OpenAIChatCompletionAssassin(Agent):
             #     "content": tutorial_response["choices"][0]["message"]["content"]
             # })
 
-            print("Tutorial Prompt: ", system_prompts)
+            # print("Tutorial Prompt: ", system_prompts)
         
             # """
             # Summarize
@@ -287,14 +292,14 @@ class OpenAIChatCompletionAssassin(Agent):
             print(system_prompts)
             print(action_prompt)
 
-            print("!!!Input message: ", history[:-1] + [action_prompt])
+            logger.info("!!!Input message: " + str(history[:-1] + [action_prompt]))
             resp = openai_wrapper(
                 messages=history[:-1] + [action_prompt],
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
-            print(resp)
+            logger.debug(resp)
             tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
             result = function_name
         else:

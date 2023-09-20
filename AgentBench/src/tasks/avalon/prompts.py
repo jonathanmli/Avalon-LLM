@@ -205,11 +205,15 @@ As you are playing the role of Assassin in this game, here are some aspects you 
 
 REVEAL_PROMPTS = {
     "Merlin": [
-        "Player {} is Minion of Modred",
+        "Player {} is Minion. Players {} are Servants.",
         "Players {} are Minions of Modred."
     ],
-    "Minion of Modred": [
-        "Player {} is Minion of Modred",
+    "Minion": [
+        "Player {} is Assassin. Players {} are Good.",
+        "Players {} are Minions of Modred."
+    ],
+    "Assassin": [
+        "Player {} is Minion. Players {} are Good.",
         "Players {} are Minions of Modred."
     ],
     # "Percival": "Player {} is Merlin and player {} is Morgan."

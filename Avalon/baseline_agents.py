@@ -207,8 +207,16 @@ class NaiveServant(Agent):
         else:
             if self.largest_successful_team is not None and self.lexigraphic:
                 out = [team for team in max_teams if set(team).issubset(set(self.largest_successful_team))]
+                # print('subset', out)
                 if len(out) > 0:
                     return out
+                else: # return list of teams of max_teams that are supersets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
+                    out = [team for team in max_teams if set(self.largest_successful_team).issubset(set(team))]
+                    # print('superset', out)
+                    if len(out) > 0:
+                        return out
+                    else:
+                        return max_teams
             return max_teams
     
     def vote_on_team(self, mission_id, team):
@@ -234,7 +242,7 @@ class NaiveServant(Agent):
         self.player_side_probabilities = [prob / sum(self.player_side_probabilities) for prob in self.player_side_probabilities]
 
         # generate team preferences for next mission, if there is one
-        if mission_id < len(self.config.num_players_for_quest):
+        if mission_id < len(self.config.num_players_for_quest)-1:
             self.team_preferences = self.generate_team_preferences(mission_id+1)
         pass
     

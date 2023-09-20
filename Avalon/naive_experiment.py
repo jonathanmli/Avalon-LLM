@@ -27,6 +27,7 @@ def main():
             player_list.append(NaiveMinion(i, f"Player {i}", config, sides=player_sides))
 
         print(f"{player_list[i]} is {role_name}")
+        assert list(map(int, player_list[i].player_sides)) == list(map(int, env.get_partial_sides(i)))
 
     while not env.done:
         # print phase from env
@@ -57,7 +58,8 @@ def main():
             # all players observe mission outcome
             for player in player_list:
                 print(env.turn-1)
-                player.observe_mission(env.get_current_quest_team(), env.turn-1, outcome[2])
+                if env.turn < 5:
+                    player.observe_mission(env.get_current_quest_team(), env.turn-1, outcome[2])
 
         # if phase is assassination phase, ask for assassination
         elif phase == 3:

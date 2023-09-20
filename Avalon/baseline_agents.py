@@ -1,6 +1,7 @@
 import random
 from engine import AvalonConfig
 import itertools
+import warnings
 
 class Agent:
 
@@ -15,8 +16,13 @@ class Agent:
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
+
+            # if role is 0 (Merlin) or side is evil, warn that player_sides are not seen
+            if role == 0 or side == 0:
+                warnings.warn("Merlin and evil players did not see player sides in initialization")
         else:
             self.player_sides = sides
+        
 
     def __str__(self):
         return self.name

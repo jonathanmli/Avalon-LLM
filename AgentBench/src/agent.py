@@ -31,7 +31,7 @@ class Session:
         assert "role" in message and "content" in message
         assert isinstance(message["role"], str)
         assert isinstance(message["content"], str)
-        assert message["role"] in ["user", "agent", "system"]
+        assert message["role"] in ["user", "agent", "system", "assistant"]
         self.history.append(message)
 
     def action(self, extend_messages: List[dict] = None) -> str:
@@ -47,7 +47,7 @@ class Session:
         self.history.extend(extend)
         self.history.append({"role": "agent", "content": result})
         if len(summary) > 0:
-            self.history = self.history[:2] + summary
+            self.history = self.history[:1] + summary
         return result
     
     def _calc_segments(self, msg: str):
@@ -103,7 +103,7 @@ class Session:
                 assert "role" in message and "content" in message
                 assert isinstance(message["role"], str)
                 assert isinstance(message["content"], str)
-                assert message["role"] in ["user", "agent", "system"]
+                assert message["role"] in ["user", "agent", "system", "assistant"]
                 # if idx % 2 == 0:
                 #     assert message["role"] == "user"
                 # else:

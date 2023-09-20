@@ -286,7 +286,7 @@ class OpenAIChatCompletionAssassin(Agent):
             """
             action_prompt = {
                 "role": "user",
-                "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT + '\n' + "Please take only one action using the tools based on the tutorial and your summary" + '\n' + history[-1]['content']
+                "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
             }
 
             print(system_prompts)
@@ -311,7 +311,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
             }
             summary_result = openai_wrapper(
-                messages=history[:-1] + [summary_prompt],
+                messages=history[1:-1] + [summary_prompt],
                 temperature=0.1,
                 **self.api_args
             )
@@ -319,15 +319,13 @@ class OpenAIChatCompletionAssassin(Agent):
             summary.append({
                 "role": "user",
                 "content": "Summary of previous information",
-                "mode": "summary"
             })
             summary.append({
-                "role": "agent",
+                "role": "assistant",
                 "content": summary_result,
-                "mode": "summary"
             })
             resp = openai_wrapper(
-                messages=history,
+                messages=[history[0]]+summary+[history[-1]],
                 temperature=0.1,
                 **self.api_args
             )

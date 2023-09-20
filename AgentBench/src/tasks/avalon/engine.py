@@ -1,17 +1,6 @@
 # import random
 import numpy as np
 
-# QUEST_PRESET      = {5 : [[3,2] , [2,3,2,3,3], [1,1,1,1,1], ] , 
-#                         6 : [[4,2] , [2,3,4,3,4], [1,1,1,1,1],] , 
-#                         7 : [[4,3] , [2,3,3,4,4], [1,1,1,2,1],] , 
-#                         8 : [[5,3] , [3,4,4,5,5], [1,1,1,2,1],] , 
-#                         9 : [[6,3] , [3,4,4,5,5], [1,1,1,2,1],] , 
-#                         10 : [[6,4] , [3,4,4,5,5], [1,1,1,2,1],]}
-
-# MAX_ROUNDS = 5
-# PHASES = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
-# ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
-
 class AvalonConfig():
     '''
     Avalon game configuration
@@ -29,7 +18,7 @@ class AvalonConfig():
     PHASES = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
     ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
 
-    def __init__(self, num_players, seed, merlin = True, percival = False, morgana = False, mordred = False, oberon = False) -> None:
+    def __init__(self, num_players, seed=42, merlin = True, percival = False, morgana = False, mordred = False, oberon = False) -> None:
         '''
         num_players: number of players in the game
         merlin: whether Merlin is in the game
@@ -50,8 +39,6 @@ class AvalonConfig():
         self.num_good = num_players - self.num_evil
         self.num_players_for_quest = self.QUEST_PRESET[num_players][1]
         self.num_fails_for_quest = self.QUEST_PRESET[num_players][2]
-
-        self.seed = seed
     
 class AvalonGameEnvironment():
     
@@ -80,17 +67,8 @@ class AvalonGameEnvironment():
         self.num_players_for_quest = config.num_players_for_quest
         self.num_fails_for_quest = config.num_fails_for_quest
 
-        self.QUEST_PRESET = config.QUEST_PRESET
-        self.MAX_ROUNDS = config.MAX_ROUNDS
-        self.PHASES = config.PHASES
-        self.ROLES = config.ROLES
-
-        self.seed = config.seed
+        self.config = config
         
-        np.random.seed(self.seed)
-
-        self.mission_id = 0
-
         # initialize game
         self.reset()
 
@@ -112,8 +90,6 @@ class AvalonGameEnvironment():
         self.quest_team = []
         self.team_votes = []
         self.quest_votes = []
-
-        self.mission_id = 0
 
         # reassign roles
         return self.assign_roles()
@@ -159,7 +135,7 @@ class AvalonGameEnvironment():
         self.roles[good_players] = np.random.choice(good_roles, self.num_good, replace = False)
 
         # return list of role names
-        return [self.ROLES[role] for role in self.roles]
+        return [self.config.ROLES[role] for role in self.roles]
 
     def get_role(self, player):
         '''
@@ -171,7 +147,7 @@ class AvalonGameEnvironment():
         '''
         returns list of tuples of role index, role name, and whether player is good
         '''
-        return [(role, self.ROLES[role], self.is_good[player]) for player, role in enumerate(self.roles)]
+        return [(role, self.config.ROLES[role], self.is_good[player]) for player, role in enumerate(self.roles)]
     
     def get_partial_sides(self, player):
         '''
@@ -180,7 +156,7 @@ class AvalonGameEnvironment():
         
         # if player is Merlin or evil, return all sides
         if self.roles[player] == 0 or not self.is_good[player]:
-            return self.is_good
+            return list(map(int, self.is_good))
         # otherwise return list of -1 for unknown
         else:
             return [-1 if i != player else 1 for i in range(self.num_players)]
@@ -189,7 +165,7 @@ class AvalonGameEnvironment():
         '''
         returns tuple of phase index and phase name
         '''
-        return (self.phase, self.PHASES[self.phase])
+        return (self.phase, self.config.PHASES[self.phase])
     
     def get_quest_leader(self):
         '''
@@ -262,7 +238,7 @@ class AvalonGameEnvironment():
         self.team_votes = votes
 
         # if this is the MAX_ROUNDS round, then team automatically passes
-        if self.round == self.MAX_ROUNDS -1:
+        if self.round == self.config.MAX_ROUNDS -1:
             self.phase += 1
             self.round = 0
             return (self.phase, self.done, True)

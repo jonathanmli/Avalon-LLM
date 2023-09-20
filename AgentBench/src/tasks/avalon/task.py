@@ -233,13 +233,16 @@ class player:
         self.role_name = role_name
 
         if role_name == "Merlin":
-            self.strategy = NaiveMerlin(id=self.id, name=self.name, sides=sides, config=self.config)
+            self.strategy = NaiveMerlin(self.id, self.name, self.config, sides=sides,)
         elif role_name == "Minion":
-            self.strategy = NaiveMinion(id=self.id, name=self.name, sides=sides, config=self.config)
+            self.strategy = NaiveMinion(self.id, self.name, self.config, sides=sides,)
         elif role_name == "Assassin":
-            self.strategy = NaiveAssassin(id=self.id, name=self.name, sides=sides, config=self.config)
+            self.strategy = NaiveAssassin(self.id, self.name, self.config, sides=sides,)
         elif role_name == "Servant":
-            self.strategy = NaiveServant(id=self.id, name=self.name, sides=sides, config=self.config)
+            self.strategy = NaiveServant(self.id, self.name, self.config, sides=sides,)
+
+        print("Agent Sides")
+        print(self.strategy.player_sides)
 
         """
         Instruction Prompt
@@ -370,24 +373,32 @@ class player:
         Reveal Phase
         """
         reveal_info = None
+        minion_list = []
+        servant_list = []
+        assassin = ''
+        merlin = ''
+        for idx, player_info in enumerate(self.player_list):
+            if player_info[1] == "Minion":
+                minion_list.append(str(idx))
+            elif player_info[1] == "Servant":
+                servant_list.append(str(idx))
+            elif player_info[1] == "Assassin":
+                assassin = str(idx)
+            elif player_info[1] == "Merlin":
+                merlin = str(idx)
         if role_name == "Merlin":
-            minion_list = []
-            for idx, player_info in enumerate(self.player_list):
-                if player_info[1] == "Minion of Modred":
-                    minion_list.append(str(idx))
             if len(minion_list) == 1:
-                reveal_info = REVEAL_PROMPTS['Merlin'][0].format(*minion_list)
+                reveal_info = REVEAL_PROMPTS['Merlin'][0].format(', '.join(minion_list), ', '.join(servant_list))
             elif len(minion_list) > 1:
-                reveal_info = REVEAL_PROMPTS['Merlin'][1].format(*minion_list)
+                reveal_info = REVEAL_PROMPTS['Merlin'][1].format(', '.join(minion_list))
         if role_name == "Minion":
-            minion_list = []
-            for idx, player_info in enumerate(self.player_list):
-                if player_info[1] == "Minion of Modred":
-                    minion_list.append(str(idx))
             if len(minion_list) == 1:
-                reveal_info = REVEAL_PROMPTS['Minion of Modred'][0].format(*minion_list)
+                reveal_info = REVEAL_PROMPTS['Minion'][0].format(assassin, ', '.join(servant_list + [merlin]))
             elif len(minion_list) > 1:
-                reveal_info = REVEAL_PROMPTS['Minion of Modred'][1].format(*minion_list)
+                reveal_info = REVEAL_PROMPTS['Minion'][1].format(', '.join(minion_list))
+        if role_name == "Assassin":
+            if len(minion_list) == 1:
+                reveal_info = REVEAL_PROMPTS['Assassin'][0].format(', '.join(minion_list), ', '.join(servant_list + [merlin]))
         if reveal_info is not None:
             self.session.inject({
                 "role": "user",
@@ -534,9 +545,10 @@ class Avalon(Task):
 
         for i in range(num_players):
             random.seed(self.seed, version=1)
-            player_list.append(player(f"Player {i}",
-                                    num_players,
-                                    sessions[i],
+            player_list.append(player(
+                                    name=f"Player {i}",
+                                    num_players=num_players,
+                                    session=sessions[i],
                                     # random.choice([0, 1]),
                                     id = i,
                                     config = self.avalon_config,
@@ -557,6 +569,7 @@ class Avalon(Task):
 
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             player_list[i].assign_role(role_i, role_name, env.get_partial_sides(i))
+            print(f"Partial Sides of {role_name}: {env.get_partial_sides(i)}")
             player_list[i].assign_side(side)
             logger.info(f"{player_list[i]} is {role_name}")
 
@@ -593,14 +606,14 @@ class Avalon(Task):
                     discussion = session.action({
                         "role": "user",
                         # "content": 'test',
-                        "content": f"Statement from {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
+                        "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
                         "mode": "discuss_on_team"
                     })
                     discussion_history.append(f"Player {idx} : " + discussion)
                 for idx, session in enumerate(sessions):
                     session.inject({
                         "role": "user",
-                        "content": f"Statement from {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
+                        "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
                     })
                     session.inject({
                         "role": "agent",

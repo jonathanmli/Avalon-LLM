@@ -1,5 +1,5 @@
 import random
-from .engine import AvalonConfig
+from engine import AvalonConfig
 import itertools
 
 class Agent:
@@ -11,13 +11,14 @@ class Agent:
         self.role = role
         self.team = None
         self.side = side # 1 for good, 0 for evil
-        self.num_players = config.num_players
         self.history = None
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
+            print("warning")
         else:
             self.player_sides = sides
+            print(f"Player Sides is {sides}")
 
     def __str__(self):
         return self.name
@@ -50,7 +51,7 @@ class Agent:
         pass
 
     def assassinate(self):
-        pass
+        return random.randint(0, self.config.num_players-1)
 
 class NaiveMinion(Agent):
     
@@ -117,6 +118,10 @@ class NaiveAssassin(Agent):
         evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
+        # assert self.config.num_players_for_quest[mission_id] - num_fails > 0
+        print(evil_team)
+        print(self.player_sides)
+        print([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1])
         return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
         
     
@@ -234,8 +239,9 @@ class NaiveServant(Agent):
         # normalize probabilities
         self.player_side_probabilities = [prob / sum(self.player_side_probabilities) for prob in self.player_side_probabilities]
 
-        # generate team preferences for next mission
-        self.team_preferences = self.generate_team_preferences(mission_id+1)
+        # generate team preferences for next mission, if there is one
+        if mission_id < len(self.config.num_players_for_quest):
+            self.team_preferences = self.generate_team_preferences(mission_id+1)
         pass
     
 

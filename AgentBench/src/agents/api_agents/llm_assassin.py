@@ -14,8 +14,9 @@ from typing import List, Callable
 import dataclasses
 from copy import deepcopy
 from ...tasks.avalon.api import *
-from ...tasks.avalon.utils import openai_wrapper
-
+from .utils import openai_wrapper
+from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT
+from langchain.chat_models import ChatOpenAI
 from ...task import logger
 
 ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
@@ -75,6 +76,53 @@ class OpenAIChatCompletionAssassin(Agent):
             raise ValueError("OpenAI model is required, please assign api_args.model.")
         self.api_args = api_args
         super().__init__(**config)
+
+    def get_vote_result(self, message):
+        # answer = wrap_langchain(message)
+        answer = openai_wrapper(
+            messages=[{'role':'user', 'content':message,}],
+            temperature=0,
+            **self.api_args
+        )
+
+        answer = answer["choices"][0]["message"]["content"]
+
+        match_vote = "Yes|No"
+        vote_result = []
+        if 'Answer:' in answer:
+            vote_result = re.findall(match_vote, answer)
+
+        result = None if len(vote_result) == 0 else vote_result[-1]
+
+        assert result in ['Yes', 'No']
+        print(result)
+
+        result_dict = {
+            "No": 0,
+            "Yes": 1
+        }
+
+        return result_dict[result]
+
+    def get_team_result(self, message):
+        # answer = wrap_langchain(message)
+
+        answer = openai_wrapper(
+            messages=[{'role':'user', 'content':message}],
+            temperature=0,
+            **self.api_args
+        )
+
+        answer = answer["choices"][0]["message"]["content"]
+
+        match_num = r"\d+"
+        player_list = []
+        if 'Answer:' in answer:
+            player_list = re.findall(match_num, answer)
+
+        player_list = [int(id) for id in player_list]
+
+        return player_list
 
     def execute_tool(self, message, history, team_size=None):
         print(message)
@@ -280,7 +328,8 @@ class OpenAIChatCompletionAssassin(Agent):
             else:
                 action_prompt = {
                     "role": "user",
-                    "content": ZERO_SHOT_ACTION["intro"] + ZERO_SHOT_ACTION[mode] + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
+                    # "content": ZERO_SHOT_ACTION["intro"] + ZERO_SHOT_ACTION[mode] + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
+                    "content": "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
                 }
                 input_messages = history[:-1] + [action_prompt]
 
@@ -298,8 +347,14 @@ class OpenAIChatCompletionAssassin(Agent):
             if mode == 'system':
                 result = resp
             else:
-                tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
-                result = function_name
+                # tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
+                # result = function_name
+                if mode == "choose_quest_team_action":
+                    result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
+                elif mode == "vote_on_team":
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
+                elif mode == "vote_on_mission":
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
         else:
             """
             Summarize
@@ -352,7 +407,7 @@ class OpenAIChatCompletionAssassin(Agent):
         time.sleep(5)
 
 
-        return result, summary
+        return str(result), summary
 
         # if mode == "choose_quest_team":
         #     team_size = history[-1]["team_size"]

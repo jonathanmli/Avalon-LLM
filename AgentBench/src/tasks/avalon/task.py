@@ -160,7 +160,8 @@ class player:
             content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss about the vote on the team {team}."
         elif mode == "action":
             # content_prompt = f"Action Phase. Please vote on the team {team}."
-            content_prompt = f"Please vote on team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
+            # content_prompt = f"Please vote on team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
+            content_prompt = f"Please vote on team {team} based on your observation."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -190,7 +191,8 @@ class player:
         if mode == "statement":
             content_prompt = ' '.join(statement_history) + ' ' + f"Please vote on the quest."
         elif mode == "action":
-            content_prompt = f"The team {team} was passed. Now, please think about your true objective, vote on the quest with team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
+            # content_prompt = f"The team {team} was passed. Now, please think about your true objective, vote on the quest with team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
+            content_prompt = f"The team {team} was passed. Now, please vote on the quest with team {team} based on your observations."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."

@@ -1,5 +1,5 @@
 import random
-from engine import AvalonConfig
+from .engine import AvalonConfig
 import itertools
 
 class Agent:

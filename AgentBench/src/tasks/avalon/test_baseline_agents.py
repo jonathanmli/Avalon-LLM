@@ -9,7 +9,7 @@ class TestNaiveServant(unittest.TestCase):
     def setUp(self):
         config = AvalonConfig(5)
         self.env = AvalonGameEnvironment(config)
-        self.naive_servant = NaiveServant(3, 'Naive Servant', config)
+        self.naive_servant = NaiveServant(3, 'Naive Servant', config, sides=self.env.get_partial_sides)
 
     # test that the Naive Servant proposes a team of size 2
     def test_propose_team(self):

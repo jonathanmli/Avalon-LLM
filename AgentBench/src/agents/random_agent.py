@@ -106,12 +106,12 @@ class RandomAgent(Agent):
                 "role": "user",
                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
             }
-            # summary_result = openai_wrapper(
-            #     messages=history[:-1] + [summary_prompt],
-            #     temperature=0.7,
-            #     **self.api_args
-            # )
-            # summary_result = summary_result["choices"][0]["message"]["content"]
+            summary_result = openai_wrapper(
+                messages=history[:-1] + [summary_prompt],
+                temperature=0.1,
+                **self.api_args
+            )
+            summary_result = summary_result["choices"][0]["message"]["content"]
             summary.append({
                 "role": "user",
                 "content": "Summary of previous information",
@@ -120,7 +120,7 @@ class RandomAgent(Agent):
             summary.append({
                 "role": "agent",
                 # "content": summary_result,
-                "content": '',
+                "content": summary_result,
                 "mode": "summary"
             })
             resp = openai_wrapper(

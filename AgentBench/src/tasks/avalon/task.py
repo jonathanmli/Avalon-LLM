@@ -157,10 +157,10 @@ class player:
     
     def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
-            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please vote on the team {team}."
+            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss about the vote on the team {team}."
         elif mode == "action":
             # content_prompt = f"Action Phase. Please vote on the team {team}."
-            content_prompt = f"Please vote on the team {team} by using `vote` function."
+            content_prompt = f"Please vote on team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -190,7 +190,7 @@ class player:
         if mode == "statement":
             content_prompt = ' '.join(statement_history) + ' ' + f"Please vote on the quest."
         elif mode == "action":
-            content_prompt = f"Please vote on the quest by using `vote` function."
+            content_prompt = f"The team {team} was passed. Now, please think about your true objective, vote on the quest with team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -239,33 +239,31 @@ class player:
         elif role_name == "Assassin":
             self.strategy = NaiveAssassin(self.id, self.name, self.config, sides=sides,)
         elif role_name == "Servant":
-            self.strategy = NaiveServant(self.id, self.name, self.config, sides=sides,)
+            self.strategy = NaiveServant(self.id, self.name, self.config,)
 
         print("Agent Sides")
         print(self.strategy.player_sides)
 
         """
-        Instruction Prompt
+        Introduction Prompt
         """
-        if role_name == "Assassin":
-            INSTRUCTIONS = INSTRUCTIONS_ASSASSIN
-        else:
-            INSTRUCTIONS = INSTRUCTIONS_NORMAL
-        content_prompt = INSTRUCTIONS + "\n" + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion(s) of Mordred."
-        initialization_prompt = f"You are {self.name}, and you are {role_name}."
+        verbal_side = ["Evil", "Good"]
+        content_prompt = INTRODUCTION + "\n" + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
+        identity_prompt = f"You are {self.name}, {role_name}, and also {verbal_side[self.side]} player. Please do not forget your identity, and do not pretend to be other roles throughout the game."
+        self.identity_prompt = identity_prompt
         self.session.inject({
             "role": "system",
-            "content": content_prompt,
+            "content": content_prompt + '\n' + identity_prompt,
             "mode": "system",
         })
-        self.session.inject({
-            "role": "user",
-            "content": initialization_prompt
-        })
-        self.session.inject({
-            "role": "agent",
-            "content": "I understand."
-        })
+        # self.session.inject({
+        #     "role": "user",
+        #     "content": 
+        # })
+        # self.session.inject({
+        #     "role": "agent",
+        #     "content": "I understand."
+        # })
         # self.session.inject({
         #     "role": "user",
         #     "content": INSTRUCTIONS
@@ -404,10 +402,10 @@ class player:
                 "role": "user",
                 "content": reveal_info
             })
-            self.session.inject({
-                "role": "agent",
-                "content": "Okay, I understand"
-            })
+            # self.session.inject({
+            #     "role": "agent",
+            #     "content": "Okay, I understand"
+            # })
 
         """
         Thought: what is my strategy for this game?
@@ -568,9 +566,9 @@ class Avalon(Task):
         
 
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
+            player_list[i].assign_side(side)
             player_list[i].assign_role(role_i, role_name, env.get_partial_sides(i))
             print(f"Partial Sides of {role_name}: {env.get_partial_sides(i)}")
-            player_list[i].assign_side(side)
             logger.info(f"{player_list[i]} is {role_name}")
 
         print("Player role: ", player_list[1].role)
@@ -613,7 +611,7 @@ class Avalon(Task):
                 for idx, session in enumerate(sessions):
                     session.inject({
                         "role": "user",
-                        "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
+                        "content": f"Discussion has ended. Here are the contents:\nStatement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
                     })
                     session.inject({
                         "role": "agent",
@@ -660,7 +658,7 @@ class Avalon(Task):
                 for idx, session in enumerate(sessions):
                     session.action({
                         "role": "user",
-                        "content": f"This mission has {outcome_verbal[int(outcome[2])]} based on the quest results.",
+                        "content": f"This mission has {outcome_verbal[int(outcome[2])]} with the team {team} based on the quest results.",
                         "mode": "system",
                         "seed": self.seed,
                         "role_name": player_list[idx].role_name

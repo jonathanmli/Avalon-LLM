@@ -32,34 +32,24 @@ ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and usin
                     "OKay, I understand."
                     ]
 
-ZERO_SHOT_ASSASSIN_NO_THOUGHT = """
-Here is a tutorial on taking actions using predefined tools (choose and vote). When you are asked to take action, please strictly follow this tutorial.
-
-1. Choosing a Team:
+ZERO_SHOT_ACTION = {'intro': """Here is a tutorial on taking actions using predefined tools. When you are asked to take action, please strictly follow this tutorial.
+""",
+'choose_quest_team_action': """
+Choosing a Team:
     - When you are asked to pick a team, and you'd like to choose player numbers 1, 3, and 4 from the 10 available players, simply output `choose([1, 3, 4])`. This will serve as your instruction for picking those particular players.
-
-2. Voting on a Team
+""",
+'vote_on_team': """
+Voting on a Team
     - If you are asked to vote on a team and you want to approve the team, output `vote(True)`. If you do not want to approve the team, output `vote(False)`.
-
-3. Voting on a Quest
+""",
+'vote_on_mission':"""
+Voting on a Quest
     - When you're asked to vote on a quest, and you wish to pass the quest, output `vote(True)`. If you want to fail the quest, output `vote(False)`.
-
-4. Assassinating a Player Believed to be Merlin
+""",
+'assassinate': """
+Assassinating a Player Believed to be Merlin
     - When you are asked to perform an assassination, choose the player who you think is most likely to be Merlin. For instance, if you suspect that player 1 is Merlin, output `assassinate(1)` to make that choice.    
-"""
-
-ZERO_SHOT_NORMAL_NO_THOUGHT = """
-Here is a tutorial on taking actions using predefined tools (choose and vote). When you are asked to take action, please strictly follow this tutorial.
-
-1. Choosing a Team:
-    - When you are asked to pick a team, and you'd like to choose player numbers 1, 3, and 4 from the 10 available players, simply output `choose([1, 3, 4])`. This will serve as your instruction for picking those particular players.
-
-2. Voting on a Team
-    - If you are asked to vote on a team and you want to approve the team, output `vote(True)`. If you do not want to approve the team, output `vote(False)`.
-
-3. Voting on a Quest
-    - When you're asked to vote on a quest, and you wish to pass the quest, output `vote(True)`. If you want to fail the quest, output `vote(False)`.
-"""
+"""}
 
 
 class OpenAIChatCompletionAssassin(Agent):
@@ -101,22 +91,24 @@ class OpenAIChatCompletionAssassin(Agent):
             "role": "assistant",
             "content": message
         }
-        logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
-        while len(function_names) != 1:
+        while len(function_names) < 1:
+            logger.warning("Funciton not Found. Please output the function to take actions.")
             rectify_message = {
                 "role": "user",
-                "content": "You are using the tools in a wrong way. Please strictly follow the tutorial."
+                "content": "Funciton not Found. Please output the function to take actions."
             }
             rectify_result = openai_wrapper(
                             messages=history + [wrapped_message] + [rectify_message],
                             temperature=0.1,
                             **self.api_args
             )
-            time.sleep(10)
+            time.sleep(5)
             rectify_result = rectify_result["choices"][0]["message"]["content"]
             print("Rectify result")
             print(rectify_result)
             function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
+        if len(function_names) > 0 and len(set(function_names)) > 1:
+            logger.warning("Generating more than one action!")
         function_name = function_names[-1]
         # for function_name in function_names:
         while not function_executed:
@@ -141,7 +133,7 @@ class OpenAIChatCompletionAssassin(Agent):
                         logger.info(str(rectify_result))
                         function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
                         function_name = function_names[-1]
-                        time.sleep(10)
+                        time.sleep(5)
 
                         result = eval(function_name)
                 elif "assassinate" in function_name:
@@ -219,18 +211,18 @@ class OpenAIChatCompletionAssassin(Agent):
             
         summary = []
         logger.info("Mode: " + str(mode))
-        if mode != "system" and mode != "discuss_on_team" and mode != "choose_quest_team_discussion":
-            system_prompts = []
-            if role_name == "Assassin":
-                system_prompts.append({
-                    "role": "user",
-                    "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT
-                })
-            else:
-                system_prompts.append({
-                    "role": "user",
-                    "content": ZERO_SHOT_NORMAL_NO_THOUGHT
-                })
+        if mode != "discuss_on_team" and mode != "choose_quest_team_discussion":
+            # system_prompts = []
+            # if role_name == "Assassin":
+            #     system_prompts.append({
+            #         "role": "user",
+            #         "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT
+            #     })
+            # else:
+            #     system_prompts.append({
+            #         "role": "user",
+            #         "content": ZERO_SHOT_NORMAL_NO_THOUGHT
+            #     })
             # for i, prompt in enumerate(ONE_SHOT_ASSASSIN_NO_THOUGHT):
             #     if i % 2 == 0:
             #         system_prompts.append({
@@ -280,28 +272,34 @@ class OpenAIChatCompletionAssassin(Agent):
 
             # print("History Pointer: ", history_pointer)
             # print("Summary: ", summary_result)
-
             """
             Action
             """
-            action_prompt = {
-                "role": "user",
-                "content": ZERO_SHOT_ASSASSIN_NO_THOUGHT + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
-            }
+            if mode == 'system':
+                input_messages = history
+            else:
+                action_prompt = {
+                    "role": "user",
+                    "content": ZERO_SHOT_ACTION["intro"] + ZERO_SHOT_ACTION[mode] + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
+                }
+                input_messages = history[:-1] + [action_prompt]
 
-            print(system_prompts)
-            print(action_prompt)
+            # print(system_prompts)
+            # print(action_prompt)
 
-            logger.info("!!!Input message: " + str(history[:-1] + [action_prompt]))
+            logger.info("!!!Input message: " + str(input_messages))
             resp = openai_wrapper(
-                messages=history[:-1] + [action_prompt],
+                messages=input_messages,
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
             logger.debug(resp)
-            tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
-            result = function_name
+            if mode == 'system':
+                result = resp
+            else:
+                tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
+                result = function_name
         else:
             """
             Summarize
@@ -311,21 +309,21 @@ class OpenAIChatCompletionAssassin(Agent):
                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
             }
             summary_result = openai_wrapper(
-                messages=history[1:-1] + [summary_prompt],
+                messages=history[:-1] + [summary_prompt],
                 temperature=0.1,
                 **self.api_args
             )
             summary_result = summary_result["choices"][0]["message"]["content"]
-            summary.append({
-                "role": "user",
-                "content": "Summary of previous information",
-            })
+            # summary.append({
+            #     "role": "user",
+            #     "content": "Summary of previous information",
+            # })
             summary.append({
                 "role": "assistant",
-                "content": summary_result,
+                "content": "Summary of previous information" + summary_result,
             })
             resp = openai_wrapper(
-                messages=[history[0]]+summary+[history[-1]],
+                messages=summary+[history[-1]],
                 temperature=0.1,
                 **self.api_args
             )

@@ -1,30 +1,7 @@
-INSTRUCTIONS_NORMAL = """You're an agent playing a game called The Resistance: Avalon.
+INTRODUCTION = """You're playing a game called The Resistance: Avalon.
 
 
-The Resistance: Avalon is the game of hidden loyalty. Players are either Loyal Servants of Arther fighting for Goodness and honor or aligned with the Evil ways of Mordred.
-
-
-Good wins the game by successfully completing three Quests. Evil wins if three Quests end in failure. Evil can also win by assassinating Merlin at game's end or if a Quest cannot be undertaken.
-
-
-Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day.
-
-
-During the game, you will be using the following tools to decide a specific action:
-
-
-1. vote(approval: boolean)
-You will be using this function to vote on a Team/Quest. When approval is `True`, it means you approve the Team/Quest. Otherwise, if approval is assigned `False`, it means you reject the Team/Quest.
-
-
-2. choose(player_list: list[int])
-When you become the leader who is required to build a team up, you need to pass a list of player ids to this function. They will be the members in your team.
-"""
-
-INSTRUCTIONS_ASSASSIN = """You're an agent playing a game called The Resistance: Avalon.
-
-
-The Resistance: Avalon is the game of hidden loyalty. Players are either Loyal Servants of Arther fighting for Goodness and honor or aligned with the Evil ways of Mordred.
+The Resistance: Avalon is the game of hidden loyalty. Players come from two sdies, Good and Evil.
 
 
 Good wins the game by successfully completing three Quests. Evil wins if three Quests end in failure. Evil can also win by assassinating Merlin at game's end or if a Quest cannot be undertaken.
@@ -33,19 +10,7 @@ Good wins the game by successfully completing three Quests. Evil wins if three Q
 Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day.
 
 
-During the game, you will be using the following tools to decide a specific action:
-
-
-1. vote(approval: boolean)
-You will be using this function to vote on a Team/Quest. When approval is `True`, it means you approve the Team/Quest. Otherwise, if approval is assigned `False`, it means you reject the Team/Quest.
-
-
-2. choose(player_list: list[int])
-When you become the leader who is required to build a team up, you need to pass a list of player ids to this function. They will be the members in your team.
-
-
-3. assassinate(player_id: int)
-This function should accept the player id of the person whom you think is most likely to be Merlin.
+A team will be accepted if over half of the players vote to support it. A quest will succeed only if all the players on the quest vote to support the quest.
 """
 
 ONE_SHOT_GOOD = ["Tutorial of taking actions by thinking and using tools during action phase.",
@@ -180,7 +145,7 @@ As you are playing the role of Minion of Modred in this game, here are some aspe
                         "Okay, I understand"],
     'Servant': ["""Tutorial on strategies:
 
-As you are playing the role of Loyal Servant of Arthur\'s in this game, here are some aspects you can consider when formulating strategies for making decisions.
+As you are playing the role of Servant in this game, here are some aspects you can consider when formulating strategies for making decisions.
 
 1. Identity Declaration: You can choose to reveal your true identity to inform players on the Good side. However, please remember that your primary mission is to locate your teammates and safeguard Merlin. If all the Loyal Servants of Arthur's reveal their true identities, the Evil players might easily identify who Merlin is.
 

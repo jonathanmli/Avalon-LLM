@@ -14,6 +14,8 @@ from copy import deepcopy
 import openai
 from ..tasks.avalon.utils import openai_wrapper
 
+from ..tasks.avalon.arguments import args
+
 
 class RandomAgent(Agent):
     """This agent is a random agent for avalon"""
@@ -84,56 +86,65 @@ class RandomAgent(Agent):
             print("Using Naive Strategy to Choose Quest Team...")
             # team_size = history[-1]["team_size"]
             # return str(random.sample(range(0, self.num_players), team_size))
-            return str(naive_result), summary
+            return list(naive_result), summary, list(naive_result)
         elif mode == "vote_on_team":
             # side = history[-1]["side"]
             # return str(random.choice([0, 1]))
             # return str(side)
             print("Using Naive Strategy to Vote on Team...")
-            return str(naive_result), summary
+            return naive_result, summary, naive_result
         elif mode == "vote_on_mission":
             print("Using Naive Strategy to Vote on Mission...")
-            return str(naive_result), summary
+            return naive_result, summary, naive_result
         elif mode == "assassination":
-            return str(random.randint(0, self.num_players-1)), summary
+            return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
         elif mode == "strategy":
-            return "None", summary
+            return "None", summary, "None"
         elif mode == "discuss_on_team":
+            if args.naive_summary == "full-history":
+                """
+                Summarize
+                """
+                summary_prompt = {
+                    "role": "user",
+                    "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
+                }
+                summary_result = openai_wrapper(
+                    messages=history[:-1] + [summary_prompt],
+                    temperature=0.1,
+                    **self.api_args
+                )
+                summary_result = summary_result["choices"][0]["message"]["content"]
+                summary.append({
+                    "role": "user",
+                    "content": "Summary of previous information",
+                    "mode": "summary"
+                })
+                summary.append({
+                    "role": "agent",
+                    # "content": summary_result,
+                    "content": summary_result,
+                    "mode": "summary"
+                })
+
+            elif args.naive_summary == "10-last":
+                """
+                Keep 10-last history
+                """
+                summary = history[-11:-1]
             """
-            Summarize
+            Discuss
             """
-            summary_prompt = {
-                "role": "user",
-                "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
-            }
-            summary_result = openai_wrapper(
-                messages=history[:-1] + [summary_prompt],
-                temperature=0.1,
-                **self.api_args
-            )
-            summary_result = summary_result["choices"][0]["message"]["content"]
-            summary.append({
-                "role": "user",
-                "content": "Summary of previous information",
-                "mode": "summary"
-            })
-            summary.append({
-                "role": "agent",
-                # "content": summary_result,
-                "content": summary_result,
-                "mode": "summary"
-            })
             resp = openai_wrapper(
-                messages=history,
+                messages=history[0] + summary + history[-1],
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
             result = resp
-
-            return result, summary
+            return result, summary, result
         elif mode == "system":
-            return "Okay", summary
+            return "Okay", summary, "Okay"
         elif mode == "choose_quest_team_discussion":
             resp = openai_wrapper(
                 messages=history,
@@ -143,7 +154,7 @@ class RandomAgent(Agent):
             resp = resp["choices"][0]["message"]["content"]
             result = resp
 
-            return result, summary
+            return result, summary, result
         else:
             print(mode)
             raise NotImplementedError(

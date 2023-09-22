@@ -43,9 +43,9 @@ class Session:
                 extend.append(extend_messages)
             else:
                 raise Exception("Invalid extend_messages")
-        result, summary = self.model_inference(self.history + extend)
+        result, summary, return_resp = self.model_inference(self.history + extend)
         self.history.extend(extend)
-        self.history.append({"role": "agent", "content": result})
+        self.history.append({"role": "agent", "content": str(return_resp)})
         if len(summary) > 0:
             self.history = self.history[:1] + summary
         return result

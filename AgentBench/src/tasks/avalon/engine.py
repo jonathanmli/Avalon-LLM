@@ -18,7 +18,7 @@ class AvalonConfig():
     PHASES = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
     ROLES = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
 
-    def __init__(self, num_players, seed=42, merlin = True, percival = False, morgana = False, mordred = False, oberon = False) -> None:
+    def __init__(self, num_players, merlin = True, percival = False, morgana = False, mordred = False, oberon = False) -> None:
         '''
         num_players: number of players in the game
         merlin: whether Merlin is in the game
@@ -156,7 +156,7 @@ class AvalonGameEnvironment():
         
         # if player is Merlin or evil, return all sides
         if self.roles[player] == 0 or not self.is_good[player]:
-            return list(map(int, self.is_good))
+            return self.is_good
         # otherwise return list of -1 for unknown
         else:
             return [-1 if i != player else 1 for i in range(self.num_players)]
@@ -262,7 +262,7 @@ class AvalonGameEnvironment():
     def vote_on_quest(self, votes):
         '''
         votes on quest: list, 0 for fail, 1 for pass
-        returns: (next phase, whether game is done, whether quest succeeds)
+        returns: (next phase, whether game is done, whether the quest succeeded, number of fails)
         '''
         # check if game ended or not
         if self.done:
@@ -278,8 +278,10 @@ class AvalonGameEnvironment():
 
         self.quest_votes = votes
 
+        num_fails = len(votes) - sum(votes)
+
         # if number of fails is greater to or equal to number of fails allowed, quest fails
-        if (len(votes) - sum(votes)) >= self.num_fails_for_quest[self.turn]:
+        if (num_fails) >= self.num_fails_for_quest[self.turn]:
             
             self.quest_results.append(False)
             self.turn += 1
@@ -288,10 +290,10 @@ class AvalonGameEnvironment():
             if len(self.quest_results) - sum(self.quest_results) == 3:
                 self.done = True
                 self.good_victory = False
-                return (self.phase, self.done, False)
+                return (self.phase, self.done, False, num_fails)
             else:
                 self.phase = 0
-                return (self.phase, self.done, False)
+                return (self.phase, self.done, False, num_fails)
 
         else:
             self.quest_results.append(True)
@@ -302,7 +304,7 @@ class AvalonGameEnvironment():
                 self.phase += 1
             else:
                 self.phase = 0
-            return (self.phase, self.done, True)
+            return (self.phase, self.done, True, num_fails)
         
     def get_assassin(self):
         '''

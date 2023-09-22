@@ -185,13 +185,21 @@ REVEAL_PROMPTS = {
 }
 
 CHECK_VOTE_ON_TEAM_PROMPT = """Based on the information, does the player approve the team? Please answer with the following template:
+
 Answer: {Yes|No}
 """
 
 CHECK_VOTE_ON_QUEST_PROMPT = """Based on the information, does the player support the quest? Please answer with the following template:
+
 Answer: {Yes|No}
 """
 
 CHECK_CHOOSE_TEAM_PROMPT = """Based on the information, what team does the player choose? Please answer with the following template:
+
 Answer: [player_ids]
+"""
+
+CHECK_ASSASSINATE_PROMPT = """Based on the information, which player will be assassinated? Please answer with the following template:
+
+Answer: [player_id_num]
 """

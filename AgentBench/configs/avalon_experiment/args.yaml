@@ -1,1 +1,3 @@
 test_naive: True
+team_discussion: False
+naive_summary: "10-last"

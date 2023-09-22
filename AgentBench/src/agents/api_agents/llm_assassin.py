@@ -15,7 +15,7 @@ import dataclasses
 from copy import deepcopy
 from ...tasks.avalon.api import *
 from .utils import openai_wrapper
-from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT
+from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT
 from langchain.chat_models import ChatOpenAI
 from ...task import logger
 
@@ -123,6 +123,24 @@ class OpenAIChatCompletionAssassin(Agent):
         player_list = [int(id) for id in player_list]
 
         return player_list
+    
+    def get_assassination_result(self, message):
+        answer = openai_wrapper(
+            messages=[{'role':'user', 'content':message}],
+            temperature=0,
+            **self.api_args
+        )
+
+        answer = answer["choices"][0]["message"]["content"]  
+
+        match_num = r"\d+"
+        player_id = []
+        if 'Answer:' in answer:
+            player_id = re.findall(match_num, answer) 
+
+        player_id = int(player_id[-1])
+
+        return player_id
 
     def execute_tool(self, message, history, team_size=None):
         print(message)
@@ -329,7 +347,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 action_prompt = {
                     "role": "user",
                     # "content": ZERO_SHOT_ACTION["intro"] + ZERO_SHOT_ACTION[mode] + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
-                    "content": "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
+                    "content": history[-1]['content']
                 }
                 input_messages = history[:-1] + [action_prompt]
 
@@ -346,15 +364,20 @@ class OpenAIChatCompletionAssassin(Agent):
             logger.debug(resp)
             if mode == 'system':
                 result = resp
+                return_resp = resp
             else:
                 # tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
                 # result = function_name
+                result = resp
+                return_resp = resp
                 if mode == "choose_quest_team_action":
                     result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
                 elif mode == "vote_on_team":
                     result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
                 elif mode == "vote_on_mission":
                     result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
+                elif mode == "assassination":
+                    result = self.get_assassination_result(resp + '\n\n' + CHECK_ASSASSINATE_PROMPT)
         else:
             """
             Summarize
@@ -375,7 +398,7 @@ class OpenAIChatCompletionAssassin(Agent):
             # })
             summary.append({
                 "role": "assistant",
-                "content": "Summary of previous information" + summary_result,
+                "content": "Summary of previous information:\n" + summary_result,
             })
             resp = openai_wrapper(
                 messages=summary+[history[-1]],
@@ -402,12 +425,13 @@ class OpenAIChatCompletionAssassin(Agent):
         # )
             resp = resp["choices"][0]["message"]["content"]
             result = resp
+            return_resp = resp
         print(result)
 
         time.sleep(5)
 
 
-        return str(result), summary
+        return str(result), summary, return_resp
 
         # if mode == "choose_quest_team":
         #     team_size = history[-1]["team_size"]

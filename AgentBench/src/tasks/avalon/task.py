@@ -18,6 +18,11 @@ from .prompts import *
 from .utils import *
 from src.task import logger
 
+from .arguments import args
+
+from langchain.chat_models import ChatOpenAI
+# from .utils import get_statement, get_team_result, get_vote_result
+
 T_INPUT = TypeVar('T_INPUT')
 T_OUTPUT = TypeVar('T_OUTPUT')
 T_TARGET = TypeVar('T_TARGET')
@@ -25,6 +30,9 @@ T_TARGET = TypeVar('T_TARGET')
 
 # Log some messages
 # logger.debug('This is a debug message.')
+
+if args.team_discussion:
+    print('Team Discussion!!!!!!!!!!!!')
 
 
 class player:
@@ -61,64 +69,64 @@ class player:
     def __repr__(self):
         return self.name
     
-    def execute_tool(self, message, team_size=None):
-        if self.session.name == "Random-Agent":
-            return eval(message)
+    # def execute_tool(self, message, team_size=None):
+    #     if self.session.name == "Random-Agent":
+    #         return eval(message)
 
-        lines = message.split("\n")
-        find_action = False
-        for line in lines:
-            execution_message = "Function is not executed!"
-            # if re.match(r"Action.*?:", line):
-            # find_action = True
-            function_names = re.findall(r'\w+\((?!\s*$).*\)', line)
-            function_executed = False
-            while len(function_names) != 1:
-                intermediate_output = self.session.action({
-                    "role": "user",
-                    "content": "You'are using the tools in a wrong way. Please try again.",
-                    "mode": "rectify",
-                    "seed": self.seed,
-                    "role_name": self.role_name
-                })
-                function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-            function_name = function_names[-1]
-            # for function_name in function_names:
-            while not function_executed:
-                try:
-                    print("test function name: ", function_name)
-                    result = eval(function_name)
-                    # Ensure size of teh team chosen is correct
-                    if team_size is not None:
-                        while len(result) != team_size:
-                            intermediate_output = self.session.action({
-                                "role": "user",
-                                "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}",
-                                "mode": "rectify",
-                                "seed": self.seed,
-                                "role_name": self.role_name
-                            })
-                            function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-                            function_name = function_names[-1]
+    #     lines = message.split("\n")
+    #     find_action = False
+    #     for line in lines:
+    #         execution_message = "Function is not executed!"
+    #         # if re.match(r"Action.*?:", line):
+    #         # find_action = True
+    #         function_names = re.findall(r'\w+\((?!\s*$).*\)', line)
+    #         function_executed = False
+    #         while len(function_names) != 1:
+    #             intermediate_output = self.session.action({
+    #                 "role": "user",
+    #                 "content": "You'are using the tools in a wrong way. Please try again.",
+    #                 "mode": "rectify",
+    #                 "seed": self.seed,
+    #                 "role_name": self.role_name
+    #             })
+    #             function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
+    #         function_name = function_names[-1]
+    #         # for function_name in function_names:
+    #         while not function_executed:
+    #             try:
+    #                 print("test function name: ", function_name)
+    #                 result = eval(function_name)
+    #                 # Ensure size of teh team chosen is correct
+    #                 if team_size is not None:
+    #                     while len(result) != team_size:
+    #                         intermediate_output = self.session.action({
+    #                             "role": "user",
+    #                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}",
+    #                             "mode": "rectify",
+    #                             "seed": self.seed,
+    #                             "role_name": self.role_name
+    #                         })
+    #                         function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
+    #                         function_name = function_names[-1]
 
-                            result = eval(function_name)
-                    else:
-                        assert int(result) in [0, 1]
+    #                         result = eval(function_name)
+    #                 else:
+    #                     assert int(result) in [0, 1]
 
-                    function_executed = True
-                    return result
-                except:
-                    function_names = []
-                    while len(function_names) != 1:
-                        intermediate_output = self.session.action({
-                            "role": "user",
-                            "content": "You'are using the tools in a wrong way. Please try again.",
-                            "mode": "rectify",
-                            "seed": self.seed,
-                            "role_name": self.role_name
-                        })
-                        function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-                    function_name = function_names[-1]
+    #                 function_executed = True
+    #                 return result
+    #             except:
+    #                 function_names = []
+    #                 while len(function_names) != 1:
+    #                     intermediate_output = self.session.action({
+    #                         "role": "user",
+    #                         "content": "You'are using the tools in a wrong way. Please try again.",
+    #                         "mode": "rectify",
+    #                         "seed": self.seed,
+    #                         "role_name": self.role_name
+    #                     })
+    #                     function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
+    #                 function_name = function_names[-1]
 
     def parse_result(self, message, team_size):
         print(message)
@@ -132,7 +140,8 @@ class player:
             #     # content_prompt = ' '.join(discussion_history) + ' ' + f"Action Phase. Please choose {team_size} players from player ids 0 to {self.num_players-1}"
             #     content_prompt = ' '.join(discussion_history) + ' ' + f"Please choose {team_size} players from player ids 0 to {self.num_players-1}"
             # else:
-            content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1} by using `choose` function."
+            # content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1} by using `choose` function."
+            content_prompt = f"Please choose {team_size} players from player ids 0 to {self.num_players-1} as team members."
 
         if self.strategy is not None:
             naive_result = self.strategy.propose_team(mission_id=mission_id)
@@ -151,7 +160,10 @@ class player:
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
         # return proposed_team, get_statement(proposed_team)
         if mode == "action":
-            return eval(proposed_team), None
+            if isinstance(proposed_team, list):
+                return proposed_team, None
+            else:
+                return eval(proposed_team), None
         elif mode == "discussion":
             return None, proposed_team
     
@@ -185,7 +197,10 @@ class player:
         # print(statement_history)
         # return random.choice([0, 1])
         # return self.execute_tool(vote_result)
-        return eval(vote_result)
+        if isinstance(vote_result, int):
+            return vote_result
+        else:
+            return eval(vote_result)
     
     def vote_on_mission(self, statement_history, mission_id, team, mode="statement"):
         if mode == "statement":
@@ -216,7 +231,10 @@ class player:
             statement_history.append(f"{self.name} votes {vote_result} on the mission")
         # return self.side
         # return self.execute_tool(vote_result)
-        return eval(vote_result)
+        if isinstance(vote_result, int):
+            return vote_result
+        else:
+            return eval(vote_result)
     
     def assign_side(self, side):
         sides = ['Evil', 'Good']
@@ -447,7 +465,7 @@ class Avalon(Task):
     def __init__(self, **configs):
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
-        self.avalon_config = AvalonConfig(self.num_players, self.seed)
+        self.avalon_config = AvalonConfig(self.num_players)
         self.env = AvalonGameEnvironment(self.avalon_config)
         super().__init__(**configs)
 
@@ -590,35 +608,36 @@ class Avalon(Task):
             if phase == 0:
                 discussion_history = []
                 leader = env.get_quest_leader()
-                """
-                Leader speaks
-                """
-                team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
-                logger.info(f"Please choose {env.get_team_size()} players in this round.")
+                if args.team_discussion:
+                    """
+                    Leader speaks
+                    """
+                    team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
+                    logger.info(f"Please choose {env.get_team_size()} players in this round.")
 
 
-                """
-                Discussion (sequential, once, in order for now)
-                """
-                for idx, session in enumerate(sessions):
-                    # if idx == leader:
-                    #     continue
-                    discussion = session.action({
-                        "role": "user",
-                        # "content": 'test',
-                        "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
-                        "mode": "discuss_on_team"
-                    })
-                    discussion_history.append(f"Player {idx} : " + discussion)
-                for idx, session in enumerate(sessions):
-                    session.inject({
-                        "role": "user",
-                        "content": f"Discussion has ended. Here are the contents:\nStatement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
-                    })
-                    session.inject({
-                        "role": "agent",
-                        "content": "I understand."
-                    })
+                    """
+                    Discussion (sequential, once, in order for now)
+                    """
+                    for idx, session in enumerate(sessions):
+                        # if idx == leader:
+                        #     continue
+                        discussion = session.action({
+                            "role": "user",
+                            # "content": 'test',
+                            "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
+                            "mode": "discuss_on_team"
+                        })
+                        discussion_history.append(f"Player {idx} : " + discussion)
+                    for idx, session in enumerate(sessions):
+                        session.inject({
+                            "role": "user",
+                            "content": f"Discussion has ended. Here are the contents:\nStatement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
+                        })
+                        session.inject({
+                            "role": "agent",
+                            "content": "I understand."
+                        })
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
                 """
@@ -679,9 +698,8 @@ class Avalon(Task):
                     #     "content": "I understand."
                     # })
                 print(f"Testing Observe Mission at turn {env.turn-1}...")
-                for idx, good in enumerate(env.is_good):
-                    if good and env.turn < 5:
-                        player_list[idx].strategy.observe_mission(team, env.turn-1, sum(np.array(votes) == 0))
+                for single_player in player_list:
+                    single_player.strategy.observe_mission(env.get_current_quest_team(), env.turn-1, outcome[3])
             
             # if phase is assassination phase, ask for assassination
             elif phase == 3:

@@ -29,6 +29,7 @@ def parse_args_to_assignment() -> Assigment:
     group.add_argument("--agent", type=str, required=True, help="Agent config to load")
     group.add_argument("--output", type=str, default=None, help="Output root directory")
     group.add_argument("--workers", type=int, default=None, help="Number of workers for evaluation")
+    group.add_argument("--config", type=str, default=None, help="System config to maintain all the arguments/prompts")
     args = parser.parse_args()
     
 

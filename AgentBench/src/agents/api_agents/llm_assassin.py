@@ -19,6 +19,8 @@ from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUES
 from langchain.chat_models import ChatOpenAI
 from ...task import logger
 
+from ...tasks.avalon.arguments import args
+
 ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
                     "Okay, please start.",
                     "If the instruction is \"Please choose 3 players from player ids 0 to 4.\" then use",
@@ -382,26 +384,33 @@ class OpenAIChatCompletionAssassin(Agent):
             """
             Summarize
             """
-            summary_prompt = {
-                "role": "user",
-                "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
-            }
-            summary_result = openai_wrapper(
-                messages=history[:-1] + [summary_prompt],
-                temperature=0.1,
-                **self.api_args
-            )
-            summary_result = summary_result["choices"][0]["message"]["content"]
-            # summary.append({
-            #     "role": "user",
-            #     "content": "Summary of previous information",
-            # })
-            summary.append({
-                "role": "assistant",
-                "content": "Summary of previous information:\n" + summary_result,
-            })
+            if args.agent_summary == "full-hostory":
+                summary_prompt = {
+                    "role": "user",
+                    "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
+                }
+                summary_result = openai_wrapper(
+                    messages=history[:-1] + [summary_prompt],
+                    temperature=0.1,
+                    **self.api_args
+                )
+                summary_result = summary_result["choices"][0]["message"]["content"]
+                # summary.append({
+                #     "role": "user",
+                #     "content": "Summary of previous information",
+                # })
+                summary.append({
+                    "role": "assistant",
+                    "content": "Summary of previous information:\n" + summary_result,
+                })
+            elif args.agent_summary == "10-last":
+                summary = history[-11:-1]
+            else:
+                raise NotImplementedError(
+                    "Value for `agent_summary` should be either `full-history` or `10-last`"
+                )
             resp = openai_wrapper(
-                messages=summary+[history[-1]],
+                messages=[history[0]] + summary + [history[-1]],
                 temperature=0.1,
                 **self.api_args
             )

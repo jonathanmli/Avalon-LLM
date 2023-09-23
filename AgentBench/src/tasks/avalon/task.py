@@ -20,7 +20,7 @@ from src.task import logger
 
 from .arguments import args
 
-from langchain.chat_models import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
 # from .utils import get_statement, get_team_result, get_vote_result
 
 T_INPUT = TypeVar('T_INPUT')
@@ -31,11 +31,9 @@ T_TARGET = TypeVar('T_TARGET')
 # Log some messages
 # logger.debug('This is a debug message.')
 
-if args.team_discussion:
-    print('Team Discussion!!!!!!!!!!!!')
 
 
-class player:
+class Player:
 
     def __init__(self, name, num_players, session, id, config:AvalonConfig, side=None, seed=None, **kwargs):
         self.name = name
@@ -57,10 +55,9 @@ class player:
         self.player_list = kwargs.pop("player_list")
 
         self.seed = seed
-        print("The seed is: ", self.seed)
 
         self.config = config
-        self.strategy = None
+        # self.strategy = None
 
 
     def __str__(self):
@@ -69,64 +66,6 @@ class player:
     def __repr__(self):
         return self.name
     
-    # def execute_tool(self, message, team_size=None):
-    #     if self.session.name == "Random-Agent":
-    #         return eval(message)
-
-    #     lines = message.split("\n")
-    #     find_action = False
-    #     for line in lines:
-    #         execution_message = "Function is not executed!"
-    #         # if re.match(r"Action.*?:", line):
-    #         # find_action = True
-    #         function_names = re.findall(r'\w+\((?!\s*$).*\)', line)
-    #         function_executed = False
-    #         while len(function_names) != 1:
-    #             intermediate_output = self.session.action({
-    #                 "role": "user",
-    #                 "content": "You'are using the tools in a wrong way. Please try again.",
-    #                 "mode": "rectify",
-    #                 "seed": self.seed,
-    #                 "role_name": self.role_name
-    #             })
-    #             function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-    #         function_name = function_names[-1]
-    #         # for function_name in function_names:
-    #         while not function_executed:
-    #             try:
-    #                 print("test function name: ", function_name)
-    #                 result = eval(function_name)
-    #                 # Ensure size of teh team chosen is correct
-    #                 if team_size is not None:
-    #                     while len(result) != team_size:
-    #                         intermediate_output = self.session.action({
-    #                             "role": "user",
-    #                             "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}",
-    #                             "mode": "rectify",
-    #                             "seed": self.seed,
-    #                             "role_name": self.role_name
-    #                         })
-    #                         function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-    #                         function_name = function_names[-1]
-
-    #                         result = eval(function_name)
-    #                 else:
-    #                     assert int(result) in [0, 1]
-
-    #                 function_executed = True
-    #                 return result
-    #             except:
-    #                 function_names = []
-    #                 while len(function_names) != 1:
-    #                     intermediate_output = self.session.action({
-    #                         "role": "user",
-    #                         "content": "You'are using the tools in a wrong way. Please try again.",
-    #                         "mode": "rectify",
-    #                         "seed": self.seed,
-    #                         "role_name": self.role_name
-    #                     })
-    #                     function_names = re.findall(r'\w+\((?!\s*$).*\)', intermediate_output)
-    #                 function_name = function_names[-1]
 
     def parse_result(self, message, team_size):
         print(message)
@@ -145,16 +84,19 @@ class player:
 
         if self.strategy is not None:
             naive_result = self.strategy.propose_team(mission_id=mission_id)
+        else:
+            raise RuntimeError
 
-        proposed_team = self.session.action({
-            "role": "user",
-            "content": content_prompt,
-            "team_size": team_size,
-            "mode": "choose_quest_team_" + mode,
-            "seed": self.seed,
-            "role_name": self.role_name,
-            "naive_result": naive_result
-        })
+        proposed_team = list(naive_result)
+        # proposed_team = self.session.action({
+        #     "role": "user",
+        #     "content": content_prompt,
+        #     "team_size": team_size,
+        #     "mode": "choose_quest_team_" + mode,
+        #     "seed": self.seed,
+        #     "role_name": self.role_name,
+        #     "naive_result": naive_result
+        # })
         print(proposed_team)
 
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
@@ -181,17 +123,22 @@ class player:
         
         if self.strategy is not None:
             naive_result = self.strategy.vote_on_team(mission_id=mission_id, team=team)
+        else:
+            raise RuntimeError
+        
+        print(self.role_name)
+        vote_result = naive_result
 
         print("Content Prompt: ", content_prompt)
-        vote_result = self.session.action({
-            "role": "user",
-            "content": content_prompt,
-            "side": int(self.side),
-            "mode": "vote_on_team",
-            "seed": self.seed,
-            "role_name": self.role_name,
-            "naive_result": naive_result
-        })
+        # vote_result = self.session.action({
+        #     "role": "user",
+        #     "content": content_prompt,
+        #     "side": int(self.side),
+        #     "mode": "vote_on_team",
+        #     "seed": self.seed,
+        #     "role_name": self.role_name,
+        #     "naive_result": naive_result
+        # })
         if mode == "statement":
             statement_history.append(f"Statements from {self.name}: {get_statement(vote_result)}")
         # print(statement_history)
@@ -215,16 +162,21 @@ class player:
         
         if self.strategy is not None:
             naive_result = self.strategy.vote_on_mission(mission_id=mission_id, team=team)
+        else:
+            raise RuntimeError
 
-        vote_result = self.session.action({
-            "role": "user",
-            "content": content_prompt,
-            "side": int(self.side),
-            "mode": "vote_on_mission",
-            "seed": self.seed,
-            "role_name": self.role_name,
-            "naive_result": naive_result
-        })
+        print(self.role_name)
+        vote_result = naive_result
+
+        # vote_result = self.session.action({
+        #     "role": "user",
+        #     "content": content_prompt,
+        #     "side": int(self.side),
+        #     "mode": "vote_on_mission",
+        #     "seed": self.seed,
+        #     "role_name": self.role_name,
+        #     "naive_result": naive_result
+        # })
         # if mode == "statement":
         #     statement_history.append(f"Statements from {self.name}: {get_statement(vote_result)}")
         if mode == "action":
@@ -248,21 +200,19 @@ class player:
         #     "content": "I understand."
         # })
 
-    def assign_role(self, role, role_name, sides):
+    def assign_role(self, role, role_name):
         self.role = role
         self.role_name = role_name
 
         if role_name == "Merlin":
-            self.strategy = NaiveMerlin(self.id, self.name, self.config, sides=sides,)
+            self.strategy = NaiveMerlin(self.id, self.name, self.config)
         elif role_name == "Minion":
-            self.strategy = NaiveMinion(self.id, self.name, self.config, sides=sides,)
+            self.strategy = NaiveMinion(self.id, self.name, self.config)
         elif role_name == "Assassin":
-            self.strategy = NaiveAssassin(self.id, self.name, self.config, sides=sides,)
+            self.strategy = NaiveAssassin(self.id, self.name, self.config)
         elif role_name == "Servant":
-            self.strategy = NaiveServant(self.id, self.name, self.config,)
+            self.strategy = NaiveServant(self.id, self.name, self.config)
 
-        print("Agent Sides")
-        print(self.strategy.player_sides)
 
         """
         Introduction Prompt
@@ -448,27 +398,39 @@ class player:
         #         Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
         #     "mode": "assassination"
         # })
-        assassinate_result = self.session.action({
-            "role": "user",
-            "content": f"Assassination phase. Your job is to assassinate Merlin. \
-                Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
-            "mode": "assassination",
-            "seed": self.seed,
-            "role_name": self.role_name,
-        })
+        assert isinstance(self.strategy, NaiveAssassin)
+        if self.strategy is not None:
+            naive_result = self.strategy.assassinate()
+        else:
+            raise RuntimeError
+        
+        print(self.role_name)
+        assassinate_result = naive_result
+        # assassinate_result = self.session.action({
+        #     "role": "user",
+        #     "content": f"Assassination phase. Your job is to assassinate Merlin. \
+        #         Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
+        #     "mode": "assassination",
+        #     "seed": self.seed,
+        #     "role_name": self.role_name,
+        #     "naive_result": naive_result
+        # })
         # return self.execute_tool(assassinate_result)
         # return self.parse_result(assassinate_result)
-        return eval(assassinate_result)
+        if isinstance(assassinate_result, int):
+            return assassinate_result
+        else:
+            return eval(assassinate_result)
 
 
 class Avalon(Task):
     def __init__(self, **configs):
+        super().__init__(**configs)
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
+        # random.seed(0)
+        # np.random.seed(0)
         self.avalon_config = AvalonConfig(self.num_players)
-        self.env = AvalonGameEnvironment(self.avalon_config)
-        super().__init__(**configs)
-
         self.llm_sides = []
 
     def get_current_agents():
@@ -480,11 +442,11 @@ class Avalon(Task):
         Plan A: generate data on the fly
         '''
         # data = self.env.__dict__
-        NUM_GAMES = 5
+        NUM_GAMES = 1000
         data = []
         logger.info(f"{NUM_GAMES} games in total.")
         for i in range(0, NUM_GAMES):
-            data = [i for _ in range(5)]
+            data = [0 for _ in range(5)]
         # print(data)
             info.append(DataPiece(data, None))
         # info.append(DataPiece(data, None))
@@ -494,8 +456,8 @@ class Avalon(Task):
     @property
     # TODO: find some proper metrics for avalon
     def metrics(self) -> Dict[str, Callable[[List[T_OUTPUT], List[T_TARGET]], Any]]:
-        print({"Success Rate": lambda x, y: sum(np.array(x) == np.array(self.llm_sides)) / len(x)})
-        return {"Success Rate": lambda x, y: sum(np.array(x) == np.array(self.llm_sides)) / len(x)}  # Hack the metric
+        print({"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)})
+        return {"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)}  # Hack the metric
     
     def predict_all(self, agents: List[Agent], inputs: List[T_INPUT], already_runs: List[Any]=None) -> List[T_OUTPUT]:
         print(f"Start Predicting All ...")
@@ -544,10 +506,10 @@ class Avalon(Task):
         # env = AvalonGameEnvironment(num_players)
         # print(sys.modules[__name__])
         num_players = self.num_players
-        env = self.env
-        env.reset()
-        while env.get_roles()[1][1] != "Assassin":
-            env.reset()
+        env = AvalonGameEnvironment(self.avalon_config)
+        # env.reset()
+        # while env.get_roles()[1][1] != "Assassin":
+        #     env.reset()
 
         # print("Data item: ", data_item)
 
@@ -561,9 +523,10 @@ class Avalon(Task):
             )
 
 
-        for i in range(num_players):
-            random.seed(self.seed, version=1)
-            player_list.append(player(
+        for i, (role_i, role_name, side) in enumerate(env.get_roles()):
+            # player_list.append(agents[role_i](i, f"Player {i}", config))
+                # random.seed(self.seed, version=1)
+            player_list.append(Player(
                                     name=f"Player {i}",
                                     num_players=num_players,
                                     session=sessions[i],
@@ -580,24 +543,33 @@ class Avalon(Task):
                                     player_list = env.get_roles(),
                                     seed=seeds[i]
                                     ))
+            
 
         print(env.get_roles())
 
-        
 
+        player_sides = [side for _, _, side in env.get_roles()]
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             player_list[i].assign_side(side)
-            player_list[i].assign_role(role_i, role_name, env.get_partial_sides(i))
-            print(f"Partial Sides of {role_name}: {env.get_partial_sides(i)}")
+            player_list[i].assign_role(role_i, role_name)
             logger.info(f"{player_list[i]} is {role_name}")
 
-        print("Player role: ", player_list[1].role)
-        if player_list[1].role in [6, 7]:
-            self.llm_sides.append(-1)
-        else:
-            self.llm_sides.append(1)
+            if role_i == 0 or side == 0:
+                assert player_list[i].strategy is not None
+                assert player_list[i].strategy.role == 0 or player_list[i].strategy.side == 0
+                player_list[i].strategy.see_sides(player_sides)
 
-        print("LLM Sides: ", self.llm_sides)
+        for i, (role_i, role_name, side) in enumerate(env.get_roles()):
+            print(role_i)
+            print(player_list[i].strategy.player_sides)
+
+        # print("Player role: ", player_list[1].role)
+        # if player_list[1].role in [6, 7]:
+        #     self.llm_sides.append(-1)
+        # else:
+        #     self.llm_sides.append(1)
+
+        # print("LLM Sides: ", self.llm_sides)
 
         while not env.done:
             # print phase from env
@@ -653,7 +625,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
-                votes = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, env.turn, mode="action"
+                votes = [player_list[i].vote_on_team(team=env.get_current_quest_team(), statement_history=discussion_history, mission_id=env.turn, mode="action"
                                                     ) for i in range(num_players)]
                 print(votes)
                 outcome = env.vote_on_team(votes)
@@ -671,7 +643,7 @@ class Avalon(Task):
                 discussion_history = []
                 # votes_first_round = [player_list[i].vote_on_mission(discussion_history, mode="statement"
                 #                                                     ) for i in env.get_current_quest_team()]
-                votes = [player_list[i].vote_on_mission(discussion_history, env.turn, team, mode="action"
+                votes = [player_list[i].vote_on_mission(discussion_history, env.turn, env.get_current_quest_team(), mode="action"
                                                         ) for i in env.get_current_quest_team()]
                 outcome = env.vote_on_quest(votes)
                 logger.info(f"Quest votes: {votes}, mission outcome: {outcome[2]}")
@@ -717,8 +689,9 @@ class Avalon(Task):
                 target = int(player_list[assassin].assassinate(assassin))
                 # target = int(input(f"Enter assassination target: "))
                 logger.info(f"Assassination target: {target}")
-                env.choose_assassination_target(assassin, target)
+                _, _, assassinated = env.choose_assassination_target(assassin, target)
 
+                print(f"assassinate outcome {assassinated}")
         # print whether good or evil won
         if env.good_victory:
             logger.info("Good wins!")

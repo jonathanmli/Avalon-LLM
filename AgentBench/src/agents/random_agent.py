@@ -57,7 +57,11 @@ class RandomAgent(Agent):
         # print(history)
         mode = history[-1]["mode"]
         seed = None if "seed" not in history[-1] else history[-1]["seed"]
-        naive_result = None if "naive_result" not in history[-1] else history[-1]["naive_result"]
+        if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination"]:
+            assert "naive_result" in history[-1]
+            naive_result = history[-1]["naive_result"]
+        else:
+            naive_result = ''
         history = json.loads(json.dumps(history))
         for h in history:
             h.pop("mode", None)
@@ -69,7 +73,8 @@ class RandomAgent(Agent):
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
 
-        random.seed(seed, version=1)
+        # random.seed(seed, version=1)
+
         # if role_name == "Assassin":
         #     agent = NaiveAssassin
         # elif role_name == "Merlin":
@@ -97,7 +102,8 @@ class RandomAgent(Agent):
             print("Using Naive Strategy to Vote on Mission...")
             return naive_result, summary, naive_result
         elif mode == "assassination":
-            return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
+            # return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
+            return naive_result, summary, naive_result
         elif mode == "strategy":
             return "None", summary, "None"
         elif mode == "discuss_on_team":
@@ -136,7 +142,7 @@ class RandomAgent(Agent):
             Discuss
             """
             resp = openai_wrapper(
-                messages=history[0] + summary + history[-1],
+                messages=[history[0]] + summary + [history[-1]],
                 temperature=0.1,
                 **self.api_args
             )

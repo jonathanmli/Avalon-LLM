@@ -17,10 +17,15 @@ with open(args.config, 'r') as f:
 
 parser.add_argument("--team_discussion", type=bool, default=True, help="Discuss before Team Selection")
 parser.add_argument("--test_naive", type=bool, default=False, help="All the agents are naive")
+parser.add_argument("--naive_summary", type=str, default="full-history",
+                    help="Mode for naive to summarize. Either `full-history` or `10-last`")
+parser.add_argument("--agent_summary", type=str, default="full-history",
+                    help="Mode for naive to summarize. Either `full-history` or `10-last`")
+parser.add_argument("--logging", type=str, default="DEBUG", help="Level of logging info")
 
 parser.set_defaults(**content)
 
 args = parser.parse_args()
 
-print(args.test_naive)
+print(args)
 

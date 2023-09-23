@@ -1,3 +1,16 @@
-test_naive: True
 team_discussion: False
 naive_summary: "10-last"
+agent_summary: "10-last"
+logging: "ERROR"
+
+# To test the with all naive agents, set team_discussion to False
+
+####### Passed Tests #######
+# team_discussion: False 
+# naive_summary: "10-last"
+# agent_summary: "10-last"
+############################
+# team_discussion: True 
+# naive_summary: "10-last"
+# agent_summary: "10-last"
+############################

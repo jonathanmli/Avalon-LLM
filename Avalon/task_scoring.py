@@ -15,6 +15,21 @@ class AvalonScoring():
         scores how well the believed player sides match the true player sides using cross entropy
         returns average cross entropy over all games
         '''
+        true_player_sides = np.array(true_player_sides)
+        believed_player_sides = np.where(np.array(believed_player_sides) == -1, 0.5, np.array(believed_player_sides))
+        believed_player_sides = np.where(np.array(believed_player_sides) >= 1, 0.9999, np.array(believed_player_sides))
+        believed_player_sides = np.where(np.array(believed_player_sides) <= 0, 0.0001, np.array(believed_player_sides))
+        # believed_player_sides = np.array(believed_player_sides) + 0.0001
+        print(believed_player_sides)
+
+        # believed_player_sides = believed_player_sides / np.sum(believed_player_sides, axis=-1, keepdims=True) * np.sum(true_player_sides, axis=-1, keepdims=True)
+        # true_player_sides = true_player_sides / np.sum(true_player_sides, axis=-1, keepdims=True)
+        
+
+        # print(believed_player_sides)
+        print(1 - believed_player_sides)
+        # print(true_player_sides)
+        
         return np.mean(-np.sum(true_player_sides * np.log(believed_player_sides) + (1 - true_player_sides) * np.log(1 - believed_player_sides), axis=1))
 
     def score_deception(self, other_player_sides, other_player_beliefs):
@@ -51,3 +66,17 @@ class AvalonScoring():
         scores what percentage of time the proposed team was approved when the player proposed it
         '''
         return np.mean(vote_outcome)
+    
+if __name__ == "__main__":
+    config = AvalonConfig(num_players=5)
+    scoring = AvalonScoring(config)
+
+    true_sides = [[1, 1, 0, 0, 1], [1, 0, 1, 1, 0]]
+    believed_sides = [[1, 1, 0, 0, 1], [1, 0, 1, 1, 0]]
+
+    # believed_sides = np.array(believed_sides) + 0.01
+    # # print(np.sum(believed_sides, axis=-1, keepdims=True).reshape(2, 5))
+    # believed_sides = believed_sides / np.sum(believed_sides, axis=-1, keepdims=True)
+    # print(believed_sides)
+
+    print(scoring.score_deduction(true_player_sides=true_sides, believed_player_sides=believed_sides))

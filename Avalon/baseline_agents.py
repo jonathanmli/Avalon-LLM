@@ -205,25 +205,25 @@ class NaiveServant(Agent):
         # find the maximum preference
         max_preference = max(team_to_preferences.values())
         # return a list of all teams with maximum preference
-        max_teams = [team for team, preference in team_to_preferences.items() if preference == max_preference]
+        max_teams = [frozenset(team) for team, preference in team_to_preferences.items() if preference == max_preference]
         # if there is only one team with maximum preference, return it
         if len(max_teams) == 1:
             return max_teams
         # else return list of teams of max_teams that are subsets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
         else:
             if self.largest_successful_team is not None and self.lexigraphic:
-                out = [team for team in max_teams if team.issubset(self.largest_successful_team)]
+                out = [frozenset(team) for team in max_teams if team.issubset(self.largest_successful_team)]
                 # print('subset', out)
                 if len(out) > 0:
                     return out
                 else: # return list of teams of max_teams that are supersets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
-                    out = [team for team in max_teams if self.largest_successful_team.issubset(team)]
+                    out = [frozenset(team) for team in max_teams if self.largest_successful_team.issubset(team)]
                     # print('superset', out)
                     if len(out) > 0:
                         return out
                     else:
                         return max_teams
-            return max_teams
+            return list(set(max_teams))
     
     def vote_on_team(self, mission_id, team: frozenset):
         # print('vote', self.team_preferences)

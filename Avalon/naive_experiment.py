@@ -45,6 +45,7 @@ def gunboat_experiment(agents, config: AvalonConfig, render=False):
         if phase == 0:
             leader = env.get_quest_leader()
             team = player_list[leader].propose_team(env.turn)
+            assert isinstance(team, frozenset)
             # print(type(team))
             if render:
                 print(f"{player_list[leader]} proposed team {team}")

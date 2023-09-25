@@ -18,7 +18,9 @@ from .prompts import *
 from .utils import *
 from src.task import logger
 
+import logging
 from .arguments import args
+from .task_scoring import AvalonScoring
 
 # from langchain.chat_models import ChatOpenAI
 # from .utils import get_statement, get_team_result, get_vote_result
@@ -31,6 +33,14 @@ T_TARGET = TypeVar('T_TARGET')
 # Log some messages
 # logger.debug('This is a debug message.')
 
+def initialize_prompts(prompts):
+    globals().update(prompts)
+    for prompt_name in prompts:
+        print(prompt_name)
+        print(prompts[prompt_name])
+    # for prompt_name in prompts:
+        # eval(prompt_name) = prompts[prompt_name]
+    # print(prompts["INTRODUCTION"])
 
 
 class Player:
@@ -67,9 +77,9 @@ class Player:
         return self.name
     
 
-    def parse_result(self, message, team_size):
-        print(message)
-        return eval(message)
+    # def parse_result(self, message, team_size):
+    #     print(message)
+    #     return eval(message)
     
     def propose_team(self, team_size, discussion_history, mission_id, mode):
         if mode == "discussion":
@@ -87,7 +97,7 @@ class Player:
         else:
             raise RuntimeError
 
-        proposed_team = list(naive_result)
+        proposed_team = frozenset(naive_result)
         # proposed_team = self.session.action({
         #     "role": "user",
         #     "content": content_prompt,
@@ -97,12 +107,12 @@ class Player:
         #     "role_name": self.role_name,
         #     "naive_result": naive_result
         # })
-        print(proposed_team)
+        logger.debug(proposed_team)
 
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
         # return proposed_team, get_statement(proposed_team)
         if mode == "action":
-            if isinstance(proposed_team, list):
+            if isinstance(proposed_team, frozenset):
                 return proposed_team, None
             else:
                 return eval(proposed_team), None
@@ -126,19 +136,19 @@ class Player:
         else:
             raise RuntimeError
         
-        print(self.role_name)
+        # print(self.role_name)
         vote_result = naive_result
 
-        print("Content Prompt: ", content_prompt)
-        # vote_result = self.session.action({
-        #     "role": "user",
-        #     "content": content_prompt,
-        #     "side": int(self.side),
-        #     "mode": "vote_on_team",
-        #     "seed": self.seed,
-        #     "role_name": self.role_name,
-        #     "naive_result": naive_result
-        # })
+        # print("Content Prompt: ", content_prompt)
+        vote_result = self.session.action({
+            "role": "user",
+            "content": content_prompt,
+            "side": int(self.side),
+            "mode": "vote_on_team",
+            "seed": self.seed,
+            "role_name": self.role_name,
+            "naive_result": naive_result
+        })
         if mode == "statement":
             statement_history.append(f"Statements from {self.name}: {get_statement(vote_result)}")
         # print(statement_history)
@@ -165,18 +175,18 @@ class Player:
         else:
             raise RuntimeError
 
-        print(self.role_name)
+        # print(self.role_name)
         vote_result = naive_result
 
-        # vote_result = self.session.action({
-        #     "role": "user",
-        #     "content": content_prompt,
-        #     "side": int(self.side),
-        #     "mode": "vote_on_mission",
-        #     "seed": self.seed,
-        #     "role_name": self.role_name,
-        #     "naive_result": naive_result
-        # })
+        vote_result = self.session.action({
+            "role": "user",
+            "content": content_prompt,
+            "side": int(self.side),
+            "mode": "vote_on_mission",
+            "seed": self.seed,
+            "role_name": self.role_name,
+            "naive_result": naive_result
+        })
         # if mode == "statement":
         #     statement_history.append(f"Statements from {self.name}: {get_statement(vote_result)}")
         if mode == "action":
@@ -404,7 +414,7 @@ class Player:
         else:
             raise RuntimeError
         
-        print(self.role_name)
+        # print(self.role_name)
         assassinate_result = naive_result
         # assassinate_result = self.session.action({
         #     "role": "user",
@@ -426,12 +436,19 @@ class Player:
 class Avalon(Task):
     def __init__(self, **configs):
         super().__init__(**configs)
+        logger.setLevel(eval("logging." + args.logging))
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
         # random.seed(0)
         # np.random.seed(0)
         self.avalon_config = AvalonConfig(self.num_players)
+        self.socring = AvalonScoring(self.avalon_config)
         self.llm_sides = []
+        self.ture_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
+        self.believed_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
+        initialize_prompts(args.prompts)
+
+        # self.detailed_winning_info
 
     def get_current_agents():
         pass
@@ -450,17 +467,21 @@ class Avalon(Task):
         # print(data)
             info.append(DataPiece(data, None))
         # info.append(DataPiece(data, None))
-        print(info)
+        # logger.debug(info)
         return info
     
     @property
     # TODO: find some proper metrics for avalon
     def metrics(self) -> Dict[str, Callable[[List[T_OUTPUT], List[T_TARGET]], Any]]:
-        print({"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)})
-        return {"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)}  # Hack the metric
+        # print({"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)})
+        return {"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x), 
+                "Failed by Assassination": lambda x, y: sum(np.array(x) == 0) / len(x),
+                "Failed by Mission": lambda x, y: sum(np.array(x) == -1) / len(x),
+                "Deduction Scores": lambda x, y: [self.socring.score_deduction(self.ture_player_sides[i], self.believed_player_sides[i])
+                                                  for i in range(self.num_players)]}  # Hack the metric
     
     def predict_all(self, agents: List[Agent], inputs: List[T_INPUT], already_runs: List[Any]=None) -> List[T_OUTPUT]:
-        print(f"Start Predicting All ...")
+        logger.debug(f"Start Predicting All ...")
         assert already_runs is None or len(already_runs) == len(inputs)
 
         thread_count = self.workers
@@ -545,7 +566,7 @@ class Avalon(Task):
                                     ))
             
 
-        print(env.get_roles())
+        logger.debug(env.get_roles())
 
 
         player_sides = [side for _, _, side in env.get_roles()]
@@ -559,9 +580,9 @@ class Avalon(Task):
                 assert player_list[i].strategy.role == 0 or player_list[i].strategy.side == 0
                 player_list[i].strategy.see_sides(player_sides)
 
-        for i, (role_i, role_name, side) in enumerate(env.get_roles()):
-            print(role_i)
-            print(player_list[i].strategy.player_sides)
+        # for i, (role_i, role_name, side) in enumerate(env.get_roles()):
+        #     print(role_i)
+        #     print(player_list[i].strategy.player_sides)
 
         # print("Player role: ", player_list[1].role)
         # if player_list[1].role in [6, 7]:
@@ -616,7 +637,7 @@ class Avalon(Task):
                 Choose a team
                 """
                 team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="action")
-                print(team)
+                logger.debug(team)
                 env.choose_quest_team(team, leader)
                 logger.info(f"{player_list[leader]} proposed team {team}")
 
@@ -627,7 +648,7 @@ class Avalon(Task):
                 #                                      ) for i in range(num_players)]
                 votes = [player_list[i].vote_on_team(team=env.get_current_quest_team(), statement_history=discussion_history, mission_id=env.turn, mode="action"
                                                     ) for i in range(num_players)]
-                print(votes)
+                logger.debug(votes)
                 outcome = env.vote_on_team(votes)
                 logger.info(f"Team votes: {votes}, team outcome: {outcome[2]}")
                 # for session in sessions:
@@ -669,7 +690,7 @@ class Avalon(Task):
                     #     "role": "agent",
                     #     "content": "I understand."
                     # })
-                print(f"Testing Observe Mission at turn {env.turn-1}...")
+                # print(f"Testing Observe Mission at turn {env.turn-1}...")
                 for single_player in player_list:
                     single_player.strategy.observe_mission(env.get_current_quest_team(), env.turn-1, outcome[3])
             
@@ -691,11 +712,26 @@ class Avalon(Task):
                 logger.info(f"Assassination target: {target}")
                 _, _, assassinated = env.choose_assassination_target(assassin, target)
 
-                print(f"assassinate outcome {assassinated}")
+                logger.debug(f"assassinate outcome {assassinated}")
+        
+        for idx, session in enumerate(sessions):
+            believed_player_sides = session.action({
+                "role": "user",
+                "content": "To what extend do you believe for each player to be Good, from Player 0 to Player 4? Please score from 0 to 10.",
+                "mode": "get_believed_sides",
+                "naive_result": list(map(int, player_list[idx].strategy.player_sides))
+            })
+            self.ture_player_sides[idx].append(list(map(int, env.is_good)))
+            self.believed_player_sides[idx].append(believed_player_sides)
+            # pass
+
         # print whether good or evil won
         if env.good_victory:
             logger.info("Good wins!")
             return 1
         else:
             logger.info("Evil wins!")
-            return -1
+            if sum(env.quest_results) >= 3:
+                return 0
+            else:
+                return -1

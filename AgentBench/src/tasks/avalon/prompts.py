@@ -203,3 +203,8 @@ CHECK_ASSASSINATE_PROMPT = """Based on the information, which player will be ass
 
 Answer: [player_id_num]
 """
+
+CHECK_BELIEVED_SIDES_PROMPT = r"""Based on the above information, to what extend do you believe for each player to be Good, from Player 0 to Player 4. Please summarize with the following template:
+
+Answer: {0: score_for_0, 1: score_for_1, 2: score_for_2, 3: score_for_3, 4: score_for_4}
+"""

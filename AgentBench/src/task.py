@@ -31,8 +31,6 @@ import logging
 # from .tasks.avalon import logger
 logger = logging.getLogger('avalon_logger')
 
-logger.setLevel(logging.DEBUG)
-
 # if args.logging == 'DEBUG':
 #     logger.setLevel(logging.DEBUG)
 # elif args.logging == 'ERROR':

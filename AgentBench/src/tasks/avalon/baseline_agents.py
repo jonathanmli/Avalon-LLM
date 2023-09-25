@@ -31,12 +31,12 @@ class Agent:
         return self.name
     
     def propose_team(self, mission_id):
-        return random.sample(range(0, self.config.num_players), self.config.num_players_for_quest[mission_id])
+        return frozenset(random.sample(range(0, self.config.num_players), self.config.num_players_for_quest[mission_id]))
     
-    def vote_on_team(self, mission_id, team):
+    def vote_on_team(self, mission_id, team: frozenset):
         return random.choice([0, 1])
     
-    def vote_on_mission(self, mission_id, team):
+    def vote_on_mission(self, mission_id, team: frozenset):
         return self.side
     
     def assign_side(self, side):
@@ -51,7 +51,7 @@ class Agent:
     def assignHistory(self, history):
         self.history = history
 
-    def observe_mission(self, team, mission_id, num_fails):
+    def observe_mission(self, team: frozenset, mission_id, num_fails):
         pass
 
     def assassinate(self):
@@ -62,7 +62,7 @@ class NaiveMinion(Agent):
     def __init__(self, id, name, config: AvalonConfig, side=0, role=6, sides = None):
         super().__init__(id, name, config, side, role, sides)
 
-    def vote_on_mission(self, mission_id, team):
+    def vote_on_mission(self, mission_id, team: frozenset):
         num_fails = self.config.num_fails_for_quest[mission_id]
 
         # if less than num_fails evil players on the team, vote success
@@ -77,7 +77,7 @@ class NaiveMinion(Agent):
         else:
             return 0
         
-    def vote_on_team(self, mission_id, team):
+    def vote_on_team(self, mission_id, team: frozenset):
         # approve if there are at least x evil player(s) on the team, where x is number of fails required for this mission
         num_fails = self.config.num_fails_for_quest[mission_id]
         if sum([self.player_sides[i] == 0 for i in team]) >= num_fails:
@@ -91,14 +91,14 @@ class NaiveMinion(Agent):
         evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
-        return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
+        return frozenset(random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team)
         
 class NaiveAssassin(Agent):
     
     def __init__(self, id, name, config: AvalonConfig, side=0, role=7, sides = None):
         super().__init__(id, name, config, side, role, sides)
 
-    def vote_on_mission(self, mission_id, team):
+    def vote_on_mission(self, mission_id, team: frozenset):
         num_fails = self.config.num_fails_for_quest[mission_id]
 
         # if less than num_fails evil players on the team, vote success
@@ -108,7 +108,7 @@ class NaiveAssassin(Agent):
         else:
             return 0
         
-    def vote_on_team(self, mission_id, team):
+    def vote_on_team(self, mission_id, team: frozenset):
         # approve if there are at least x evil player(s) on the team, where x is number of fails required for this mission
         num_fails = self.config.num_fails_for_quest[mission_id]
         if sum([self.player_sides[i] == 0 for i in team]) >= num_fails:
@@ -122,7 +122,7 @@ class NaiveAssassin(Agent):
         evil_team = random.sample([i for i in range(self.config.num_players) if self.player_sides[i] == 0 and i != self.id], num_fails - 1) + [self.id]
 
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
-        return random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team
+        return frozenset(random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team)
         
     
 class NaiveMerlin(Agent):
@@ -130,7 +130,7 @@ class NaiveMerlin(Agent):
     def __init__(self, id, name, config: AvalonConfig, side=1, role=0, sides = None):
         super().__init__(id, name, config, side, role, sides)
     
-    def vote_on_team(self, mission_id, team):
+    def vote_on_team(self, mission_id, team: frozenset):
         # approve if there are no evil players on the team
         if any([self.player_sides[i] == 0 for i in team]):
             return 0
@@ -139,7 +139,7 @@ class NaiveMerlin(Agent):
         
     def propose_team(self, mission_id):
         # propose a random team with all good players that includes Merlin
-        return random.sample([i for i in range(self.config.num_players) if self.player_sides[i] != 0 and i != self.id], self.config.num_players_for_quest[mission_id] - 1) + [self.id]
+        return frozenset(random.sample([i for i in range(self.config.num_players) if self.player_sides[i] != 0 and i != self.id], self.config.num_players_for_quest[mission_id] - 1) + [self.id])
 
 class NaiveServant(Agent):
 
@@ -181,8 +181,8 @@ class NaiveServant(Agent):
         generates preferences across mission teams specified by mission_id
         '''
         team_size = self.config.num_players_for_quest[mission_id]
-        # generate list of all possible teams of size team_size, where team should be a list of player ids
-        teams = list(itertools.combinations(range(self.config.num_players), team_size))
+        # generate list of all possible teams of size team_size, where team should be a set of player ids
+        teams = [frozenset(team) for team in itertools.combinations(range(self.config.num_players), team_size)]
 
         # maintain a list of preferences for each team, and set all preferences to 0
         team_preferences = [0] * len(teams)
@@ -212,12 +212,12 @@ class NaiveServant(Agent):
         # else return list of teams of max_teams that are subsets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
         else:
             if self.largest_successful_team is not None and self.lexigraphic:
-                out = [team for team in max_teams if set(team).issubset(set(self.largest_successful_team))]
+                out = [team for team in max_teams if team.issubset(self.largest_successful_team)]
                 # print('subset', out)
                 if len(out) > 0:
                     return out
                 else: # return list of teams of max_teams that are supersets of self.largest_successful_team if it is not None and non-empty, otherwise return max_teams
-                    out = [team for team in max_teams if set(self.largest_successful_team).issubset(set(team))]
+                    out = [team for team in max_teams if self.largest_successful_team.issubset(team)]
                     # print('superset', out)
                     if len(out) > 0:
                         return out
@@ -225,15 +225,17 @@ class NaiveServant(Agent):
                         return max_teams
             return max_teams
     
-    def vote_on_team(self, mission_id, team):
+    def vote_on_team(self, mission_id, team: frozenset):
+        # print('vote', self.team_preferences)
         # if team is in most preferred teams, approve, otherwise reject
         return 1 if team in self.find_most_prefered_teams(self.team_preferences) else 0
     
     def propose_team(self, mission_id):
         # propose random team in most preferred teams
+        # print('propose', self.team_preferences)
         return random.choice(self.find_most_prefered_teams(self.team_preferences))
     
-    def observe_mission(self, team, mission_id, num_fails):
+    def observe_mission(self, team: frozenset, mission_id, num_fails):
         # if mission succeeded, update largest_successful_team
         if num_fails == 0:
             if self.largest_successful_team is None or len(team) > len(self.largest_successful_team):

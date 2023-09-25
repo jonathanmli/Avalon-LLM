@@ -57,7 +57,8 @@ class RandomAgent(Agent):
         # print(history)
         mode = history[-1]["mode"]
         seed = None if "seed" not in history[-1] else history[-1]["seed"]
-        if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination"]:
+        # TODO: should add the mode name here when using naive results
+        if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
             assert "naive_result" in history[-1]
             naive_result = history[-1]["naive_result"]
         else:
@@ -91,21 +92,26 @@ class RandomAgent(Agent):
             print("Using Naive Strategy to Choose Quest Team...")
             # team_size = history[-1]["team_size"]
             # return str(random.sample(range(0, self.num_players), team_size))
-            return list(naive_result), summary, list(naive_result)
+            return frozenset(naive_result), summary, frozenset(naive_result)
+        
         elif mode == "vote_on_team":
             # side = history[-1]["side"]
             # return str(random.choice([0, 1]))
             # return str(side)
-            print("Using Naive Strategy to Vote on Team...")
+            # print("Using Naive Strategy to Vote on Team...")
             return naive_result, summary, naive_result
+        
         elif mode == "vote_on_mission":
-            print("Using Naive Strategy to Vote on Mission...")
+            # print("Using Naive Strategy to Vote on Mission...")
             return naive_result, summary, naive_result
+        
         elif mode == "assassination":
             # return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
             return naive_result, summary, naive_result
+        
         elif mode == "strategy":
             return "None", summary, "None"
+        
         elif mode == "discuss_on_team":
             if args.naive_summary == "full-history":
                 """
@@ -149,8 +155,10 @@ class RandomAgent(Agent):
             resp = resp["choices"][0]["message"]["content"]
             result = resp
             return result, summary, result
+        
         elif mode == "system":
             return "Okay", summary, "Okay"
+        
         elif mode == "choose_quest_team_discussion":
             resp = openai_wrapper(
                 messages=history,
@@ -161,8 +169,10 @@ class RandomAgent(Agent):
             result = resp
 
             return result, summary, result
+        elif mode == "get_believed_sides":
+            return naive_result, summary, naive_result
+
         else:
-            print(mode)
             raise NotImplementedError(
-                "There should not be other situations."
+                f"There should not be other situations: {mode}."
             )

@@ -179,7 +179,7 @@ class AvalonGameEnvironment():
         '''
         return self.num_players_for_quest[self.turn]
     
-    def choose_quest_team(self, team, leader):
+    def choose_quest_team(self, team: frozenset, leader):
         '''
         chooses quest team
         team: list of players on team

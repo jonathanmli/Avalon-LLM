@@ -17,6 +17,7 @@ from ...tasks.avalon.api import *
 from .utils import openai_wrapper
 from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT
 from langchain.chat_models import ChatOpenAI
+import numpy as np
 from ...task import logger
 
 from ...tasks.avalon.arguments import args
@@ -143,104 +144,111 @@ class OpenAIChatCompletionAssassin(Agent):
         player_id = int(player_id[-1])
 
         return player_id
+    
+    def get_believed_player_sides(self, message):
+        answer = openai_wrapper(
+            message=[{'role':'user', 'content':message}],
+            temperature=0,
+            **self.api_args
+        )
 
-    def execute_tool(self, message, history, team_size=None):
-        print(message)
-        # lines = message.split("\n")
-        find_action = False
-        # for line in lines:
-        execution_message = "Function is not executed!"
-        # if re.match(r"Action.*?:", line):
-        # find_action = True
-        function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', message)
-        print(function_names)
-        function_executed = False
-        wrapped_message = {
-            "role": "assistant",
-            "content": message
-        }
-        while len(function_names) < 1:
-            logger.warning("Funciton not Found. Please output the function to take actions.")
-            rectify_message = {
-                "role": "user",
-                "content": "Funciton not Found. Please output the function to take actions."
-            }
-            rectify_result = openai_wrapper(
-                            messages=history + [wrapped_message] + [rectify_message],
-                            temperature=0.1,
-                            **self.api_args
-            )
-            time.sleep(5)
-            rectify_result = rectify_result["choices"][0]["message"]["content"]
-            print("Rectify result")
-            print(rectify_result)
-            function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
-        if len(function_names) > 0 and len(set(function_names)) > 1:
-            logger.warning("Generating more than one action!")
-        function_name = function_names[-1]
-        # for function_name in function_names:
-        while not function_executed:
-            try:
-                logger.info("test function name: " + str(function_name))
-                result = eval(function_name)
-                # Ensure size of the team chosen is correct
-                if team_size is not None:
-                    while len(result) != team_size:
-                        logger.warning(f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}")
-                        rectify_message = {
-                            "role": "user",
-                            "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
-                        }
-                        rectify_result = openai_wrapper(
-                                        messages=history + [wrapped_message] + [rectify_message],
-                                        temperature=0.1,
-                                        **self.api_args
-                        )
-                        rectify_result = rectify_result["choices"][0]["message"]["content"]
-                        logger.info("Rectify Results:")
-                        logger.info(str(rectify_result))
-                        function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
-                        function_name = function_names[-1]
-                        time.sleep(5)
+    # def execute_tool(self, message, history, team_size=None):
+    #     print(message)
+    #     # lines = message.split("\n")
+    #     find_action = False
+    #     # for line in lines:
+    #     execution_message = "Function is not executed!"
+    #     # if re.match(r"Action.*?:", line):
+    #     # find_action = True
+    #     function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', message)
+    #     print(function_names)
+    #     function_executed = False
+    #     wrapped_message = {
+    #         "role": "assistant",
+    #         "content": message
+    #     }
+    #     while len(function_names) < 1:
+    #         logger.warning("Funciton not Found. Please output the function to take actions.")
+    #         rectify_message = {
+    #             "role": "user",
+    #             "content": "Funciton not Found. Please output the function to take actions."
+    #         }
+    #         rectify_result = openai_wrapper(
+    #                         messages=history + [wrapped_message] + [rectify_message],
+    #                         temperature=0.1,
+    #                         **self.api_args
+    #         )
+    #         time.sleep(5)
+    #         rectify_result = rectify_result["choices"][0]["message"]["content"]
+    #         print("Rectify result")
+    #         print(rectify_result)
+    #         function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
+    #     if len(function_names) > 0 and len(set(function_names)) > 1:
+    #         logger.warning("Generating more than one action!")
+    #     function_name = function_names[-1]
+    #     # for function_name in function_names:
+    #     while not function_executed:
+    #         try:
+    #             logger.debug("test function name: " + str(function_name))
+    #             result = eval(function_name)
+    #             # Ensure size of the team chosen is correct
+    #             if team_size is not None:
+    #                 while len(result) != team_size:
+    #                     logger.warning(f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}")
+    #                     rectify_message = {
+    #                         "role": "user",
+    #                         "content": f"You'are choosing a team with the wrong size. Please choose the team again using the tool. The proper size of team should be {team_size}"
+    #                     }
+    #                     rectify_result = openai_wrapper(
+    #                                     messages=history + [wrapped_message] + [rectify_message],
+    #                                     temperature=0.1,
+    #                                     **self.api_args
+    #                     )
+    #                     rectify_result = rectify_result["choices"][0]["message"]["content"]
+    #                     logger.debug("Rectify Results:")
+    #                     logger.debug(str(rectify_result))
+    #                     function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
+    #                     function_name = function_names[-1]
+    #                     time.sleep(5)
 
-                        result = eval(function_name)
-                elif "assassinate" in function_name:
-                    print("Result type: ", type(result))
-                    assert int(result) in [0, 1, 2, 3, 4]  # Hardcode the number of players
-                else:
-                    assert int(result) in [0, 1]
+    #                     result = eval(function_name)
+    #             elif "assassinate" in function_name:
+    #                 print("Result type: ", type(result))
+    #                 assert int(result) in [0, 1, 2, 3, 4]  # Hardcode the number of players
+    #             else:
+    #                 assert int(result) in [0, 1]
 
-                function_executed = True
-                return result, function_name
-            except Exception as e:
-                logger.warning(str(e))
-                function_names = []
-                logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
-                while len(function_names) != 1:
-                    rectify_message = {
-                        "role": "user",
-                        "content": "You are using the tools in a wrong way. Please strictly follow the tutorial."
-                    }
-                    rectify_result = openai_wrapper(
-                                    messages=history + [wrapped_message] + [rectify_message],
-                                    temperature=0.1,
-                                    **self.api_args
-                    )
-                    time.sleep(5)
-                    rectify_result = rectify_result["choices"][0]["message"]["content"]
-                    logger.info("Rectify Results:")
-                    logger.info(str(rectify_result))
-                    function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
-                function_name = function_names[-1]
-                return result, function_name
+    #             function_executed = True
+    #             return result, function_name
+    #         except Exception as e:
+    #             logger.warning(str(e))
+    #             function_names = []
+    #             logger.warning("You are using the tools in a wrong way. Please strictly follow the tutorial.")
+    #             while len(function_names) != 1:
+    #                 rectify_message = {
+    #                     "role": "user",
+    #                     "content": "You are using the tools in a wrong way. Please strictly follow the tutorial."
+    #                 }
+    #                 rectify_result = openai_wrapper(
+    #                                 messages=history + [wrapped_message] + [rectify_message],
+    #                                 temperature=0.1,
+    #                                 **self.api_args
+    #                 )
+    #                 time.sleep(5)
+    #                 rectify_result = rectify_result["choices"][0]["message"]["content"]
+    #                 logger.debug("Rectify Results:")
+    #                 logger.debug(str(rectify_result))
+    #                 function_names = re.findall(r'(?:vote\(True\)|vote\(False\))|(?:choose\(\[(?:\d+(?:, \d+)*)\]\))|(?:assassinate\((?:\d+)\))', rectify_result)
+    #             function_name = function_names[-1]
+    #             return result, function_name
 
 
     def inference(self, history: List[dict]) -> str:
         """
         Summarize-then-action
         """
-        logger.debug("Current History:")
-        logger.debug(str(history))
+        logger.info("Current History:")
+        logger.info(str(history))
         mode = history[-1]["mode"]
         role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
@@ -278,7 +286,7 @@ class OpenAIChatCompletionAssassin(Agent):
 
             
         summary = []
-        logger.info("Mode: " + str(mode))
+        logger.debug("Mode: " + str(mode))
         if mode != "discuss_on_team" and mode != "choose_quest_team_discussion":
             # system_prompts = []
             # if role_name == "Assassin":
@@ -356,14 +364,14 @@ class OpenAIChatCompletionAssassin(Agent):
             # print(system_prompts)
             # print(action_prompt)
 
-            logger.info("!!!Input message: " + str(input_messages))
+            logger.debug("!!!Input message: " + str(input_messages))
             resp = openai_wrapper(
                 messages=input_messages,
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
-            logger.debug(resp)
+            logger.info(resp)
             if mode == 'system':
                 result = resp
                 return_resp = resp
@@ -380,6 +388,8 @@ class OpenAIChatCompletionAssassin(Agent):
                     result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
                 elif mode == "assassination":
                     result = self.get_assassination_result(resp + '\n\n' + CHECK_ASSASSINATE_PROMPT)
+                elif mode == "get_believed_sides":
+                    result = np.zeros(5).tolist()
         else:
             """
             Summarize

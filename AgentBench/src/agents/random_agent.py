@@ -15,6 +15,7 @@ import openai
 from ..tasks.avalon.utils import openai_wrapper
 
 from ..tasks.avalon.arguments import args
+from ..task import logger
 
 
 class RandomAgent(Agent):
@@ -25,6 +26,7 @@ class RandomAgent(Agent):
         
     def __init__(self, api_args=None, num_players=None, **config):
         self.name = config.pop("name")
+        self.player_id = config.pop("id")
         self.num_players = num_players
         if not api_args:
             api_args = {}
@@ -58,11 +60,12 @@ class RandomAgent(Agent):
         mode = history[-1]["mode"]
         seed = None if "seed" not in history[-1] else history[-1]["seed"]
         # TODO: should add the mode name here when using naive results
-        if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
-            assert "naive_result" in history[-1]
-            naive_result = history[-1]["naive_result"]
-        else:
-            naive_result = ''
+        # if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
+        #     assert "naive_result" in history[-1]
+        #     naive_result = history[-1]["naive_result"]
+        # else:
+        #     naive_result = ''
+        naive_result = '' if "naive_result" not in history[-1] else history[-1]["naive_result"]
         history = json.loads(json.dumps(history))
         for h in history:
             h.pop("mode", None)
@@ -74,7 +77,7 @@ class RandomAgent(Agent):
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
 
-        # random.seed(seed, version=1)
+        random.seed(seed, version=1)
 
         # if role_name == "Assassin":
         #     agent = NaiveAssassin
@@ -92,37 +95,33 @@ class RandomAgent(Agent):
             print("Using Naive Strategy to Choose Quest Team...")
             # team_size = history[-1]["team_size"]
             # return str(random.sample(range(0, self.num_players), team_size))
-            return frozenset(naive_result), summary, frozenset(naive_result)
+            return frozenset(naive_result), summary, frozenset(naive_result), self.player_id
         
         elif mode == "vote_on_team":
             # side = history[-1]["side"]
             # return str(random.choice([0, 1]))
             # return str(side)
             # print("Using Naive Strategy to Vote on Team...")
-            return naive_result, summary, naive_result
+            return naive_result, summary, naive_result, self.player_id
         
         elif mode == "vote_on_mission":
             # print("Using Naive Strategy to Vote on Mission...")
-            return naive_result, summary, naive_result
+            return naive_result, summary, naive_result, self.player_id
         
         elif mode == "assassination":
             # return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
-            return naive_result, summary, naive_result
+            return naive_result, summary, naive_result, self.player_id
         
         elif mode == "strategy":
-            return "None", summary, "None"
+            return "None", summary, "None", self.player_id
         
-        elif mode == "discuss_on_team":
+        elif mode == "summarize":
             if args.naive_summary == "full-history":
                 """
                 Summarize
                 """
-                summary_prompt = {
-                    "role": "user",
-                    "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
-                }
                 summary_result = openai_wrapper(
-                    messages=history[:-1] + [summary_prompt],
+                    messages=history,
                     temperature=0.1,
                     **self.api_args
                 )
@@ -138,26 +137,32 @@ class RandomAgent(Agent):
                     "content": summary_result,
                     "mode": "summary"
                 })
+                # logger.info("Summary of previous information:\n" + str(summary_result))
 
             elif args.naive_summary == "10-last":
                 """
                 Keep 10-last history
                 """
                 summary = history[-11:-1]
+                # logger.info("Summary of previous information:\n" + str(summary))
+
+            return summary, summary, summary, self.player_id
+        
+        elif mode == "discuss_on_team":
             """
             Discuss
             """
             resp = openai_wrapper(
-                messages=[history[0]] + summary + [history[-1]],
+                messages=history,
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
             result = resp
-            return result, summary, result
+            return result, summary, result, self.player_id
         
         elif mode == "system":
-            return "Okay", summary, "Okay"
+            return "Okay", summary, "Okay", self.player_id
         
         elif mode == "choose_quest_team_discussion":
             resp = openai_wrapper(
@@ -168,9 +173,9 @@ class RandomAgent(Agent):
             resp = resp["choices"][0]["message"]["content"]
             result = resp
 
-            return result, summary, result
+            return result, summary, result, self.player_id
         elif mode == "get_believed_sides":
-            return naive_result, summary, naive_result
+            return naive_result, summary, naive_result, self.player_id
 
         else:
             raise NotImplementedError(

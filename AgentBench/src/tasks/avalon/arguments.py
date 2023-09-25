@@ -1,5 +1,6 @@
 import argparse
 import yaml
+from ...logger import logger
 
 parser = argparse.ArgumentParser(description="Argument Parser")
 

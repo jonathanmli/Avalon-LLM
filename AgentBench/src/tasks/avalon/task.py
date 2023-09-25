@@ -19,7 +19,7 @@ from .utils import *
 from src.task import logger
 
 import logging
-from .arguments import args
+from .arguments import args, content
 from .task_scoring import AvalonScoring
 
 # from langchain.chat_models import ChatOpenAI
@@ -107,7 +107,7 @@ class Player:
         #     "role_name": self.role_name,
         #     "naive_result": naive_result
         # })
-        logger.debug(proposed_team)
+        # logger.debug(proposed_team)
 
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
         # return proposed_team, get_statement(proposed_team)
@@ -236,102 +236,11 @@ class Player:
             "content": content_prompt + '\n' + identity_prompt,
             "mode": "system",
         })
-        # self.session.inject({
-        #     "role": "user",
-        #     "content": 
-        # })
-        # self.session.inject({
-        #     "role": "agent",
-        #     "content": "I understand."
-        # })
-        # self.session.inject({
-        #     "role": "user",
-        #     "content": INSTRUCTIONS
-        # })
-        # self.session.inject({
-        #     "role": "agent",
-        #     "content": "I understand."
-        # })
-        # self.session.inject({
-        #     "role": "user",
-        #     "content": f"There are {self.num_players} players. {self.num_good} players are good, including {int(self.merlin)} Merlin, {int(self.percival)} Percival, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, including {int(self.morgana)} Morgana, {int(self.mordred)} Mordred, {int(self.oberon)} Oberon, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion(s) of Mordred."
-        # })
-        # self.session.inject({
-        #     "role": "agent",
-        #     "content": "I understand, please start."
-        # })
+
         """
         One-shot Prompts
         """
-        # if role_name == "Assassin":
-        #     for i, prompt in enumerate(ONE_SHOT_ASSASSIN_NO_THOUGHT):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
-        #     for i, prompt in enumerate(ONE_SHOT_ASSASSIN_DISCUSSION):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
-        # elif role_name in ["Merlin", "Loyal Servant of Arthur's"]:
-        #     for i, prompt in enumerate(ONE_SHOT_GOOD):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
-        #     for i, prompt in enumerate(ONE_SHOT_GOOD_DISCUSSION):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
-        # elif role_name in ["Minion of Modred"]:
-        #     for i, prompt in enumerate(ONE_SHOT_EVIL):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
-        #     for i, prompt in enumerate(ONE_SHOT_EVIL_DISCUSSION):
-        #         if i % 2 == 0:
-        #             self.session.inject({
-        #                 "role": "user",
-        #                 "content": prompt
-        #             })
-        #         else:
-        #             self.session.inject({
-        #                 "role": "agent",
-        #                 "content": prompt
-        #             })
+
 
         """
         Tutorial on strategies
@@ -437,11 +346,25 @@ class Avalon(Task):
     def __init__(self, **configs):
         super().__init__(**configs)
         logger.setLevel(eval("logging." + args.logging))
+        # for item in args:
+        #     if item != "prompt":
+        #         logger.info(str(item) + '\n')
+        setups = '\nSetups:\n'
+        for item in content:
+            if item != 'prompts':
+                setups += str(item) + ": " + str(content[item]) + '\n'
+
+        logger.debug("="*100)
+        l = " New Experiment! "
+        logger.debug("="*((100-len(l))//2) + l + "="*(100-(100-len(l))//2 - len(l)))
+        logger.debug("="*100)
+        logger.info(setups)
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
         # random.seed(0)
         # np.random.seed(0)
         self.avalon_config = AvalonConfig(self.num_players)
+        self.env = AvalonGameEnvironment(self.avalon_config)
         self.socring = AvalonScoring(self.avalon_config)
         self.llm_sides = []
         self.ture_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
@@ -459,7 +382,7 @@ class Avalon(Task):
         Plan A: generate data on the fly
         '''
         # data = self.env.__dict__
-        NUM_GAMES = 1000
+        NUM_GAMES = 1
         data = []
         logger.info(f"{NUM_GAMES} games in total.")
         for i in range(0, NUM_GAMES):
@@ -475,8 +398,8 @@ class Avalon(Task):
     def metrics(self) -> Dict[str, Callable[[List[T_OUTPUT], List[T_TARGET]], Any]]:
         # print({"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x)})
         return {"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x), 
-                "Failed by Assassination": lambda x, y: sum(np.array(x) == 0) / len(x),
-                "Failed by Mission": lambda x, y: sum(np.array(x) == -1) / len(x),
+                "Failure by Assassination": lambda x, y: sum(np.array(x) == 0) / len(x),
+                "Failure by Mission": lambda x, y: sum(np.array(x) == -1) / len(x),
                 "Deduction Scores": lambda x, y: [self.socring.score_deduction(self.ture_player_sides[i], self.believed_player_sides[i])
                                                   for i in range(self.num_players)]}  # Hack the metric
     
@@ -526,11 +449,15 @@ class Avalon(Task):
         # num_players = int(input("Enter number of players: "))
         # env = AvalonGameEnvironment(num_players)
         # print(sys.modules[__name__])
+        env = self.env
+        logger.debug("-"*100)
+        l = " New Game! "
+        logger.debug("-"*((100-len(l))//2) + l + "-"*(100-(100-len(l))//2 - len(l)))
+        logger.debug("-"*100)
         num_players = self.num_players
-        env = AvalonGameEnvironment(self.avalon_config)
         # env.reset()
-        # while env.get_roles()[1][1] != "Assassin":
-        #     env.reset()
+        while env.get_roles()[0][1] != "Assassin":
+            env.reset()
 
         # print("Data item: ", data_item)
 
@@ -573,7 +500,7 @@ class Avalon(Task):
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             player_list[i].assign_side(side)
             player_list[i].assign_role(role_i, role_name)
-            logger.info(f"{player_list[i]} is {role_name}")
+            logger.debug(f"{player_list[i]} is {role_name}")
 
             if role_i == 0 or side == 0:
                 assert player_list[i].strategy is not None
@@ -595,51 +522,66 @@ class Avalon(Task):
         while not env.done:
             # print phase from env
             phase = env.get_phase()[0]
-            logger.info(env.get_phase()[1])
+            logger.debug("_"*50)
+            logger.debug(env.get_phase()[1] + ' ' + f"(Mission {env.turn}, Round {env.round})")
+            # logger.debug("-"*50)
             
             # if phase is team selection phase, ask for team
             if phase == 0:
                 discussion_history = []
                 leader = env.get_quest_leader()
-                if args.team_discussion:
-                    """
-                    Leader speaks
-                    """
-                    team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
-                    logger.info(f"Please choose {env.get_team_size()} players in this round.")
+                """
+                Leader speaks & Discussion & Summarize
+                """
+                if args.team_discussion or args.summarize:
+                    if args.team_discussion:
+                        """
+                        Leader speaks
+                        """
+                        team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
+                        logger.debug(f"Please choose {env.get_team_size()} players in this round.")
 
-
                     """
-                    Discussion (sequential, once, in order for now)
+                    Discussion (sequential, once, in order for now) and Summarize
                     """
                     for idx, session in enumerate(sessions):
+                        if args.summarize:
+                            summary = session.action({
+                                "role": "user",
+                                "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game.",
+                                "mode": "summarize"
+                            })
+                            # logger.info()
+                            # logger.info(f"History after summarization of Player {idx}\n" + parse_summary(summary))
                         # if idx == leader:
                         #     continue
-                        discussion = session.action({
-                            "role": "user",
-                            # "content": 'test',
-                            "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
-                            "mode": "discuss_on_team"
-                        })
-                        discussion_history.append(f"Player {idx} : " + discussion)
-                    for idx, session in enumerate(sessions):
-                        session.inject({
-                            "role": "user",
-                            "content": f"Discussion has ended. Here are the contents:\nStatement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
-                        })
-                        session.inject({
-                            "role": "agent",
-                            "content": "I understand."
-                        })
+                        if args.team_discussion:
+                            discussion = session.action({
+                                "role": "user",
+                                # "content": 'test',
+                                "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
+                                "mode": "discuss_on_team"
+                            })
+                            discussion_history.append(f"Player {idx} : " + discussion)
+                    if args.team_discussion:
+                        for idx, session in enumerate(sessions):
+                            session.inject({
+                                "role": "user",
+                                "content": f"Discussion has ended. Here are the contents:\nStatement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}"
+                            })
+                            session.inject({
+                                "role": "agent",
+                                "content": "I understand."
+                            })
                 # votes_first_round = [player_list[i].vote_on_team(env.get_current_quest_team(), discussion_history, mode="statement"
                 #                                      ) for i in range(num_players)]
                 """
                 Choose a team
                 """
                 team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="action")
-                logger.debug(team)
+                # logger.debug(team)
                 env.choose_quest_team(team, leader)
-                logger.info(f"{player_list[leader]} proposed team {team}")
+                logger.debug(f"{player_list[leader]} proposed team {team}")
 
             # if phase is team voting phase, ask for votes
             elif phase == 1:
@@ -648,7 +590,7 @@ class Avalon(Task):
                 #                                      ) for i in range(num_players)]
                 votes = [player_list[i].vote_on_team(team=env.get_current_quest_team(), statement_history=discussion_history, mission_id=env.turn, mode="action"
                                                     ) for i in range(num_players)]
-                logger.debug(votes)
+                # logger.debug(votes)
                 outcome = env.vote_on_team(votes)
                 logger.info(f"Team votes: {votes}, team outcome: {outcome[2]}")
                 # for session in sessions:

@@ -15,6 +15,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, Dict, Callable
 
+from .logger import logger
+from .utils import parse_result
+
 
 class SessionExeption(Exception):
     pass
@@ -43,11 +46,13 @@ class Session:
                 extend.append(extend_messages)
             else:
                 raise Exception("Invalid extend_messages")
-        result, summary, return_resp = self.model_inference(self.history + extend)
+        result, summary, return_resp, player_id = self.model_inference(self.history + extend)
         self.history.extend(extend)
         self.history.append({"role": "agent", "content": str(return_resp)})
         if len(summary) > 0:
             self.history = self.history[:1] + summary
+            logger.info(f"History after summarization of Player {player_id}\n" + parse_result(self.history))
+        logger.info(f"Output of Player {player_id}\n" + parse_result(return_resp))
         return result
     
     def _calc_segments(self, msg: str):

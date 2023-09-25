@@ -75,7 +75,6 @@ def get_team_result(message):
     return player_list
 
 
-
 if __name__ == "__main__":
     # # Test Acc of 100 runs: 1.0
     # for _ in tqdm(range(100)):

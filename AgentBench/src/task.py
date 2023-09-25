@@ -26,29 +26,31 @@ import requests
 from .agent import Agent, Session
 from .utils import serialize
 
-import logging
-# from .tasks.avalon.arguments import args
-# from .tasks.avalon import logger
-logger = logging.getLogger('avalon_logger')
+from .logger import logger
 
-# if args.logging == 'DEBUG':
-#     logger.setLevel(logging.DEBUG)
-# elif args.logging == 'ERROR':
-#     logger.setLevel(logging.ERROR)
-# else:
-#     raise NotImplemented(
-#         "Unknown logging level!!"
-#     )
+# import logging
+# # from .tasks.avalon.arguments import args
+# # from .tasks.avalon import logger
+# logger = logging.getLogger('avalon_logger')
 
-# Create a file handler
-file_handler = logging.FileHandler('./src/tasks/avalon/logs/example.log')
+# # if args.logging == 'DEBUG':
+# #     logger.setLevel(logging.DEBUG)
+# # elif args.logging == 'ERROR':
+# #     logger.setLevel(logging.ERROR)
+# # else:
+# #     raise NotImplemented(
+# #         "Unknown logging level!!"
+# #     )
 
-# Create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
+# # Create a file handler
+# file_handler = logging.FileHandler('./src/tasks/avalon/logs/example.log')
 
-# Add the file handler to the logger
-logger.addHandler(file_handler)
+# # Create a logging format
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# file_handler.setFormatter(formatter)
+
+# # Add the file handler to the logger
+# logger.addHandler(file_handler)
 
 
 T_INPUT = TypeVar('T_INPUT')

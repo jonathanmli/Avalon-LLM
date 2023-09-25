@@ -7,6 +7,24 @@ import numpy as np
 
 # from SwissArmyTransformer import mpu, get_tokenizer
 
+def parse_result(result):
+    parsed_result = '\n'
+    if isinstance(result, list):
+        for result_item in result:
+            if isinstance(result_item, dict):
+                for result_sub_item in result_item:
+                    parsed_result += str(result_item[result_sub_item]) + '\n'
+                parsed_result += "-"*50 + '\n'
+            elif isinstance(result_item, str):
+                parsed_result += result_item + '\n'
+            else:
+                parsed_result += str(result_item) + '\n'
+    elif isinstance(result, str):
+        parsed_result += result
+    else:
+        parsed_result += str(result)
+
+    return parsed_result
 
 class JsonEncoder(json.JSONEncoder):
     """Convert numpy classes to JSON serializable objects."""

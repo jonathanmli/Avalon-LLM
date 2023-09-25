@@ -20,14 +20,14 @@ class AvalonScoring():
         believed_player_sides = np.where(np.array(believed_player_sides) >= 1, 0.9999, np.array(believed_player_sides))
         believed_player_sides = np.where(np.array(believed_player_sides) <= 0, 0.0001, np.array(believed_player_sides))
         # believed_player_sides = np.array(believed_player_sides) + 0.0001
-        print(believed_player_sides)
+        # print(believed_player_sides)
 
         # believed_player_sides = believed_player_sides / np.sum(believed_player_sides, axis=-1, keepdims=True) * np.sum(true_player_sides, axis=-1, keepdims=True)
         # true_player_sides = true_player_sides / np.sum(true_player_sides, axis=-1, keepdims=True)
         
 
         # print(believed_player_sides)
-        print(1 - believed_player_sides)
+        # print(1 - believed_player_sides)
         # print(true_player_sides)
         
         return np.mean(-np.sum(true_player_sides * np.log(believed_player_sides) + (1 - true_player_sides) * np.log(1 - believed_player_sides), axis=1))

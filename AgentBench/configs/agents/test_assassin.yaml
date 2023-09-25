@@ -1,16 +1,8 @@
 module: "Multiagent"
 parameters:
-- module: "src.agents.RandomAgent"
-  parameters:
-      name: "Random-Agent"
-      num_players: 5
-      seed: 42
-      api_args:
-          model: "gpt-3.5-turbo"
-          base: "None"
-          timeout: 120
 - module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
   parameters:
+      id: 0
       name: "gpt-3.5"
       api_args:
           model: "gpt-3.5-turbo"
@@ -18,6 +10,7 @@ parameters:
           timeout: 120
 - module: "src.agents.RandomAgent"
   parameters:
+      id: 1
       name: "Random-Agent"
       num_players: 5
       seed: 42
@@ -27,6 +20,7 @@ parameters:
           timeout: 120
 - module: "src.agents.RandomAgent"
   parameters:
+      id: 2
       name: "Random-Agent"
       num_players: 5
       seed: 42
@@ -36,6 +30,17 @@ parameters:
           timeout: 120
 - module: "src.agents.RandomAgent"
   parameters:
+      id: 3
+      name: "Random-Agent"
+      num_players: 5
+      seed: 42
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.RandomAgent"
+  parameters:
+      id: 4
       name: "Random-Agent"
       num_players: 5
       seed: 42

@@ -39,6 +39,8 @@ class AvalonConfig():
         self.num_good = num_players - self.num_evil
         self.num_players_for_quest = self.QUEST_PRESET[num_players][1]
         self.num_fails_for_quest = self.QUEST_PRESET[num_players][2]
+
+        np.random.seed(0)
     
 class AvalonGameEnvironment():
     
@@ -69,6 +71,7 @@ class AvalonGameEnvironment():
 
         self.config = config
         
+        # np.random.seed(0)
         # initialize game
         self.reset()
 
@@ -179,7 +182,7 @@ class AvalonGameEnvironment():
         '''
         return self.num_players_for_quest[self.turn]
     
-    def choose_quest_team(self, team, leader):
+    def choose_quest_team(self, team: frozenset, leader):
         '''
         chooses quest team
         team: list of players on team

@@ -103,25 +103,25 @@ if __name__ == "__main__":
     Answer: [player_id_num]
     """
 
-    CHECK_BELIEVED_SIDES_PROMPT = r"""Based on the above information, to what extend do you believe for each player to be Good, from Player 0 to Player 4 with score from 0 to 10. Please summarize with the following template:
+    CHECK_BELIEVED_SIDES_PROMPT = r"""Based on the above information, to what extend do you believe for each player to be Good, from Player 0 to Player 4 with probabilities within [0, 1]. Please summarize with the following template:
 
     Answer: {0: score_for_0, 1: score_for_1, 2: score_for_2, 3: score_for_3, 4: score_for_4}
     """
-    # Test Acc of 100 runs: 1.0
-    total_count = 0
-    correct_count = 0
-    for _ in tqdm(range(100)):
-        random_ids = np.random.randint(0, 101, 3)
-        result = get_team_result(f"""I have carefully considered the abilities and track record of each player before making my decision. I would probably choose player {random_ids[0]}, player {random_ids[1]} and player {random_ids[2]} as the team members.
+    # # Test Acc of 100 runs: 1.0
+    # total_count = 0
+    # correct_count = 0
+    # for _ in tqdm(range(100)):
+    #     random_ids = np.random.randint(0, 101, 3)
+    #     result = get_team_result(f"""I have carefully considered the abilities and track record of each player before making my decision. I would probably choose player {random_ids[0]}, player {random_ids[1]} and player {random_ids[2]} as the team members.
 
-    Based on the information, what team does the player choose? Please answer with the following template:
-    Answer: [player_ids]""")
+    # Based on the information, what team does the player choose? Please answer with the following template:
+    # Answer: [player_ids]""")
         
-        if set(random_ids) == set(result):
-            correct_count += 1
-        total_count += 1
+    #     if set(random_ids) == set(result):
+    #         correct_count += 1
+    #     total_count += 1
     
-    print(f"Acc: {correct_count/total_count}")
+    # print(f"Acc: {correct_count/total_count}")
 
     # # Test Acc of 100 runs: 1.0
     # total_count = 0
@@ -146,23 +146,23 @@ if __name__ == "__main__":
 
     # print(result)
 
-    # # Test Acc for 100 runs: 0.58
-    # total_count = 0
-    # correct_count = 0
-    # for _ in tqdm(range(100)):
-    #     random_num = np.random.randint(0, 11, 5)
-    #     # print(random_num)
-    #     input_template = f"The socre for each player is:\n Player 0: {random_num[0]}, Player 1: {random_num[1]}, Player 2: {random_num[2]}, Player 3: {random_num[3]}, Player 4: {random_num[4]}"
-    #     # print(input_template)
-    #     input = input_template + '\n' + CHECK_BELIEVED_SIDES_PROMPT
-    #     # print(input)
-    #     result = get_believed_player_sides(input)
-    #     temp_nums = []
-    #     for idx in result:
-    #         temp_nums.append(result[idx])
-    #     if temp_nums == random_num.tolist():
-    #         correct_count += 1
+    # Test Acc for 50 runs: 1
+    total_count = 0
+    correct_count = 0
+    for _ in tqdm(range(50)):
+        random_num = np.round(np.random.rand(5), 2)
+        # print(random_num)
+        input_template = f"The socre for each player is:\n Player 0: {random_num[0]}, Player 1: {random_num[1]}, Player 2: {random_num[2]}, Player 3: {random_num[3]}, Player 4: {random_num[4]}"
+        # print(input_template)
+        input = input_template + '\n' + CHECK_BELIEVED_SIDES_PROMPT
+        # print(input)
+        result = get_believed_player_sides(input)
+        temp_nums = []
+        for idx in result:
+            temp_nums.append(result[idx])
+        if temp_nums == random_num.tolist():
+            correct_count += 1
 
-    #     total_count += 1
+        total_count += 1
 
-    # print(correct_count / total_count)
+    print(correct_count / total_count)

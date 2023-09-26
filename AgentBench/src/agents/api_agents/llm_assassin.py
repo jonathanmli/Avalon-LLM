@@ -256,7 +256,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 result = []
                 scores = self.get_believed_player_sides(resp + '\n\n' + CHECK_BELIEVED_SIDES_PROMPT)
                 for i in range(5):
-                    result.append(scores[i] / 10)
+                    result.append(scores[i])
         elif mode == "summarize":
             """
             Summarize

@@ -77,7 +77,7 @@ class RandomAgent(Agent):
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
 
-        random.seed(seed, version=1)
+        # random.seed(0, version=1)
 
         # if role_name == "Assassin":
         #     agent = NaiveAssassin

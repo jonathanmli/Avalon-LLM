@@ -109,8 +109,8 @@ def main():
     render = args.render
     seed = args.seed
 
-    random.seed(seed)
-    np.random.seed(seed)
+    # random.seed(seed)
+    # np.random.seed(seed)
     config = AvalonConfig(num_players)
     agents = {0: NaiveMerlin, 5: NaiveServant, 6: NaiveMinion, 7:NaiveAssassin}
     wins = 0

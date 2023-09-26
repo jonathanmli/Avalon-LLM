@@ -29,6 +29,8 @@ T_INPUT = TypeVar('T_INPUT')
 T_OUTPUT = TypeVar('T_OUTPUT')
 T_TARGET = TypeVar('T_TARGET')
 
+# random.seed(0, version=1)
+# np.random.seed(0)
 
 # Log some messages
 # logger.debug('This is a debug message.')
@@ -65,6 +67,8 @@ class Player:
         self.player_list = kwargs.pop("player_list")
 
         self.seed = seed
+        # random.seed(0, version=1)
+        # np.random.seed(seed=0)
 
         self.config = config
         # self.strategy = None
@@ -325,16 +329,16 @@ class Player:
             raise RuntimeError
         
         # print(self.role_name)
-        assassinate_result = naive_result
-        # assassinate_result = self.session.action({
-        #     "role": "user",
-        #     "content": f"Assassination phase. Your job is to assassinate Merlin. \
-        #         Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
-        #     "mode": "assassination",
-        #     "seed": self.seed,
-        #     "role_name": self.role_name,
-        #     "naive_result": naive_result
-        # })
+        # assassinate_result = naive_result
+        assassinate_result = self.session.action({
+            "role": "user",
+            "content": f"Assassination phase. Your job is to assassinate Merlin. \
+                Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
+            "mode": "assassination",
+            "seed": self.seed,
+            "role_name": self.role_name,
+            "naive_result": naive_result
+        })
         # return self.execute_tool(assassinate_result)
         # return self.parse_result(assassinate_result)
         if isinstance(assassinate_result, int):
@@ -362,8 +366,6 @@ class Avalon(Task):
         logger.info(setups)
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
-        random.seed(self.seed)
-        np.random.seed(self.seed)
         self.avalon_config = AvalonConfig(self.num_players)
         self.env = AvalonGameEnvironment(self.avalon_config)
         self.socring = AvalonScoring(self.avalon_config)
@@ -383,7 +385,7 @@ class Avalon(Task):
         Plan A: generate data on the fly
         '''
         # data = self.env.__dict__
-        NUM_GAMES = 100
+        NUM_GAMES = 30
         data = []
         logger.info(f"{NUM_GAMES} games in total.")
         for i in range(0, NUM_GAMES):
@@ -418,6 +420,8 @@ class Avalon(Task):
         results = [None] * len(inputs)
 
         def call_wrap(data_item, index):
+            # random.seed(0, version=1)
+            # np.random.seed(0)
             try:
                 sessions = []
                 for agent in agents:
@@ -450,6 +454,7 @@ class Avalon(Task):
         # num_players = int(input("Enter number of players: "))
         # env = AvalonGameEnvironment(num_players)
         # print(sys.modules[__name__])
+        # random.seed(0, version=1)
         env = self.env
         logger.debug("-"*100)
         l = " New Game! "
@@ -474,7 +479,7 @@ class Avalon(Task):
 
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             # player_list.append(agents[role_i](i, f"Player {i}", config))
-            random.seed(self.seed, version=1)
+            # random.seed(0, version=1)
             player_list.append(Player(
                                     name=f"Player {i}",
                                     num_players=num_players,
@@ -660,7 +665,7 @@ class Avalon(Task):
         for idx, session in enumerate(sessions):
             believed_player_sides = session.action({
                 "role": "user",
-                "content": "To what extend do you believe for each player to be Good, from Player 0 to Player 4? Please score from 0 to 10.",
+                "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places.",
                 "mode": "get_believed_sides",
                 "naive_result": list(map(int, player_list[idx].strategy.player_sides))
             })

@@ -92,10 +92,10 @@ class RandomAgent(Agent):
 
             
         if mode == "choose_quest_team_action":
-            print("Using Naive Strategy to Choose Quest Team...")
+            # print("Using Naive Strategy to Choose Quest Team...")
             # team_size = history[-1]["team_size"]
             # return str(random.sample(range(0, self.num_players), team_size))
-            return frozenset(naive_result), summary, frozenset(naive_result), self.player_id
+            return naive_result, summary, naive_result, self.player_id
         
         elif mode == "vote_on_team":
             # side = history[-1]["side"]

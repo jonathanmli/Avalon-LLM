@@ -22,8 +22,8 @@ class Agent:
                 warnings.warn("Merlin and evil players did not see player sides in initialization")
         else:
             self.player_sides = sides
-        
 
+            
     def __str__(self):
         return self.name
 

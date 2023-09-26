@@ -288,7 +288,7 @@ class OpenAIChatCompletionAssassin(Agent):
                 )
             result = summary
             return_resp = summary
-        elif mode == "discuss_on_team" and mode == "choose_quest_team_discussion":
+        elif mode == "discuss_on_team" or mode == "choose_quest_team_discussion":
             resp = openai_wrapper(
                 messages=[history[0]] + summary + [history[-1]],
                 temperature=0.1,

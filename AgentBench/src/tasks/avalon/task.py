@@ -97,16 +97,17 @@ class Player:
         else:
             raise RuntimeError
 
-        proposed_team = frozenset(naive_result)
-        # proposed_team = self.session.action({
-        #     "role": "user",
-        #     "content": content_prompt,
-        #     "team_size": team_size,
-        #     "mode": "choose_quest_team_" + mode,
-        #     "seed": self.seed,
-        #     "role_name": self.role_name,
-        #     "naive_result": naive_result
-        # })
+        # proposed_team = frozenset(naive_result)
+        proposed_team = self.session.action({
+            "role": "user",
+            "content": content_prompt,
+            "team_size": team_size,
+            "mode": "choose_quest_team_" + mode,
+            "seed": self.seed,
+            "role_name": self.role_name,
+            "naive_result": list(naive_result)
+        })
+        proposed_team = frozenset(proposed_team)
         # logger.debug(proposed_team)
 
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
@@ -117,15 +118,15 @@ class Player:
             else:
                 return eval(proposed_team), None
         elif mode == "discussion":
-            return None, proposed_team
+            return None, list(proposed_team)
     
     def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
-            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss about the vote on the team {team}."
+            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss about the vote on the team {list(team)}."
         elif mode == "action":
             # content_prompt = f"Action Phase. Please vote on the team {team}."
             # content_prompt = f"Please vote on team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
-            content_prompt = f"Please vote on team {team} based on your observation."
+            content_prompt = f"Please vote on team {list(team)} based on your observation."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -164,7 +165,7 @@ class Player:
             content_prompt = ' '.join(statement_history) + ' ' + f"Please vote on the quest."
         elif mode == "action":
             # content_prompt = f"The team {team} was passed. Now, please think about your true objective, vote on the quest with team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
-            content_prompt = f"The team {team} was passed. Now, please vote on the quest with team {team} based on your observations."
+            content_prompt = f"The team {list(team)} was passed. Now, please vote on the quest with team {list(team)} based on your observations."
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -361,8 +362,8 @@ class Avalon(Task):
         logger.info(setups)
         self.num_players = configs.pop('num_players')
         self.seed = configs.pop('seed')
-        # random.seed(0)
-        # np.random.seed(0)
+        random.seed(self.seed)
+        np.random.seed(self.seed)
         self.avalon_config = AvalonConfig(self.num_players)
         self.env = AvalonGameEnvironment(self.avalon_config)
         self.socring = AvalonScoring(self.avalon_config)
@@ -382,7 +383,7 @@ class Avalon(Task):
         Plan A: generate data on the fly
         '''
         # data = self.env.__dict__
-        NUM_GAMES = 1
+        NUM_GAMES = 100
         data = []
         logger.info(f"{NUM_GAMES} games in total.")
         for i in range(0, NUM_GAMES):
@@ -455,7 +456,7 @@ class Avalon(Task):
         logger.debug("-"*((100-len(l))//2) + l + "-"*(100-(100-len(l))//2 - len(l)))
         logger.debug("-"*100)
         num_players = self.num_players
-        # env.reset()
+        env.reset()
         while env.get_roles()[0][1] != "Assassin":
             env.reset()
 
@@ -473,7 +474,7 @@ class Avalon(Task):
 
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             # player_list.append(agents[role_i](i, f"Player {i}", config))
-                # random.seed(self.seed, version=1)
+            random.seed(self.seed, version=1)
             player_list.append(Player(
                                     name=f"Player {i}",
                                     num_players=num_players,
@@ -581,7 +582,7 @@ class Avalon(Task):
                 team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="action")
                 # logger.debug(team)
                 env.choose_quest_team(team, leader)
-                logger.debug(f"{player_list[leader]} proposed team {team}")
+                logger.debug(f"{player_list[leader]} proposed team {list(team)}")
 
             # if phase is team voting phase, ask for votes
             elif phase == 1:
@@ -614,7 +615,7 @@ class Avalon(Task):
                 for idx, session in enumerate(sessions):
                     session.action({
                         "role": "user",
-                        "content": f"This mission has {outcome_verbal[int(outcome[2])]} with the team {team} based on the quest results.",
+                        "content": f"This mission has {outcome_verbal[int(outcome[2])]} with the team {list(team)} based on the quest results.",
                         "mode": "system",
                         "seed": self.seed,
                         "role_name": player_list[idx].role_name

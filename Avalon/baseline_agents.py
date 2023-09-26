@@ -56,6 +56,12 @@ class Agent:
 
     def assassinate(self):
         return random.randint(0, self.config.num_players-1)
+    
+    def get_believed_sides(self):
+        '''
+        returns a list of probability of each player being good, where the list is ordered by player id. if player side is known, probability is 0 or 1. otherwise, probability is 0.5
+        '''
+        return [0.5 if side == -1 else side for side in self.player_sides]
 
 class NaiveMinion(Agent):
     
@@ -147,7 +153,7 @@ class NaiveServant(Agent):
         super().__init__(id, name, config, side, role, sides)
 
         # maintain a list of all possible combinations of player sides
-        self.possible_player_sides = self.generate_possible_player_sides(self.player_sides)
+        self.possible_player_sides = self.generate_possible_player_sides(self.player_sides, self.config.num_evil)
         self.player_side_probabilities = [1/len(self.possible_player_sides)] * len(self.possible_player_sides)
 
         # generate team preferences for first mission
@@ -158,9 +164,9 @@ class NaiveServant(Agent):
 
         self.lexigraphic = lexigraphic
 
-    def generate_possible_player_sides(self, sides):
+    def generate_possible_player_sides(self, sides, num_evils):
         '''
-        generates a list of all possible combinations of player sides given a list of known sides and unknown sides recursively
+        generates a list of all possible combinations of player sides given a list of known sides and unknown sides recursively as well number of unknown evils
         '''
         out = []
         # if there are no unknown sides, return the list of sides   
@@ -169,12 +175,39 @@ class NaiveServant(Agent):
         else:
             # find the first unknown side
             unknown_index = sides.index(-1)
+            unknown_count = sum([1 for side in sides if side == -1])
+            num_good = unknown_count - num_evils
             # recurse on the two possible sides
             for side in [0, 1]:
+                if side == 0 and num_evils == 0:
+                    continue
+                if side == 1 and num_good == 0:
+                    continue
                 sides_copy = sides.copy()
                 sides_copy[unknown_index] = side
-                out.extend(self.generate_possible_player_sides(sides_copy))
+                if side == 0:
+                    out.extend(self.generate_possible_player_sides(sides_copy, num_evils - 1))
+                else:
+                    out.extend(self.generate_possible_player_sides(sides_copy, num_evils))    
             return out
+
+    # def generate_possible_player_sides(self, sides):
+    #     '''
+    #     generates a list of all possible combinations of player sides given a list of known sides and unknown sides recursively
+    #     '''
+    #     out = []
+    #     # if there are no unknown sides, return the list of sides   
+    #     if -1 not in sides:
+    #         return [sides]
+    #     else:
+    #         # find the first unknown side
+    #         unknown_index = sides.index(-1)
+    #         # recurse on the two possible sides
+    #         for side in [0, 1]:
+    #             sides_copy = sides.copy()
+    #             sides_copy[unknown_index] = side
+    #             out.extend(self.generate_possible_player_sides(sides_copy))
+    #         return out
         
     def generate_team_preferences(self, mission_id):
         '''
@@ -248,11 +281,28 @@ class NaiveServant(Agent):
 
         # normalize probabilities
         self.player_side_probabilities = [prob / sum(self.player_side_probabilities) for prob in self.player_side_probabilities]
+        # print('side probs', self.player_side_probabilities)
+        # print(self.possible_player_sides)
 
         # generate team preferences for next mission, if there is one
         if mission_id < len(self.config.num_players_for_quest)-1:
             self.team_preferences = self.generate_team_preferences(mission_id+1)
         pass
+
+    def get_believed_sides(self):
+        '''
+        Return marginal distribution of each player being good based on self.player_side_probabilities and self.possible_player_sides
+        '''
+        # initialize marginal distribution to 0
+        marginal_distribution = [0] * self.config.num_players
+        # iterate over possible player sides and side probabilities
+        for sides, prob in zip(self.possible_player_sides, self.player_side_probabilities):
+            # iterate over players
+            for i in range(self.config.num_players):
+                # if player is good in sides, increment marginal distribution by prob of side
+                if sides[i] == 1:
+                    marginal_distribution[i] += prob
+        return marginal_distribution
     
 
 

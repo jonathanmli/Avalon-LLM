@@ -1,6 +1,7 @@
 from baseline_agents import *
 import unittest
 from engine import AvalonConfig
+import numpy as np
 
 # Test the baseline agents. Use python unittest module.
 class TestNaiveServant(unittest.TestCase):
@@ -24,6 +25,7 @@ class TestNaiveServant(unittest.TestCase):
 
     # test that the Naive servant observes team [0,1] fail
     def test_observe_team_fail(self):
+        print('first test')
         self.naive_servant.observe_mission([0, 1], 0, 2)
     
     # test that the Naive servant rejects any team that is superset of the team that failed when using vote_on_team
@@ -47,6 +49,15 @@ class TestNaiveServant(unittest.TestCase):
         self.assertEqual(len(self.naive_servant.propose_team(3)), 3)
         self.naive_servant.observe_mission([0,1,2], 3, 2)
         self.assertEqual(len(self.naive_servant.propose_team(4)), 3)
+
+    # test that the Naive servant believes that 2,4 have 3/5 chance of being good after observing team [0,1] fail, players 0,1 have a 2/5 chance of being good, and that 2,4 have 3/5 chance of being good after observing team [0,1,3] fail
+    def test_believe_player_sides(self):
+        self.naive_servant.observe_mission([0, 1], 0, 1)
+        # assert that almost all array elements are equal
+        self.assertTrue(np.allclose(self.naive_servant.get_believed_sides(), [0.4, 0.4, 0.6, 1.0, 0.6], atol=0.1))
+        self.naive_servant.observe_mission([0, 1, 3], 1, 1)
+        self.assertTrue(np.allclose(self.naive_servant.get_believed_sides(), [0.4, 0.4, 0.6, 1.0, 0.6], atol=0.1))
+        
 
 if __name__ == '__main__':
     unittest.main()

@@ -32,7 +32,6 @@ def gunboat_experiment(agents, config: AvalonConfig, render=False):
     
     if render:
         print("-"*50)
-        print(f"{player_list[i]} is {role_name}")
         assert list(map(int, player_list[i].player_sides)) == list(map(int, env.get_partial_sides(i)))
 
     while not env.done:

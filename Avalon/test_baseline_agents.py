@@ -57,6 +57,13 @@ class TestNaiveServant(unittest.TestCase):
         self.assertTrue(np.allclose(self.naive_servant.get_believed_sides(), [0.4, 0.4, 0.6, 1.0, 0.6], atol=0.1))
         self.naive_servant.observe_mission([0, 1, 3], 1, 1)
         self.assertTrue(np.allclose(self.naive_servant.get_believed_sides(), [0.4, 0.4, 0.6, 1.0, 0.6], atol=0.1))
+        self.naive_servant.observe_mission([2, 3], 1, 1)
+        self.assertTrue(np.allclose(self.naive_servant.get_believed_sides(), [0.5, 0.5, 0, 1.0, 1.0], atol=0.1))
+        # print(self.naive_servant.possible_player_sides)
+        # print(self.naive_servant.possible_player_sides)
+        # print(self.naive_servant.player_side_probabilities)
+
+    # test that the Naive servant proposes subsets and supersets of the last successful team when indifferent
         
 
 if __name__ == '__main__':

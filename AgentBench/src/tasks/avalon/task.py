@@ -562,13 +562,17 @@ class Avalon(Task):
                         # if idx == leader:
                         #     continue
                         if args.team_discussion:
+                            if len(discussion_history) > 0:
+                                contents = f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence."
+                            else:
+                                contents = f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nThis is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence."
                             discussion = session.action({
                                 "role": "user",
                                 # "content": 'test',
-                                "content": f"Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence.",
+                                "content": contents,
                                 "mode": "discuss_on_team"
                             })
-                            discussion_history.append(f"Player {idx} : " + discussion)
+                            discussion_history.append(f"Player {idx} : " + discussion + '\n')
                     if args.team_discussion:
                         for idx, session in enumerate(sessions):
                             session.inject({

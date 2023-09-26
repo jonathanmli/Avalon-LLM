@@ -87,7 +87,7 @@ class Player:
     
     def propose_team(self, team_size, discussion_history, mission_id, mode):
         if mode == "discussion":
-            content_prompt = f"You are the leader in this round. Please make some statements with one sentence."
+            content_prompt = f"You are the leader in this round. Please make some statements about your team proposal."
         elif mode == "action":
             # if len(discussion_history) > 0:
             #     # content_prompt = ' '.join(discussion_history) + ' ' + f"Action Phase. Please choose {team_size} players from player ids 0 to {self.num_players-1}"
@@ -111,7 +111,8 @@ class Player:
             "role_name": self.role_name,
             "naive_result": list(naive_result)
         })
-        proposed_team = frozenset(proposed_team)
+        if mode == "action":
+            proposed_team = frozenset(proposed_team)
         # logger.debug(proposed_team)
 
         # return self.execute_tool(proposed_team, team_size=team_size), get_statement(proposed_team)
@@ -122,7 +123,7 @@ class Player:
             else:
                 return eval(proposed_team), None
         elif mode == "discussion":
-            return None, list(proposed_team)
+            return None, proposed_team
     
     def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
@@ -546,13 +547,14 @@ class Avalon(Task):
                         """
                         team, statement = player_list[leader].propose_team(env.get_team_size(), discussion_history, env.turn, mode="discussion")
                         logger.debug(f"Please choose {env.get_team_size()} players in this round.")
+                        logger.debug(f"Leader's Statement: {statement}")
 
                     """
                     Discussion (sequential, once, in order for now) and Summarize
                     """
                     for idx, session in enumerate(sessions):
                         if args.summarize:
-                            summary = session.action({
+                            session.action({
                                 "role": "user",
                                 "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game.",
                                 "mode": "summarize"

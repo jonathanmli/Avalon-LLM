@@ -143,12 +143,14 @@ class Player:
             raise RuntimeError
         
         # print(self.role_name)
-        vote_result = naive_result
-
+        # vote_result = naive_result
+        thought = ''
+        if args.thought:
+            thought = "Please think about it step by step, and then take actions."
         # print("Content Prompt: ", content_prompt)
         vote_result = self.session.action({
             "role": "user",
-            "content": content_prompt,
+            "content": content_prompt + "\n" + thought,
             "side": int(self.side),
             "mode": "vote_on_team",
             "seed": self.seed,
@@ -182,11 +184,13 @@ class Player:
             raise RuntimeError
 
         # print(self.role_name)
-        vote_result = naive_result
-
+        # vote_result = naive_result
+        thought = ''
+        if args.thought:
+            thought = "Please think about it step by step, and then take actions."
         vote_result = self.session.action({
             "role": "user",
-            "content": content_prompt,
+            "content": content_prompt + "\n" + thought,
             "side": int(self.side),
             "mode": "vote_on_mission",
             "seed": self.seed,
@@ -331,10 +335,13 @@ class Player:
         
         # print(self.role_name)
         # assassinate_result = naive_result
+        thought = ''
+        if args.thought:
+            thought = "Please think about it step by step, and then take actions."
         assassinate_result = self.session.action({
             "role": "user",
             "content": f"Assassination phase. Your job is to assassinate Merlin. \
-                Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}",
+                Choose a player (id) to assassinate. Choose the player id from 0 to {self.num_players-1}." + "\n" + thought,
             "mode": "assassination",
             "seed": self.seed,
             "role_name": self.role_name,
@@ -463,7 +470,7 @@ class Avalon(Task):
         logger.debug("-"*100)
         num_players = self.num_players
         env.reset()
-        while env.get_roles()[0][1] != "Assassin":
+        while env.get_roles()[0][1] != args.test_role:
             env.reset()
 
         # print("Data item: ", data_item)
@@ -671,9 +678,9 @@ class Avalon(Task):
         for idx, session in enumerate(sessions):
             believed_player_sides = session.action({
                 "role": "user",
-                "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places.",
+                "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
                 "mode": "get_believed_sides",
-                "naive_result": list(map(int, player_list[idx].strategy.player_sides))
+                "naive_result": list(map(int, player_list[idx].strategy.get_believed_sides()))
             })
             self.ture_player_sides[idx].append(list(map(int, env.is_good)))
             self.believed_player_sides[idx].append(believed_player_sides)

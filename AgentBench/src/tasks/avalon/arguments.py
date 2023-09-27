@@ -23,6 +23,7 @@ parser.add_argument("--naive_summary", type=str, default="full-history",
 parser.add_argument("--agent_summary", type=str, default="full-history",
                     help="Mode for naive to summarize. Either `full-history` or `10-last`")
 parser.add_argument("--logging", type=str, default="DEBUG", help="Level of logging info")
+parser.add_argument("--thought", type=bool, default=False, help="Append `Think about it and then take actions` to the prompts.")
 
 parser.set_defaults(**content)
 

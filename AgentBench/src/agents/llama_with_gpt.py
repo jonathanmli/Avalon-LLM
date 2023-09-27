@@ -1,5 +1,5 @@
+import openai
 from src.agent import Agent
-from typing import List, Dict, Any, Optional, Union, Tuple, Callable, Type, TypeVar
 import os
 import json
 import sys
@@ -10,24 +10,32 @@ import random
 import datetime
 import argparse
 import requests
+from typing import List, Callable
+import dataclasses
 from copy import deepcopy
-import openai
+
 from ..tasks.avalon.utils import openai_wrapper
 
-from ..tasks.avalon.arguments import args
-from ..task import logger
+import requests
+
+def ollama_wrapper(history: List[dict]):
+
+    # Define the base URL of your FastAPI application
+    base_url = "http://172.31.76.7:8000"  # Replace with your actual server's address and port
+
+    data = {"messages": history}
+
+    response = requests.post(base_url + "/api", json=data)
+    print("POST Response:", response.status_code, response.json())
+
+    result = response.json()['result']['content']
+
+    return result
 
 
-class RandomAgent(Agent):
-    """This agent is a random agent for avalon"""
-
-    # def __init__(self,  seed=None, **kwargs) -> None:
-    #     super().__init__(**kwargs)
-        
-    def __init__(self, api_args=None, num_players=None, **config):
+class OpenAIChatCompletion(Agent):
+    def __init__(self, api_args=None, **config):
         self.name = config.pop("name")
-        self.player_id = config.pop("id")
-        self.num_players = num_players
         if not api_args:
             api_args = {}
         print("api_args={}".format(api_args))
@@ -41,34 +49,21 @@ class RandomAgent(Agent):
             raise ValueError("OpenAI API key is required, please assign api_args.key or set OPENAI_API_KEY environment variable.")
         os.environ['OPENAI_API_KEY'] = api_key
         print("OpenAI API key={}".format(openai.api_key))
-        # api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
-        # os.environ['OPENAI_API_BASE'] = api_base
-        # print("openai.api_base={}".format(openai.api_base))
+        api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
+        os.environ['OPENAI_API_BASE'] = api_base
+        print("openai.api_base={}".format(openai.api_base))
         if not api_args["model"]:
             raise ValueError("OpenAI model is required, please assign api_args.model.")
         self.api_args = api_args
         super().__init__(**config)
 
     def inference(self, history: List[dict]) -> str:
-        '''
-        There are 3 situations:
-        1. choose quest team
-        2. vote
-        3. assassination
-        '''
-        # print(history)
+        print(history)
         mode = history[-1]["mode"]
-        seed = None if "seed" not in history[-1] else history[-1]["seed"]
-        # TODO: should add the mode name here when using naive results
-        # if mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
-        #     assert "naive_result" in history[-1]
-        #     naive_result = history[-1]["naive_result"]
-        # else:
-        #     naive_result = ''
         naive_result = '' if "naive_result" not in history[-1] else history[-1]["naive_result"]
         history = json.loads(json.dumps(history))
         for h in history:
-            h.pop("mode", None)
+            h_mode = h.pop("mode", None)
             h.pop("team_size", None)
             h.pop("side", None)
             h.pop("seed", None)
@@ -76,40 +71,33 @@ class RandomAgent(Agent):
             h.pop("naive_result", None)
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
+        # resp = openai.ChatCompletion.create(
+        #     messages=history,
+        #     **self.api_args
+        # )
 
-        # random.seed(0, version=1)
-
-        # if role_name == "Assassin":
-        #     agent = NaiveAssassin
-        # elif role_name == "Merlin":
-        #     agent = NaiveMerlin
-        # elif role_name == "Minion":
-        #     agent = NaiveMinion
-        # else:
+        # return resp["choices"][0]["message"]["content"]
 
         summary = []
 
 
             
         if mode == "choose_quest_team_action":
-            # print("Using Naive Strategy to Choose Quest Team...")
-            # team_size = history[-1]["team_size"]
-            # return str(random.sample(range(0, self.num_players), team_size))
+
             return naive_result, summary, naive_result, self.player_id
         
         elif mode == "vote_on_team":
-            # side = history[-1]["side"]
-            # return str(random.choice([0, 1]))
-            # return str(side)
-            # print("Using Naive Strategy to Vote on Team...")
+
+            result = ollama_wrapper(history=history)
+
             return naive_result, summary, naive_result, self.player_id
         
         elif mode == "vote_on_mission":
-            # print("Using Naive Strategy to Vote on Mission...")
+
             return naive_result, summary, naive_result, self.player_id
         
         elif mode == "assassination":
-            # return random.randint(0, self.num_players-1), summary, random.randint(0, self.num_players-1)
+
             return naive_result, summary, naive_result, self.player_id
         
         elif mode == "strategy":
@@ -133,18 +121,15 @@ class RandomAgent(Agent):
                 })
                 summary.append({
                     "role": "agent",
-                    # "content": summary_result,
                     "content": summary_result,
                     "mode": "summary"
                 })
-                # logger.info("Summary of previous information:\n" + str(summary_result))
 
             elif args.naive_summary == "10-last":
                 """
                 Keep 10-last history
                 """
                 summary = history[-11:-1]
-                # logger.info("Summary of previous information:\n" + str(summary))
 
             return summary, summary, summary, self.player_id
         

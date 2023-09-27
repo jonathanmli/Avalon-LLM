@@ -5,7 +5,7 @@ import numpy as np
 import os
 import re
 from tqdm import tqdm
-from langchain.chat_models import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
 # from .prompts import CHECK_VOTE_ON_QUEST_PROMPT
 
 import yaml

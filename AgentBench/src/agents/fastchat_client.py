@@ -58,6 +58,7 @@ class FastChatAgent(Agent):
     """This agent is a test agent, which does nothing. (return empty string for each action)"""
 
     def __init__(self, model_name, controller_address=None, worker_address=None, temperature=0, max_new_tokens=32, top_p=0, prompter=None, args=None, **kwargs) -> None:
+        self.player_id = kwargs.pop("id")
         if controller_address is None and worker_address is None:
             raise ValueError("Either controller_address or worker_address must be specified.")
         self.controller_address = controller_address
@@ -72,6 +73,9 @@ class FastChatAgent(Agent):
         super().__init__(**kwargs)
 
     def inference(self, history: List[dict]) -> str:
+        for h in history:
+            if h['role'] == 'system':
+                h['role'] = 'user'
         if self.worker_address:
             worker_addr = self.worker_address
         else:
@@ -122,7 +126,8 @@ class FastChatAgent(Agent):
                 for line in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
                     if line:
                         text = json.loads(line)["text"]
-                return text
+                print(text)
+                return text, None, text, self.player_id
             # if timeout or connection error, retry
             except Timeout: 
                 print("Timeout, retrying...")
@@ -131,4 +136,3 @@ class FastChatAgent(Agent):
             time.sleep(5)
         else:
             raise Exception("Timeout after 3 retries.")
-

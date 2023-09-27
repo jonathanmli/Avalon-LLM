@@ -72,6 +72,15 @@ def get_team_result(message):
 
     return player_list
 
+def get_assassinate_result(message):
+    answer = wrap_langchain(message)
+
+    match_num = r"\d+"
+
+    target = re.findall(match_num, answer)
+
+    return target[-1]
+
 def get_believed_player_sides(message):
     answer = wrap_langchain(message)
 
@@ -146,21 +155,40 @@ if __name__ == "__main__":
 
     # print(result)
 
-    # Test Acc for 50 runs: 1
+    # # Test Acc for 50 runs: 1.0
+    # total_count = 0
+    # correct_count = 0
+    # for _ in tqdm(range(50)):
+    #     random_num = np.round(np.random.rand(5), 2)
+    #     # print(random_num)
+    #     input_template = f"The socre for each player is:\n Player 0: {random_num[0]}, Player 1: {random_num[1]}, Player 2: {random_num[2]}, Player 3: {random_num[3]}, Player 4: {random_num[4]}"
+    #     # print(input_template)
+    #     input = input_template + '\n' + CHECK_BELIEVED_SIDES_PROMPT
+    #     # print(input)
+    #     result = get_believed_player_sides(input)
+    #     temp_nums = []
+    #     for idx in result:
+    #         temp_nums.append(result[idx])
+    #     if temp_nums == random_num.tolist():
+    #         correct_count += 1
+
+    #     total_count += 1
+
+    # print(correct_count / total_count)
+
+    # Test Acc for 50 runs: 1.0
     total_count = 0
     correct_count = 0
     for _ in tqdm(range(50)):
-        random_num = np.round(np.random.rand(5), 2)
-        # print(random_num)
-        input_template = f"The socre for each player is:\n Player 0: {random_num[0]}, Player 1: {random_num[1]}, Player 2: {random_num[2]}, Player 3: {random_num[3]}, Player 4: {random_num[4]}"
+        random_num = np.random.randint(0, 20, 1)
+        # print(random_num[0])
+        input_template = f"As the Assassin, I choose to assassinate Player {random_num[0]}"
         # print(input_template)
-        input = input_template + '\n' + CHECK_BELIEVED_SIDES_PROMPT
+        input = input_template + '\n' + CHECK_ASSASSINATE_PROMPT
         # print(input)
-        result = get_believed_player_sides(input)
-        temp_nums = []
-        for idx in result:
-            temp_nums.append(result[idx])
-        if temp_nums == random_num.tolist():
+        result = get_assassinate_result(input)
+        # print(result)
+        if int(result) == random_num[0]:
             correct_count += 1
 
         total_count += 1

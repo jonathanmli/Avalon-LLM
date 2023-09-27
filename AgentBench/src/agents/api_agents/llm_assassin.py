@@ -93,8 +93,8 @@ class OpenAIChatCompletionAssassin(Agent):
 
         match_vote = "Yes|No"
         vote_result = []
-        if 'Answer:' in answer:
-            vote_result = re.findall(match_vote, answer)
+        
+        vote_result = re.findall(match_vote, answer)
 
         result = None if len(vote_result) == 0 else vote_result[-1]
 
@@ -121,8 +121,8 @@ class OpenAIChatCompletionAssassin(Agent):
 
         match_num = r"\d+"
         player_list = []
-        if 'Answer:' in answer:
-            player_list = re.findall(match_num, answer)
+        
+        player_list = re.findall(match_num, answer)
 
         player_list = [int(id) for id in player_list]
 
@@ -139,8 +139,8 @@ class OpenAIChatCompletionAssassin(Agent):
 
         match_num = r"\d+"
         player_id = []
-        if 'Answer:' in answer:
-            player_id = re.findall(match_num, answer) 
+            
+        player_id = re.findall(match_num, str(message)+str(answer)) 
 
         player_id = int(player_id[-1])
 
@@ -239,13 +239,30 @@ class OpenAIChatCompletionAssassin(Agent):
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
-            # logger.info(resp)
-            # tool_result, function_name = self.execute_tool(resp, history[:-1]+[action_prompt], team_size=team_size)
-            # result = function_name
             result = resp
             return_resp = resp
             if mode == "choose_quest_team_action":
                 result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
+                if len(result) != team_size:
+                    logger.warning(f"Wrong team size{len(result)}. The correct team size should be {team_size}.")
+                    wrong_result = {
+                        "role": "assistant",
+                        "content": resp
+                    }
+                    warning_prompt = {
+                        "role": "user",
+                        "content": f"You should choose a team of size {team_size}, instead of size {len(result)} as you did."
+                    }
+                    resp = openai_wrapper(
+                        messages=input_messages+[wrong_result]+[warning_prompt],
+                        temperature=0.1,
+                        **self.api_args
+                    )
+                    resp = resp["choices"][0]["message"]["content"]
+                    result = resp
+                    return_resp = resp
+
+                    result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
             elif mode == "vote_on_team":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
             elif mode == "vote_on_mission":

@@ -238,7 +238,8 @@ class Player:
         Introduction Prompt
         """
         verbal_side = ["Evil", "Good"]
-        content_prompt = INTRODUCTION + "\n" + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
+        # INTRODUCTION + "\n" + 
+        content_prompt = f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
         identity_prompt = f"You are {self.name}, {role_name}, and also {verbal_side[self.side]} player. Please do not forget your identity, and do not pretend to be other roles throughout the game."
         self.identity_prompt = identity_prompt
         self.session.inject({

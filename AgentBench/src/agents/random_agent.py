@@ -44,8 +44,8 @@ class RandomAgent(Agent):
         # api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
         # os.environ['OPENAI_API_BASE'] = api_base
         # print("openai.api_base={}".format(openai.api_base))
-        if not api_args["model"]:
-            raise ValueError("OpenAI model is required, please assign api_args.model.")
+        # if not api_args["model"]:
+        #     raise ValueError("OpenAI model is required, please assign api_args.model.")
         self.api_args = api_args
         super().__init__(**config)
 

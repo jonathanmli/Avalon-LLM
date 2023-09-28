@@ -1,0 +1,42 @@
+module: "Multiagent"
+parameters:
+- module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
+  parameters:
+      id: 0
+      name: "gpt-3.5"
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
+  parameters:
+      id: 1
+      name: "gpt-3.5"
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
+  parameters:
+      id: 2
+      name: "gpt-3.5"
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
+  parameters:
+      id: 3
+      name: "gpt-3.5"
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.api_agents.OpenAIChatCompletionAssassin"
+  parameters:
+      id: 4
+      name: "gpt-3.5"
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120

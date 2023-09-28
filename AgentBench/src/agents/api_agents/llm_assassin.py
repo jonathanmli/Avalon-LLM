@@ -96,17 +96,14 @@ class OpenAIChatCompletionAssassin(Agent):
         
         vote_result = re.findall(match_vote, answer)
 
-        result = None if len(vote_result) == 0 else vote_result[-1]
+        result = '' if len(vote_result) == 0 else vote_result[-1]
 
-        assert result in ['Yes', 'No']
+        # assert result in ['Yes', 'No']
         print(result)
 
-        result_dict = {
-            "No": 0,
-            "Yes": 1
-        }
 
-        return result_dict[result]
+
+        return result
 
     def get_team_result(self, message):
         # answer = wrap_langchain(message)
@@ -219,6 +216,10 @@ class OpenAIChatCompletionAssassin(Agent):
 
         # print(system_prompts)
         # print(action_prompt)
+        result_dict = {
+            "No": 0,
+            "Yes": 1
+        }
 
         if mode == 'system':
             # logger.debug("!!!Input message: " + str(input_messages))
@@ -244,7 +245,7 @@ class OpenAIChatCompletionAssassin(Agent):
             if mode == "choose_quest_team_action":
                 result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
                 if len(result) != team_size:
-                    logger.warning(f"Wrong team size{len(result)}. The correct team size should be {team_size}.")
+                    logger.warning(f"Wrong team size {len(result)}. The correct team size should be {team_size}.")
                     wrong_result = {
                         "role": "assistant",
                         "content": resp
@@ -265,8 +266,48 @@ class OpenAIChatCompletionAssassin(Agent):
                     result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
             elif mode == "vote_on_team":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
+                if result not in ["No", "Yes"]:
+                    logger.warning(f"Error from vote on team")
+                    wrong_result = {
+                        "role": "assistant",
+                        "content": resp
+                    }
+                    warning_prompt = {
+                        "role": "user",
+                        "content": f"You should output Yes or No to vote on the team."
+                    }
+                    resp = openai_wrapper(
+                        messages=input_messages+[wrong_result]+[warning_prompt],
+                        temperature=0.1
+                        **self.api_args
+                    )
+                    resp = resp["choices"][0]["message"]["content"]
+                    result = resp
+                    return_resp = resp
+
+                result = result_dict[result]
             elif mode == "vote_on_mission":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
+                if result not in ["No", "Yes"]:
+                    logger.warning(f"Error from vote on mission")
+                    wrong_result = {
+                        "role": "assistant",
+                        "content": resp
+                    }
+                    warning_prompt = {
+                        "role": "user",
+                        "content": f"You should output Yes or No to vote on the quest."
+                    }
+                    resp = openai_wrapper(
+                        messages=input_messages+[wrong_result]+[warning_prompt],
+                        temperature=0.1
+                        **self.api_args
+                    )
+                    resp = resp["choices"][0]["message"]["content"]
+                    result = resp
+                    return_resp = resp
+
+                result = result_dict[result]
             elif mode == "assassination":
                 result = self.get_assassination_result(resp + '\n\n' + CHECK_ASSASSINATE_PROMPT)
             elif mode == "get_believed_sides":

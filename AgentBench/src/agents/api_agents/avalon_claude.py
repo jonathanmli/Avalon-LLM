@@ -1,4 +1,4 @@
-import openai
+import anthropic
 from src.agent import Agent
 import os
 import json
@@ -13,178 +13,46 @@ import requests
 from typing import List, Callable
 import dataclasses
 from copy import deepcopy
-from ...tasks.avalon.api import *
-from .utils import openai_wrapper
-from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT, CHECK_BELIEVED_SIDES_PROMPT
-from langchain.chat_models import ChatOpenAI
-import numpy as np
+from .utils import claude_wrapper
 from ...task import logger
 
 from ...tasks.avalon.arguments import args
+from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT, CHECK_BELIEVED_SIDES_PROMPT
 
-ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
-                    "Okay, please start.",
-                    "If the instruction is \"Please choose 3 players from player ids 0 to 4.\" then use",
-                    "Action: choose([0, 2, 3]).",
-                    "Please vote on the team [1, 3, 4].",
-                    "Action: vote(True).",
-                    "Please vote on the quest.",
-                    "Action: vote(True).",
-                    "Assassination phase. Your job is to assassinate Merlin. Choose a player (id) to assassinate. Choose the player id from 0 to 9.",
-                    "Action: assassinate(3).",
-                    "That's all about the tutorial.",                    
-                    "OKay, I understand."
-                    ]
-
-ZERO_SHOT_ACTION = {'intro': """Here is a tutorial on taking actions using predefined tools. When you are asked to take action, please strictly follow this tutorial.
-""",
-'choose_quest_team_action': """
-Choosing a Team:
-    - When you are asked to pick a team, and you'd like to choose player numbers 1, 3, and 4 from the 10 available players, simply output `choose([1, 3, 4])`. This will serve as your instruction for picking those particular players.
-""",
-'vote_on_team': """
-Voting on a Team
-    - If you are asked to vote on a team and you want to approve the team, output `vote(True)`. If you do not want to approve the team, output `vote(False)`.
-""",
-'vote_on_mission':"""
-Voting on a Quest
-    - When you're asked to vote on a quest, and you wish to pass the quest, output `vote(True)`. If you want to fail the quest, output `vote(False)`.
-""",
-'assassinate': """
-Assassinating a Player Believed to be Merlin
-    - When you are asked to perform an assassination, choose the player who you think is most likely to be Merlin. For instance, if you suspect that player 1 is Merlin, output `assassinate(1)` to make that choice.    
-"""}
-
-
-class OpenAIChatCompletionAssassin(Agent):
+class AvalonClaude(Agent):
     def __init__(self, api_args=None, **config):
-        self.player_id = config.pop("id")
-        self.name = config.pop("name")
         if not api_args:
             api_args = {}
-        print("api_args={}".format(api_args))
-        print("config={}".format(config))
-        
         api_args = deepcopy(api_args)
-        api_key = api_args.pop("key", None) or os.getenv('OPENAI_API_KEY')
+        self.key = api_args.pop("key", None) or os.getenv('Claude_API_KEY')
         api_args["model"] = api_args.pop("model", None)
-        api_args["api_key"] = api_key
-        if not api_key:
-            raise ValueError("OpenAI API key is required, please assign api_args.key or set OPENAI_API_KEY environment variable.")
-        os.environ['OPENAI_API_KEY'] = api_key
-        print("OpenAI API key={}".format(openai.api_key))
-        api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
-        os.environ['OPENAI_API_BASE'] = api_base
-        print("openai.api_base={}".format(openai.api_base))
+        if not self.key:
+            raise ValueError("Claude API KEY is required, please assign api_args.key or set OPENAI_API_KEY environment variable.")
         if not api_args["model"]:
-            raise ValueError("OpenAI model is required, please assign api_args.model.")
+            raise ValueError("Claude model is required, please assign api_args.model.")
         self.api_args = api_args
-        super().__init__(**config)
-
-    def get_vote_result(self, message):
-        # answer = wrap_langchain(message)
-        answer = openai_wrapper(
-            messages=[{'role':'user', 'content':message,}],
-            temperature=0,
-            **self.api_args
-        )
-
-        answer = answer["choices"][0]["message"]["content"]
-
-        match_vote = "Yes|No"
-        vote_result = []
-        
-        vote_result = re.findall(match_vote, answer)
-
-        result = '' if len(vote_result) == 0 else vote_result[-1]
-
-        # assert result in ['Yes', 'No']
-        print(result)
-
-
-
-        return result
-
-    def get_team_result(self, message):
-        # answer = wrap_langchain(message)
-
-        answer = openai_wrapper(
-            messages=[{'role':'user', 'content':message}],
-            temperature=0,
-            **self.api_args
-        )
-
-        answer = answer["choices"][0]["message"]["content"]
-
-        match_num = r"\d+"
-        player_list = []
-        
-        player_list = re.findall(match_num, answer)
-
-        player_list = [int(id) for id in player_list]
-
-        return player_list
-    
-    def get_assassination_result(self, message):
-        answer = openai_wrapper(
-            messages=[{'role':'user', 'content':message}],
-            temperature=0,
-            **self.api_args
-        )
-
-        answer = answer["choices"][0]["message"]["content"]  
-
-        match_num = r"\d+"
-        player_id = []
-            
-        player_id = re.findall(match_num, str(message)+str(answer)) 
-
-        player_id = int(player_id[-1])
-
-        return player_id
-    
-    def get_believed_player_sides(self, message):
-        answer = openai_wrapper(
-            messages=[{'role':'user', 'content':message}],
-            temperature=0,
-            **self.api_args
-        )
-
-        answer = answer["choices"][0]["message"]["content"]
-
-        scores = eval(answer.split("Answer: ")[-1])
-
-        return scores
-
+        if not self.api_args.get("stop_sequences"):
+            self.api_args["stop_sequences"] = [anthropic.HUMAN_PROMPT]
+        super.__init__(**config)
 
     def inference(self, history: List[dict]) -> str:
-        """
-        Summarize-then-action
-        """
-        # logger.info("Current History:")
-        # logger.info(str(history))
         mode = history[-1]["mode"]
         role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
-        # history_pointer = history
-        history = json.loads(json.dumps(history))
-        filtered_history = []
-        # idx = 0
-        # while idx < len(history):
-        #     h = history[idx]
-        last_discuss = False
-        for h in history:
-            h_mode = h.pop("mode", None)
-            h.pop("team_size", None)
-            h.pop("side", None)
-            h.pop("seed", None)
-            h.pop("role_name", None)
-            h.pop("naive_result", None)
-            if h['role'] == 'agent':
-                h['role'] = 'assistant'
+        prompt = ""
+        for message in history:
+            if message["role"] == "user":
+                prompt += anthropic.HUMAN_PROMPT + message["content"]
+            else:
+                prompt += anthropic.AI_PROMPT + message["content"]
+        prompt += anthropic.AI_PROMPT
+        c = anthropic.Client(self.key)
+        # resp = c.completion(
+        #     prompt=prompt,
+        #     **self.api_args
+        # )
+        # return resp
 
-
-            
         summary = []
         # logger.debug("Mode: " + str(mode))
         """
@@ -209,8 +77,9 @@ class OpenAIChatCompletionAssassin(Agent):
 
         if mode == 'system':
             # logger.debug("!!!Input message: " + str(input_messages))
-            resp = openai_wrapper(
+            resp = claude_wrapper(
                 messages=input_messages,
+                key=self.key,
                 temperature=0.1,
                 **self.api_args
             )
@@ -220,8 +89,9 @@ class OpenAIChatCompletionAssassin(Agent):
             return_resp = resp
         elif mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
             # logger.debug("!!!Input message: " + str(input_messages))
-            resp = openai_wrapper(
+            resp = claude_wrapper(
                 messages=input_messages,
+                key=self.key,
                 temperature=0.1,
                 **self.api_args
             )
@@ -240,8 +110,9 @@ class OpenAIChatCompletionAssassin(Agent):
                         "role": "user",
                         "content": f"You should choose a team of size {team_size}, instead of size {len(result)} as you did."
                     }
-                    resp = openai_wrapper(
+                    resp = claude_wrapper(
                         messages=input_messages+[wrong_result]+[warning_prompt],
+                        key=self.key,
                         temperature=0.1,
                         **self.api_args
                     )
@@ -262,8 +133,9 @@ class OpenAIChatCompletionAssassin(Agent):
                         "role": "user",
                         "content": f"You should output Yes or No to vote on the team."
                     }
-                    resp = openai_wrapper(
+                    resp = claude_wrapper(
                         messages=input_messages+[wrong_result]+[warning_prompt],
+                        key=self.key,
                         temperature=0.1
                         **self.api_args
                     )
@@ -284,8 +156,9 @@ class OpenAIChatCompletionAssassin(Agent):
                         "role": "user",
                         "content": f"You should output Yes or No to vote on the quest."
                     }
-                    resp = openai_wrapper(
+                    resp = claude_wrapper(
                         messages=input_messages+[wrong_result]+[warning_prompt],
+                        key=self.key,
                         temperature=0.1
                         **self.api_args
                     )
@@ -310,8 +183,9 @@ class OpenAIChatCompletionAssassin(Agent):
                     "role": "user",
                     "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
                 }
-                summary_result = openai_wrapper(
+                summary_result = claude_wrapper(
                     messages=history[:-1] + [summary_prompt],
+                    key=self.key,
                     temperature=0.1,
                     **self.api_args
                 )
@@ -333,8 +207,9 @@ class OpenAIChatCompletionAssassin(Agent):
             result = summary
             return_resp = summary
         elif mode == "discuss_on_team" or mode == "choose_quest_team_discussion":
-            resp = openai_wrapper(
+            resp = claude_wrapper(
                 messages=[history[0]] + summary + [history[-1]],
+                key=self.key,
                 temperature=0.1,
                 **self.api_args
             )

@@ -4,6 +4,8 @@ test_role: "Assassin"
 naive_summary: "10-last"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
+local_llm: True
+num_games: 10
 
 prompts:
   INTRODUCTION: >

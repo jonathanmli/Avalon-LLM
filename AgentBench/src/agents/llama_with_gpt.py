@@ -57,11 +57,11 @@ class Llama7B(Agent):
             raise ValueError("OpenAI API key is required, please assign api_args.key or set OPENAI_API_KEY environment variable.")
         os.environ['OPENAI_API_KEY'] = api_key
         print("OpenAI API key={}".format(openai.api_key))
-        # api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
-        # os.environ['OPENAI_API_BASE'] = api_base
-        # print("openai.api_base={}".format(openai.api_base))
-        # if not api_args["model"]:
-            # raise ValueError("OpenAI model is required, please assign api_args.model.")
+        api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
+        os.environ['OPENAI_API_BASE'] = api_base
+        print("openai.api_base={}".format(openai.api_base))
+        if not api_args["model"]:
+            raise ValueError("OpenAI model is required, please assign api_args.model.")
         self.api_args = api_args
         super().__init__(**config)
 
@@ -80,17 +80,12 @@ class Llama7B(Agent):
         
         vote_result = re.findall(match_vote, answer)
 
-        result = None if len(vote_result) == 0 else vote_result[-1]
+        result = '' if len(vote_result) == 0 else vote_result[-1]
 
-        assert result in ['Yes', 'No']
+        # assert result in ['Yes', 'No']
         print(result)
 
-        result_dict = {
-            "No": 0,
-            "Yes": 1
-        }
-
-        return result_dict[result]
+        return result
 
     def get_team_result(self, message):
         # answer = wrap_langchain(message)
@@ -184,7 +179,11 @@ class Llama7B(Agent):
                 "content": history[-1]['content']
             }
             input_messages = history[:-1] + [action_prompt]
-
+        
+        result_dict = {
+            "No": 0,
+            "Yes": 1
+        }
 
         if mode == 'system':
             # logger.debug("!!!Input message: " + str(input_messages))
@@ -231,8 +230,52 @@ class Llama7B(Agent):
                     result = self.get_team_result(resp + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT)
             elif mode == "vote_on_team":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
+                if result not in ["No", "Yes"]:
+                    logger.warning(f"Error from vote on team")
+                    wrong_result = {
+                        "role": "assistant",
+                        "content": resp
+                    }
+                    warning_prompt = {
+                        "role": "user",
+                        "content": f"You should output Yes or No to vote on the team."
+                    }
+                    resp = openai_wrapper(
+                        messages=input_messages+[wrong_result]+[warning_prompt],
+                        temperature=0.1,
+                        **self.api_args
+                    )
+                    resp = resp["choices"][0]["message"]["content"]
+                    result = resp
+                    return_resp = resp
+
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
+
+                result = result_dict[result]
             elif mode == "vote_on_mission":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
+                if result not in ["No", "Yes"]:
+                    logger.warning(f"Error from vote on team")
+                    wrong_result = {
+                        "role": "assistant",
+                        "content": resp
+                    }
+                    warning_prompt = {
+                        "role": "user",
+                        "content": f"You should output Yes or No to vote on the team."
+                    }
+                    resp = openai_wrapper(
+                        messages=input_messages+[wrong_result]+[warning_prompt],
+                        temperature=0.1,
+                        **self.api_args
+                    )
+                    resp = resp["choices"][0]["message"]["content"]
+                    result = resp
+                    return_resp = resp
+
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
+                    
+                result = result_dict[result]
             elif mode == "assassination":
                 result = self.get_assassination_result(resp + '\n\n' + CHECK_ASSASSINATE_PROMPT)
             elif mode == "get_believed_sides":

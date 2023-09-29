@@ -6,8 +6,24 @@ import os
 import re
 from tqdm import tqdm
 from langchain.chat_models import ChatOpenAI
+import anthropic
 # from prompts import CHECK_VOTE_ON_QUEST_PROMPT
 
+def claude_wrapper(messages, key, temperature=0.1, **kwargs):
+    prompt = ""
+    for message in messages:
+        if message["role"] == "user":
+            prompt += anthropic.HUMAN_PROMPT + message["content"]
+        else:
+            prompt += anthropic.AI_PROMPT + message["content"]
+    prompt += anthropic.AI_PROMPT
+
+    c = anthropic.Client(key)
+    resp = c.completion(
+        prompt=prompt,
+        **kwargs
+    )
+    return resp
 
 # TODO: can we wrap all kinds of api in a single function
 def openai_wrapper(messages, temperature=0.1, **kwargs):

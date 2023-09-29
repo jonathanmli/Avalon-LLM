@@ -41,11 +41,11 @@ class RandomAgent(Agent):
             raise ValueError("OpenAI API key is required, please assign api_args.key or set OPENAI_API_KEY environment variable.")
         os.environ['OPENAI_API_KEY'] = api_key
         print("OpenAI API key={}".format(openai.api_key))
-        # api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
-        # os.environ['OPENAI_API_BASE'] = api_base
-        # print("openai.api_base={}".format(openai.api_base))
-        # if not api_args["model"]:
-        #     raise ValueError("OpenAI model is required, please assign api_args.model.")
+        api_base = api_args.pop("base", None) or os.getenv('OPENAI_API_BASE')
+        os.environ['OPENAI_API_BASE'] = api_base
+        print("openai.api_base={}".format(openai.api_base))
+        if not api_args["model"]:
+            raise ValueError("OpenAI model is required, please assign api_args.model.")
         self.api_args = api_args
         super().__init__(**config)
 

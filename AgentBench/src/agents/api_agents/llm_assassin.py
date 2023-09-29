@@ -182,21 +182,7 @@ class OpenAIChatCompletionAssassin(Agent):
             h.pop("naive_result", None)
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
-            # if h['role'] == 'user':
-            #     h['role'] = 'system'
 
-            # if last_discuss:
-            #     last_discuss = False
-            #     continue
-            # if h_mode != "discuss_on_team":
-            #     filtered_history.append(h)
-            # else:
-            #     last_discuss = True
-        
-        # if mode == "discuss_on_team":
-        #     filtered_history.append(history[-1])
-
-        # history = filtered_history
 
             
         summary = []
@@ -382,23 +368,3 @@ class OpenAIChatCompletionAssassin(Agent):
 
 
         return result, summary, return_resp, self.player_id
-
-        # if mode == "choose_quest_team":
-        #     team_size = history[-1]["team_size"]
-        #     return str(random.sample(range(0, self.num_players), team_size))
-        # elif mode == "vote":
-        #     side = history[-1]["side"]
-        #     # return str(random.choice([0, 1]))
-        #     return str(side)
-        # elif mode == "assassination":
-        #     return str(random.randint(0, self.num_players-1))
-        # elif mode == "strategy":
-        #     return "None"
-        # elif mode == "discuss_on_team":
-        #     return "No idea."
-        # elif mode == "system":
-        #     return "Okay"
-        # else:
-        #     raise NotImplementedError(
-        #         "There should not be other situations."
-        #     )

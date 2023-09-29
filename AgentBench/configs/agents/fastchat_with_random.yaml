@@ -1,0 +1,55 @@
+module: "Multiagent"
+parameters:
+- module: "src.agents.FastChatAgent"
+  parameters:
+      id: 0
+      name: "Llama"
+      model_name: "./models/Llama/"
+      controller_address: 'http://172.31.76.7:21001'
+      max_new_tokens: 128
+      temperature: 0
+      top_p: 0
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.RandomAgent"
+  parameters:
+      id: 1
+      name: "Random-Agent"
+      num_players: 5
+      seed: 42
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.RandomAgent"
+  parameters:
+      id: 2
+      name: "Random-Agent"
+      num_players: 5
+      seed: 42
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.RandomAgent"
+  parameters:
+      id: 3
+      name: "Random-Agent"
+      num_players: 5
+      seed: 42
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120
+- module: "src.agents.RandomAgent"
+  parameters:
+      id: 4
+      name: "Random-Agent"
+      num_players: 5
+      seed: 42
+      api_args:
+          model: "gpt-3.5-turbo"
+          base: "None"
+          timeout: 120

@@ -8,5 +8,11 @@
 # # Servant - w/o Discussion w/o Thought
 # python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/test_assassin.yaml --config configs/avalon_experiment/servant_nd_nt.yaml
 
-# All LLM - w/ Discussion w/ Thought Player 0 as Assassin
-python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_llm.yaml --config configs/avalon_experiment/all_llm.yaml
+# # All LLM - w/ Discussion w/ Thought Player 0 as Assassin
+# python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_llm.yaml --config configs/avalon_experiment/all_llm.yaml
+
+# # Assassin - w/o Discussion w/ Thought
+# python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/test_assassin.yaml --config configs/avalon_experiment/no_discussion_w_thought.yaml
+
+# Servant - w/o Discussion w/ Thought
+python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/test_assassin.yaml --config configs/avalon_experiment/servant_nd_wt.yaml

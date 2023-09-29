@@ -278,13 +278,14 @@ class OpenAIChatCompletionAssassin(Agent):
                     }
                     resp = openai_wrapper(
                         messages=input_messages+[wrong_result]+[warning_prompt],
-                        temperature=0.1
+                        temperature=0.1,
                         **self.api_args
                     )
                     resp = resp["choices"][0]["message"]["content"]
                     result = resp
                     return_resp = resp
 
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_TEAM_PROMPT)
                 result = result_dict[result]
             elif mode == "vote_on_mission":
                 result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
@@ -300,13 +301,14 @@ class OpenAIChatCompletionAssassin(Agent):
                     }
                     resp = openai_wrapper(
                         messages=input_messages+[wrong_result]+[warning_prompt],
-                        temperature=0.1
+                        temperature=0.1,
                         **self.api_args
                     )
                     resp = resp["choices"][0]["message"]["content"]
                     result = resp
                     return_resp = resp
 
+                    result = self.get_vote_result(resp + '\n\n' + CHECK_VOTE_ON_QUEST_PROMPT)
                 result = result_dict[result]
             elif mode == "assassination":
                 result = self.get_assassination_result(resp + '\n\n' + CHECK_ASSASSINATE_PROMPT)

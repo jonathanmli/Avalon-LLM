@@ -5,7 +5,7 @@ parameters:
       name: "claude-v2"
       api_args:
           model: "claude-v2"
-          key: sk-ant-api03-XUr__De4aYEh4x8Su42gXKHheARxsd4UIFxQYmmg8_ANojkBsrbsV_tvuedPj0iJ9EQKrjJS3G76Y0LFMFlUEg-4XAbJwA
+          # key: 
           max_tokens_to_sample: 256
 - module: "src.agents.RandomAgent"
   parameters:

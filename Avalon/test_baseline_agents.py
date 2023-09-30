@@ -64,6 +64,16 @@ class TestNaiveServant(unittest.TestCase):
         # print(self.naive_servant.player_side_probabilities)
 
     # test that the Naive servant proposes subsets and supersets of the last successful team when indifferent
+    def test_propose_team_indifferent(self):
+        self.naive_servant.observe_mission(frozenset({0,1}), 0, 0)
+        self.assertEqual(self.naive_servant.propose_team(1), {0,1,3})
+        # self.naive_servant.observe_mission(frozenset({0,1,4}), 1, 1)
+        # print(self.naive_servant.propose_team(2))
+        # self.assertIn(self.naive_servant.propose_team(1), [{0,1,2}, {0,1,3}, {0,1,4}])
+        # self.naive_servant.observe_mission([0, 1, 2], 1, 1)
+        # self.assertIn(self.naive_servant.propose_team(2), [{0,1,2}, {0,1,3}, {0,1,4}])
+        # self.naive_servant.observe_mission([0, 1, 3], 2, 1)
+        # self.assertIn(self.naive_servant.propose_team(3), [{0,1,2}, {0,1,3}, {0,1,4}])
         
 
 if __name__ == '__main__':

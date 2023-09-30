@@ -62,6 +62,9 @@ class Agent:
         returns a list of probability of each player being good, where the list is ordered by player id. if player side is known, probability is 0 or 1. otherwise, probability is 0.5
         '''
         return [0.5 if side == -1 else side for side in self.player_sides]
+    
+    def observe_votes(self, team: frozenset, mission_id, votes):
+        pass
 
 class NaiveMinion(Agent):
     

@@ -29,6 +29,7 @@ T_INPUT = TypeVar('T_INPUT')
 T_OUTPUT = TypeVar('T_OUTPUT')
 T_TARGET = TypeVar('T_TARGET')
 
+
 # random.seed(0, version=1)
 # np.random.seed(0)
 
@@ -87,7 +88,7 @@ class Player:
     
     def propose_team(self, team_size, discussion_history, mission_id, mode):
         if mode == "discussion":
-            content_prompt = f"You are the leader in this round. Please make some statements about your team proposal."
+            content_prompt = f"You are the leader this round. Please make some statements about what team you want to propose."
         elif mode == "action":
             # if len(discussion_history) > 0:
             #     # content_prompt = ' '.join(discussion_history) + ' ' + f"Action Phase. Please choose {team_size} players from player ids 0 to {self.num_players-1}"
@@ -127,11 +128,11 @@ class Player:
     
     def vote_on_team(self, team, statement_history, mission_id, mode="statement"):
         if mode == "statement":
-            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss about the vote on the team {list(team)}."
+            content_prompt = ' '.join(statement_history) + ' ' + f"Discussion Phase. Please discuss your thoughts on the team {list(team)} and what players should do in the current situation."
         elif mode == "action":
             # content_prompt = f"Action Phase. Please vote on the team {team}."
             # content_prompt = f"Please vote on team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
-            content_prompt = f"Please vote on team {list(team)} based on your observation."
+            content_prompt = f"Based on the discussion, and your observations and preferences, do you approve or reject the team {list(team)}?"
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -146,7 +147,7 @@ class Player:
         # vote_result = naive_result
         thought = ''
         if args.thought:
-            thought = "Please think about it step by step, and then take actions."
+            thought = COTHOUGHT_PROMPT
         # print("Content Prompt: ", content_prompt)
         vote_result = self.session.action({
             "role": "user",
@@ -172,7 +173,7 @@ class Player:
             content_prompt = ' '.join(statement_history) + ' ' + f"Please vote on the quest."
         elif mode == "action":
             # content_prompt = f"The team {team} was passed. Now, please think about your true objective, vote on the quest with team {team} based on your observation, explain it, and use `vote()` function to make your final decision. Your output must include `vote()` funciton only once."
-            content_prompt = f"The team {list(team)} was passed. Now, please vote on the quest with team {list(team)} based on your observations."
+            content_prompt = f"The team {list(team)} was approved, which includes you. Based on your preferences, do you want to help the mission succeed or fail it?"
         else:
             raise RuntimeError(
                 f"Unexpected Mode {mode}."
@@ -187,7 +188,7 @@ class Player:
         # vote_result = naive_result
         thought = ''
         if args.thought:
-            thought = "Please think about it step by step, and then take actions."
+            thought = COTHOUGHT_PROMPT
         vote_result = self.session.action({
             "role": "user",
             "content": content_prompt + "\n" + thought,
@@ -243,8 +244,8 @@ class Player:
             intro_prompt = ''
         else:
             intro_prompt += '\n'
-        content_prompt = intro_prompt + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
-        identity_prompt = f"You are {self.name}, {role_name}, and also {verbal_side[self.side]} player. Please do not forget your identity, and do not pretend to be other roles throughout the game."
+        content_prompt = intro_prompt + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur. {self.num_evil} players are evil, including 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
+        identity_prompt = f"You are {self.name}, with identity {role_name}. You are on the side of {verbal_side[self.side]}. Please do not forget your identity throughout the game." # and do not pretend to be other roles throughout the game."
         self.identity_prompt = identity_prompt
         self.session.inject({
             "role": "system",
@@ -324,7 +325,7 @@ class Player:
         if player >= self.num_players:
             raise ValueError(f"Player {player} does not exist.")
         if self.role != 7:
-            raise ValueError("Only assassin can assassinate.")
+            raise ValueError("Only the Assassin can assassinate.")
         
         # assassinate_result = self.session.action({
         #     "role": "user",
@@ -342,7 +343,7 @@ class Player:
         # assassinate_result = naive_result
         thought = ''
         if args.thought:
-            thought = "Please think about it step by step, and then take actions."
+            thought = COTHOUGHT_PROMPT
         assassinate_result = self.session.action({
             "role": "user",
             "content": f"Assassination phase. Your job is to assassinate Merlin. \
@@ -568,7 +569,7 @@ class Avalon(Task):
                         if args.summarize:
                             session.action({
                                 "role": "user",
-                                "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game.",
+                                "content": "Please summarize the history. Try to keep all useful information, including your identity, other player's identities, and your observations in the game.",
                                 "mode": "summarize"
                             })
                             # logger.info()
@@ -683,7 +684,8 @@ class Avalon(Task):
         for idx, session in enumerate(sessions):
             believed_player_sides = session.action({
                 "role": "user",
-                "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
+                # TODO: change to player 0 to player {num_players-1}
+                "content": "To what extent do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
                 "mode": "get_believed_sides",
                 "naive_result": list(map(int, player_list[idx].strategy.get_believed_sides()))
             })

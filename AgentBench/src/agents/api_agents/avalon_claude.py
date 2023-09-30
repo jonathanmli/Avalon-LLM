@@ -13,11 +13,7 @@ import requests
 from typing import List, Callable
 import dataclasses
 from copy import deepcopy
-<<<<<<< HEAD
 
-
-class Claude(Agent):
-=======
 from .utils import claude_wrapper
 from ...task import logger
 
@@ -25,7 +21,6 @@ from ...tasks.avalon.arguments import args
 from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT, CHECK_BELIEVED_SIDES_PROMPT
 
 class AvalonClaude(Agent):
->>>>>>> 4ba6b383ffe973517e9f63290c3050ae57682766
     def __init__(self, api_args=None, **config):
         if not api_args:
             api_args = {}
@@ -39,15 +34,12 @@ class AvalonClaude(Agent):
         self.api_args = api_args
         if not self.api_args.get("stop_sequences"):
             self.api_args["stop_sequences"] = [anthropic.HUMAN_PROMPT]
-        super.__init__(**config)
+        super().__init__(**config)
 
     def inference(self, history: List[dict]) -> str:
-<<<<<<< HEAD
-=======
         mode = history[-1]["mode"]
         role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
->>>>>>> 4ba6b383ffe973517e9f63290c3050ae57682766
         prompt = ""
         for message in history:
             if message["role"] == "user":
@@ -55,14 +47,14 @@ class AvalonClaude(Agent):
             else:
                 prompt += anthropic.AI_PROMPT + message["content"]
         prompt += anthropic.AI_PROMPT
-        c = anthropic.Client(self.key)
-<<<<<<< HEAD
-        resp = c.completion(
+        print(self.key)
+        c = anthropic.Anthropic(api_key=self.key)
+        resp = c.completions.create(
             prompt=prompt,
             **self.api_args
         )
-        return resp
-=======
+        print("!!!!!", resp.completion)
+        # return resp
         # resp = c.completion(
         #     prompt=prompt,
         #     **self.api_args
@@ -257,4 +249,3 @@ class AvalonClaude(Agent):
 
 
         return result, summary, return_resp, self.player_id
->>>>>>> 4ba6b383ffe973517e9f63290c3050ae57682766

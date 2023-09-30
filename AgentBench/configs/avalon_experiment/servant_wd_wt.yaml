@@ -5,6 +5,8 @@ test_role: "Servant"
 naive_summary: "full-history"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
+local_llm: False
+
 
 prompts:
   INTRODUCTION: >

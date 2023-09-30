@@ -238,11 +238,12 @@ class Player:
         Introduction Prompt
         """
         verbal_side = ["Evil", "Good"]
+        intro_prompt = INTRODUCTION
         if args.local_llm:
-            INTRODUCTION = ''
+            intro_prompt = ''
         else:
-            INTRODUCTION += '\n'
-        content_prompt = INTRODUCTION + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
+            intro_prompt += '\n'
+        content_prompt = intro_prompt + f"There are {self.num_players} players, including Player 0, Player 1, Player 2, Player 3, and Player 4. {self.num_good} players are good, including {int(self.merlin)} Merlin, and {self.num_good - int(self.merlin) - int(self.percival)} Loyal Servant(s) of Arthur's. {self.num_evil} players are evil, 1 Assassin, and {self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1} Minion."
         identity_prompt = f"You are {self.name}, {role_name}, and also {verbal_side[self.side]} player. Please do not forget your identity, and do not pretend to be other roles throughout the game."
         self.identity_prompt = identity_prompt
         self.session.inject({
@@ -691,6 +692,9 @@ class Avalon(Task):
             # pass
 
         # print whether good or evil won
+        for idx, session in enumerate(sessions):
+            logger.info(f"History in the last round of Player {idx}:")
+            logger.info(str(session.history))
         if env.good_victory:
             logger.info("Good wins!")
             return 1

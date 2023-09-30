@@ -169,14 +169,17 @@ As you are playing the role of Assassin in this game, here are some aspects you 
 }
 
 REVEAL_PROMPTS = {
+    #TODO: Evil, Good
     "Merlin": [
         "Player {} is Minion. Players {} are Servants.",
-        "Players {} are Minions of Modred."
+        # "Players {} are Minions of Modred."
     ],
+    #TODO: only knows who are Evil
     "Minion": [
         "Player {} is Assassin. Players {} are Good.",
         "Players {} are Minions of Modred."
     ],
+    #TODO: Evil, Good
     "Assassin": [
         "Player {} is Minion. Players {} are Good.",
         "Players {} are Minions of Modred."

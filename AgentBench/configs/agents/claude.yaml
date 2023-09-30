@@ -4,7 +4,7 @@ parameters:
   parameters:
       name: "claude-v2"
       api_args:
-          model: "claude-v2"
+          model: "claude-2"
           # key: 
           max_tokens_to_sample: 256
 - module: "src.agents.RandomAgent"

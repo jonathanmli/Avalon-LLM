@@ -132,7 +132,10 @@ class NaiveAssassin(Agent):
         # propose a random team that includes evil_team and y-x good player(s), where y is number of players required for this mission
         return frozenset(random.sample([i for i in range(self.config.num_players) if i not in evil_team and self.player_sides[i] == 1], self.config.num_players_for_quest[mission_id] - num_fails) + evil_team)
         
-    
+    def assassinate(self):
+        # assassinate a random good player
+        return random.choice([i for i in range(self.config.num_players) if self.player_sides[i] == 1])
+
 class NaiveMerlin(Agent):
 
     def __init__(self, id, name, config: AvalonConfig, side=1, role=0, sides = None):

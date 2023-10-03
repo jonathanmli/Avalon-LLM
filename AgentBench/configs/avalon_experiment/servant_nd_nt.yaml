@@ -5,6 +5,7 @@ test_role: "Servant"
 naive_summary: "10-last"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
+game_log: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, 0, 0, 0, 0, 0, 0, 0, None, None, None]
 
 prompts:
   INTRODUCTION: >

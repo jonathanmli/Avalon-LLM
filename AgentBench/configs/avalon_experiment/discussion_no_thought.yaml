@@ -1,11 +1,13 @@
 team_discussion: True
 summarize: True
+thought: False
 test_role: "Assassin"
 naive_summary: "full-history"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
-local_llm: True
-num_games: 10
+local_llm: False
+num_games: 30
+game_log: [1, 0, 1, None, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, None, 1, 0, 0, 0, -1, 0]
 
 prompts:
   INTRODUCTION: >

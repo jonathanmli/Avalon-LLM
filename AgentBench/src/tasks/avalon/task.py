@@ -206,7 +206,7 @@ class Player:
         if isinstance(vote_result, int):
             return vote_result
         else:
-            return eval(vote_result)
+            raise ValueError
     
     def assign_side(self, side):
         sides = ['Evil', 'Good']
@@ -320,7 +320,7 @@ class Player:
         #     "mode": "strategy"
         # })
 
-    def assassinate(self, player):
+    def assassinate(self, player, assassin_history=None):
         if player >= self.num_players:
             raise ValueError(f"Player {player} does not exist.")
         if self.role != 7:
@@ -350,7 +350,8 @@ class Player:
             "mode": "assassination",
             "seed": self.seed,
             "role_name": self.role_name,
-            "naive_result": naive_result
+            "naive_result": naive_result,
+            "assassin_history": assassin_history,
         })
         # return self.execute_tool(assassinate_result)
         # return self.parse_result(assassinate_result)
@@ -367,6 +368,7 @@ class Avalon(Task):
         # for item in args:
         #     if item != "prompt":
         #         logger.info(str(item) + '\n')
+        self.rerun_counter = 0
         setups = '\nSetups:\n'
         for item in content:
             if item != 'prompts':
@@ -383,8 +385,10 @@ class Avalon(Task):
         self.env = AvalonGameEnvironment(self.avalon_config)
         self.socring = AvalonScoring(self.avalon_config)
         self.llm_sides = []
-        self.ture_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
-        self.believed_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
+        # self.ture_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
+        # self.believed_player_sides = {0: [], 1: [], 2: [], 3: [], 4: []} # 5 x T x N
+        self.true_player_sides = []
+        self.believed_player_sides = []
         initialize_prompts(args.prompts)
 
         # self.detailed_winning_info
@@ -416,8 +420,8 @@ class Avalon(Task):
         return {"Success Rate": lambda x, y: sum(np.array(x) == 1) / len(x), 
                 "Failure by Assassination": lambda x, y: sum(np.array(x) == 0) / len(x),
                 "Failure by Mission": lambda x, y: sum(np.array(x) == -1) / len(x),
-                "Deduction Scores": lambda x, y: [self.socring.score_deduction(self.ture_player_sides[i], self.believed_player_sides[i])
-                                                  for i in range(self.num_players)]}  # Hack the metric
+                "Deduction Scores": lambda x, y: self.socring.deduction_acc(self.true_player_sides, self.believed_player_sides)
+                                                  }  # Hack the metric
     
     def predict_all(self, agents: List[Agent], inputs: List[T_INPUT], already_runs: List[Any]=None) -> List[T_OUTPUT]:
         logger.debug(f"Start Predicting All ...")
@@ -475,8 +479,17 @@ class Avalon(Task):
         logger.debug("-"*100)
         num_players = self.num_players
         env.reset()
-        while env.get_roles()[0][1] != args.test_role:
-            env.reset()
+        if args.test_role is not None:
+            while env.get_roles()[0][1] != args.test_role:
+                env.reset()
+
+        if args.rerun:
+            if args.game_log[self.rerun_counter] != 'None':
+                self.rerun_counter += 1
+                logger.info("Pass")
+                return args.game_log[self.rerun_counter]
+            else:
+                self.rerun_counter += 1
 
         # print("Data item: ", data_item)
 
@@ -526,6 +539,20 @@ class Avalon(Task):
                 assert player_list[i].strategy.role == 0 or player_list[i].strategy.side == 0
                 player_list[i].strategy.see_sides(player_sides)
 
+
+        """
+        Benchmark Assassination
+        """
+        if args.benchmark_assassination:
+            assassin = env.get_assassin()
+            target = int(player_list[assassin].assassinate(assassin, args.assassin_history))
+
+            if target != int(args.merlin):
+                logger.info("Failed")
+            else:
+                logger.info("Succeeded")
+            
+            return target != int(args.merlin)
         # for i, (role_i, role_name, side) in enumerate(env.get_roles()):
         #     print(role_i)
         #     print(player_list[i].strategy.player_sides)
@@ -681,14 +708,15 @@ class Avalon(Task):
                 logger.debug(f"assassinate outcome {assassinated}")
         
         for idx, session in enumerate(sessions):
-            believed_player_sides = session.action({
-                "role": "user",
-                "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
-                "mode": "get_believed_sides",
-                "naive_result": list(map(int, player_list[idx].strategy.get_believed_sides()))
-            })
-            self.ture_player_sides[idx].append(list(map(int, env.is_good)))
-            self.believed_player_sides[idx].append(believed_player_sides)
+            if player_list[idx].role_name == "Servant":
+                believed_player_sides = session.action({
+                    "role": "user",
+                    "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
+                    "mode": "get_believed_sides",
+                    "naive_result": list(map(int, player_list[idx].strategy.get_believed_sides()))
+                })
+                self.true_player_sides.append(list(map(int, env.is_good)))
+                self.believed_player_sides.append(believed_player_sides)
             # pass
 
         # print whether good or evil won

@@ -1,0 +1,63 @@
+team_discussion: False
+summarize: True
+test_role: "Servant"
+naive_summary: "10-last"
+agent_summary: "10-last" # either `10-last` or `full-history`
+logging: "DEBUG"
+num_games: 100
+# game_log: [1, 0, 1, None, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, None, 1, 0, 0, 0, -1, 0]
+benchmark_assassination: True
+merlin: 1
+rerun: False
+temperature: 1
+assassin_history: >
+  [{'role': 'system', 'content': "You're playing a game called The Resistance: Avalon.\n\nThe Resistance: Avalon is the game of hidden loyalty. Players come from two sdies, Good and Evil.\n\nGood wins the game by successfully completing three Quests. Evil wins if three Quests end in failure. Evil can also win by assassinating Merlin at game's end or if a Quest cannot be undertaken.\n\nPlayers may make any claims during the game, at any point in the game. Discussion, deception, accusation, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day.\n\nA team will be accepted if over half of the players vote to support it. A quest will succeed only if all the players on the quest vote to support the quest.\n\nThere are 5 players, including Player 0, Player 1, Player 2, Player 3, and Player 4. 3 players are good, including 1 Merlin, and 2 Loyal Servant(s) of Arthur's. 2 players are evil, 1 Assassin, and 1 Minion.\nYou are Player 3, Assassin, and also Evil player. Please do not forget your identity, and do not pretend to be other roles throughout the game.", 'mode': 'system'}, {'role': 'assistant', 'content': "Summary of previous information:\nThroughout the game, I have been playing as Player 3, the Assassin, and an Evil player. The other Evil player is Player 4, who is the Minion. \n\nThe Good players consist of Player 0, Player 1, and Player 2. Player 0 is a known Loyal Servant of Arthur's, while Player 1 and Player 2 are also Loyal Servants of Arthur's. \n\nIn previous rounds, I have observed the actions of Player 0 and Player 2, and they have both acted in line with the goals of the Good team. \n\nAs the Assassin, my goal is to ensure that three quests end in failure or to assassinate Merlin at the end of the game. \n\nBased on this information, I proposed a team consisting of Player 0, Player 2, and myself, Player 3, for a previous quest. The team was approved, and the mission succeeded.\n\nHowever, in the current round, Player 4, the Minion, proposed a team consisting of Player 0, Player 1, and themselves. This proposal raised suspicions among the other players, including myself, as it seemed like Player 4 was trying to manipulate the situation to their advantage.\n\nPlayer 0 and Player 1 expressed their concerns about Player 4's claim, and Player 2 agreed with these concerns. As an Evil player, I saw this as an opportunity to sow doubt and confusion among the players.\n\nGiven the suspicions raised and the doubts surrounding Player 4's claim, I voted against the team [0, 1, 2]. However, the team was approved and the mission succeeded."}, {'role': 'user', 'content': 'Statement from Leader Player 1: \n"As the leader, I propose a team consisting of Player 0, Player 1 (myself), and Player 2. I believe this team is a good choice because it includes both loyal servants of Arthur\'s and myself, Merlin, who can use my knowledge of the evil players to guide our decisions. Player 0 and Player 2 have shown themselves to be trustworthy in previous rounds, and I believe we can work together to successfully complete this quest."\nAnd words from other players:\nPlayer 0 : Player 3: I agree with the leader\'s proposal, as it includes both loyal servants and Merlin, who can provide valuable insight.\n Player 1 : Player 2: I also agree with the leader\'s proposal, as it seems like a strong team composition.\n Player 2 : Player 2: I agree with the leader\'s proposal and the reasoning behind it, as it includes both loyal servants and Merlin\'s guidance.\n\n This is discussion phase, and you don\'t need to take an action. Please discuss about words from the leader and other players with just one sentence.', 'mode': 'discuss_on_team'}, {'role': 'agent', 'content': "Player 3: The leader's proposal seems reasonable, as it includes both loyal servants and Merlin's guidance."}, {'role': 'user', 'content': 'Discussion has ended. Here are the contents:\nStatement from Leader Player 1: \n"As the leader, I propose a team consisting of Player 0, Player 1 (myself), and Player 2. I believe this team is a good choice because it includes both loyal servants of Arthur\'s and myself, Merlin, who can use my knowledge of the evil players to guide our decisions. Player 0 and Player 2 have shown themselves to be trustworthy in previous rounds, and I believe we can work together to successfully complete this quest."\nAnd words from other players:\nPlayer 0 : Player 3: I agree with the leader\'s proposal, as it includes both loyal servants and Merlin, who can provide valuable insight.\n Player 1 : Player 2: I also agree with the leader\'s proposal, as it seems like a strong team composition.\n Player 2 : Player 2: I agree with the leader\'s proposal and the reasoning behind it, as it includes both loyal servants and Merlin\'s guidance.\n Player 3 : Player 3: The leader\'s proposal seems reasonable, as it includes both loyal servants and Merlin\'s guidance.\n Player 4 : As the Minion, I agree with the leader\'s proposal and the reasoning behind it, as it allows Merlin to guide the team\'s decisions.\n'}, {'role': 'agent', 'content': 'I understand.'}, {'role': 'user', 'content': 'Please vote on team [0, 2] based on your observation.\nPlease think about it step by step, and then take actions.', 'side': 0, 'mode': 'vote_on_team', 'seed': 0, 'role_name': 'Assassin', 'naive_result': 0}, {'role': 'agent', 'content': 'Based on the information provided, I, as Player 3, the Assassin and Evil player, will vote in favor of the team [0, 2].'}, {'role': 'user', 'content': 'This mission has succeeded with the team [0, 2] based on the quest results.', 'mode': 'system', 'seed': 42, 'role_name': 'Assassin'}, {'role': 'agent', 'content': 'As an Evil player, I am disappointed to hear that the mission has succeeded. However, I will continue to play my role and observe the game.'}, {'role': 'user', 'content': 'Assassination phase. Your job is to assassinate Merlin.                 Choose a player (id) to assassinate. Choose the player id from 0 to 4.\nPlease think about it step by step, and then take actions.', 'mode': 'assassination', 'seed': 0, 'role_name': 'Assassin', 'naive_result': 4}]
+
+prompts:
+  INTRODUCTION: >
+    You're playing a game called The Resistance: Avalon.
+
+
+    The Resistance: Avalon is the game of hidden loyalty. Players come from two sdies, Good and Evil.
+
+
+    Good wins the game by successfully completing three Quests. Evil wins if three Quests end in failure. Evil can also win by assassinating Merlin at game's end or if a Quest cannot be undertaken.
+
+
+    Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day.
+
+
+    A team will be accepted if over half of the players vote to support it. A quest will succeed only if all the players on the quest vote to support the quest.
+  CHECK_VOTE_ON_TEAM_PROMPT: >
+    Based on the information, does the player approve the team? Please answer with the following template:
+
+    Answer: {Yes|No}
+
+  CHECK_VOTE_ON_QUEST_PROMPT: >
+    Based on the information, does the player support the quest? Please answer with the following template:
+
+    Answer: {Yes|No}
+
+  CHECK_CHOOSE_TEAM_PROMPT: >
+    Based on the information, what team does the player choose? Please answer with the following template:
+
+    Answer: [player_ids]
+
+  CHECK_ASSASSINATE_PROMPT: >
+    Based on the information, which player will be assassinated? Please answer with the following template:
+
+    Answer: [player_id_num]
+  
+  DISCUSSION_PROMPT: "Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence."
+
+# To test the with all naive agents, set team_discussion to False
+
+####### Passed Tests #######
+# team_discussion: False 
+# naive_summary: "10-last"
+# agent_summary: "10-last"
+############################
+# team_discussion: True 
+# naive_summary: "10-last"
+# agent_summary: "10-last"
+############################

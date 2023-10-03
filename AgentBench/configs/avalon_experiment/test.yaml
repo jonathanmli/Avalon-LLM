@@ -4,6 +4,10 @@ test_role: "Servant"
 naive_summary: "10-last"
 agent_summary: "10-last" # either `10-last` or `full-history`
 logging: "DEBUG"
+num_games: 30
+rerun: False
+benchmark_assassination: False
+# game_log: [1, 0, 1, None, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, None, 1, 0, 0, 0, -1, 0]
 
 prompts:
   INTRODUCTION: >

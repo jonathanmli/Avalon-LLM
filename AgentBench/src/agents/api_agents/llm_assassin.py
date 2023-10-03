@@ -163,7 +163,9 @@ class OpenAIChatCompletionAssassin(Agent):
         """
         # logger.info("Current History:")
         # logger.info(str(history))
+        temperature = 0.1
         mode = history[-1]["mode"]
+        assassin_history = history[-1].pop("assassin_history", None)
         role_name = None if "role_name" not in history[-1] else history[-1]["role_name"]
         team_size = None if "team_size" not in history[-1] else history[-1]["team_size"]
         # history_pointer = history
@@ -172,6 +174,12 @@ class OpenAIChatCompletionAssassin(Agent):
         # idx = 0
         # while idx < len(history):
         #     h = history[idx]
+
+        if args.benchmark_assassination:
+            assert assassin_history is not None
+            history = eval(assassin_history)
+            temperature = args.temperature
+
         last_discuss = False
         for h in history:
             h_mode = h.pop("mode", None)
@@ -182,7 +190,6 @@ class OpenAIChatCompletionAssassin(Agent):
             h.pop("naive_result", None)
             if h['role'] == 'agent':
                 h['role'] = 'assistant'
-
 
             
         summary = []
@@ -222,7 +229,7 @@ class OpenAIChatCompletionAssassin(Agent):
             # logger.debug("!!!Input message: " + str(input_messages))
             resp = openai_wrapper(
                 messages=input_messages,
-                temperature=0.1,
+                temperature=temperature,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]

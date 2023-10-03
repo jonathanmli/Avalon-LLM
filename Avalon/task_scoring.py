@@ -6,6 +6,14 @@ class AvalonScoring():
     def __init__(self, config: AvalonConfig) -> None:
         self.config = config # AvalonConfig object
 
+    def deduction_acc(self, true_player_sides, believed_player_sides):
+        true_player_sides = np.array(true_player_sides)
+        believed_player_sides = np.where(np.array(believed_player_sides) == 0.5, -1, np.array(believed_player_sides))
+        believed_player_sides = np.where(np.array(believed_player_sides) > 0.5, 1, np.array(believed_player_sides))
+        believed_player_sides = np.where(np.array(believed_player_sides) < 0.5, 0, np.array(believed_player_sides))
+
+        return np.mean(np.sum(believed_player_sides == true_player_sides, axis=1) / 5)
+
     def score_deduction(self, true_player_sides, believed_player_sides):
         '''
         N: number of players
@@ -71,12 +79,12 @@ if __name__ == "__main__":
     config = AvalonConfig(num_players=5)
     scoring = AvalonScoring(config)
 
-    true_sides = [[1, 1, 0, 0, 1], [1, 0, 1, 1, 0]]
-    believed_sides = [[1, 1, 0, 0, 1], [1, 0, 1, 1, 0]]
+    true_sides = [[1, 1, 0, 1, 0], [1, 1, 0, 1, 0], [1, 1, 1, 0, 0], [1, 0, 1, 0, 1], [1, 0, 0, 1, 1], [1, 1, 0, 1, 0], [1, 1, 1, 0, 0], [1, 0, 1, 1, 0], [1, 0, 0, 1, 1], [1, 0, 0, 1, 1]]
+    believed_sides = [[0.3, 0.8, 0.6, 0.9, 0.1], [0.5, 0.8, 0.3, 0.6, 0.4], [0.8, 0.6, 0.2, 0.2, 0.6], [0.8, 0.7, 0.6, 0.5, 0.3], [0.7, 0.5, 0.6, 0.4, 0.3], [0.8, 0.9, 0.7, 0.8, 0.5], [0.8, 0.7, 0.6, 0.4, 0.5], [0.75, 0.25, 0.6, 0.4, 0.8], [0.8, -1, 0.7, 0.6, 0.4], [0.7, 0.3, 0.4, 0.5, 0.6]]
 
     # believed_sides = np.array(believed_sides) + 0.01
     # # print(np.sum(believed_sides, axis=-1, keepdims=True).reshape(2, 5))
     # believed_sides = believed_sides / np.sum(believed_sides, axis=-1, keepdims=True)
     # print(believed_sides)
 
-    print(scoring.score_deduction(true_player_sides=true_sides, believed_player_sides=believed_sides))
+    print(scoring.deduction_acc(true_player_sides=true_sides, believed_player_sides=believed_sides))

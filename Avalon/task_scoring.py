@@ -8,8 +8,8 @@ class AvalonScoring():
 
     def deduction_acc(self, true_player_sides, believed_player_sides):
         true_player_sides = np.array(true_player_sides)
-        believed_player_sides = np.where(np.array(believed_player_sides) == 0.5, -1, np.array(believed_player_sides))
-        believed_player_sides = np.where(np.array(believed_player_sides) > 0.5, 1, np.array(believed_player_sides))
+        # believed_player_sides = np.where(np.array(believed_player_sides) == 0.5, -1, np.array(believed_player_sides))
+        believed_player_sides = np.where(np.array(believed_player_sides) >= 0.5, 1, np.array(believed_player_sides))
         believed_player_sides = np.where(np.array(believed_player_sides) < 0.5, 0, np.array(believed_player_sides))
 
         return np.mean(np.sum(believed_player_sides == true_player_sides, axis=1) / 5)

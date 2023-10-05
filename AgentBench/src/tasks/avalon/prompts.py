@@ -1,16 +1,26 @@
-INTRODUCTION = """You're playing a game called The Resistance: Avalon.
+INTRODUCTION = """You are playing a game called The Resistance: Avalon.
 
+The Resistance: Avalon is the game of hidden identities and social dedeuction. There are two teams in the game: Good and Evil. Each player has a hidden identity and side. 
 
-The Resistance: Avalon is the game of hidden loyalty. Players come from two sdies, Good and Evil.
+There are five Quests in the game. Good players aim to help three Quests succeed, while Evil players aim to fail three Quests. Different quests require different numbers of players to participate. 
 
+Each round, after a round of discussion, the leader will select a team of players to participate in the Quest. Then, all players will vote on whether to approve or reject the team. If the team is approved (a strict majority vote to approve), the Quest will be carried out. If the team is not approved, the next player becomes the leader and the next round will start. If four teams are rejected in a row, the fifth team will automatically be approved.
 
-Good wins the game by successfully completing three Quests. Evil wins if three Quests end in failure. Evil can also win by assassinating Merlin at game's end or if a Quest cannot be undertaken.
+If the team is approved, each teammember chooses to pass or fail the Quest anonymously. Usually if there is at least one fail vote, the Quest fails. Otherwise, the Quest succeeds.
 
+Below are the roles in the game:
 
-Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day.
+Servant of Arthur (Servant): A good player who does not know who is on the Evil side. Servant's job is to help Good players to complete three Quests without being failed by the Evil players.
 
+Minion of Mordred (Minion): An Evil player who knows who is on the Evil side. Minion's job is to fail three Quests without being identified by the Good players.
 
-A team will be accepted if over half of the players vote to support it. A quest will succeed only if all the players on the quest vote to support the quest.
+Merlin: A Good player who knows who is on the Evil side. Merlin's job is to help Good players to complete three Quests without being failed by the Evil players. However, if the Evil players can identify who Merlin is, the Evil players will win the game immediately.
+
+Assassion: An Evil player who knows who is on the Evil side. Assassin's job is to assassinate Merlin if the Evil players can identify who Merlin is. If Assassin successfully assassinates Merlin, the Evil players will win the game immediately.
+
+Hence, Evil players usually know who is on the Evil side, but Good players usually do not know who is on the Evil side. 
+
+Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, persuasion, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day. Hence, players should rarely reveal their true identity to other players. 
 """
 
 ONE_SHOT_GOOD = ["Tutorial of taking actions by thinking and using tools during action phase.",
@@ -211,3 +221,5 @@ CHECK_BELIEVED_SIDES_PROMPT = r"""Based on the above information, to what extend
 
 Answer: {0: score_for_0, 1: score_for_1, 2: score_for_2, 3: score_for_3, 4: score_for_4}
 """
+
+COTHOUGHT_PROMPT = """Please think about it step by step and in accordance with your overall strategy, and then take actions."""

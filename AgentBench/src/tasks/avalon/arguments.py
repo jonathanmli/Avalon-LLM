@@ -17,15 +17,24 @@ with open(args.config, 'r') as f:
     print(content)
 
 parser.add_argument("--team_discussion", type=bool, default=True, help="Discuss before Team Selection")
+
 parser.add_argument("--test_naive", type=bool, default=False, help="All the agents are naive")
+
 parser.add_argument("--naive_summary", type=str, default="full-history",
                     help="Mode for naive to summarize. Either `full-history` or `10-last`")
+
 parser.add_argument("--agent_summary", type=str, default="full-history",
                     help="Mode for naive to summarize. Either `full-history` or `10-last`")
+
 parser.add_argument("--logging", type=str, default="DEBUG", help="Level of logging info")
+
 parser.add_argument("--thought", type=bool, default=False, help="Append `Think about it and then take actions` to the prompts.")
+
 parser.add_argument("--num_games", type=int, default=30)
+
 parser.add_argument("--local_llm", type=bool, default=False)
+
+parser.add_argument("--rerun", type=bool, default=False)
 
 parser.set_defaults(**content)
 

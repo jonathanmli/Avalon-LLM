@@ -22,39 +22,6 @@ from ...task import logger
 
 from ...tasks.avalon.arguments import args
 
-ONE_SHOT_ASSASSIN_NO_THOUGHT = ["Tutorial of taking actions by thinking and using tools during action phase.",
-                    "Okay, please start.",
-                    "If the instruction is \"Please choose 3 players from player ids 0 to 4.\" then use",
-                    "Action: choose([0, 2, 3]).",
-                    "Please vote on the team [1, 3, 4].",
-                    "Action: vote(True).",
-                    "Please vote on the quest.",
-                    "Action: vote(True).",
-                    "Assassination phase. Your job is to assassinate Merlin. Choose a player (id) to assassinate. Choose the player id from 0 to 9.",
-                    "Action: assassinate(3).",
-                    "That's all about the tutorial.",                    
-                    "OKay, I understand."
-                    ]
-
-ZERO_SHOT_ACTION = {'intro': """Here is a tutorial on taking actions using predefined tools. When you are asked to take action, please strictly follow this tutorial.
-""",
-'choose_quest_team_action': """
-Choosing a Team:
-    - When you are asked to pick a team, and you'd like to choose player numbers 1, 3, and 4 from the 10 available players, simply output `choose([1, 3, 4])`. This will serve as your instruction for picking those particular players.
-""",
-'vote_on_team': """
-Voting on a Team
-    - If you are asked to vote on a team and you want to approve the team, output `vote(True)`. If you do not want to approve the team, output `vote(False)`.
-""",
-'vote_on_mission':"""
-Voting on a Quest
-    - When you're asked to vote on a quest, and you wish to pass the quest, output `vote(True)`. If you want to fail the quest, output `vote(False)`.
-""",
-'assassinate': """
-Assassinating a Player Believed to be Merlin
-    - When you are asked to perform an assassination, choose the player who you think is most likely to be Merlin. For instance, if you suspect that player 1 is Merlin, output `assassinate(1)` to make that choice.    
-"""}
-
 
 class OpenAIChatCompletionAssassin(Agent):
     def __init__(self, api_args=None, **config):
@@ -82,7 +49,6 @@ class OpenAIChatCompletionAssassin(Agent):
         super().__init__(**config)
 
     def get_vote_result(self, message):
-        # answer = wrap_langchain(message)
         answer = openai_wrapper(
             messages=[{'role':'user', 'content':message,}],
             temperature=0,
@@ -193,7 +159,7 @@ class OpenAIChatCompletionAssassin(Agent):
 
             
         summary = []
-        # logger.debug("Mode: " + str(mode))
+
         """
         Action
         """
@@ -202,7 +168,6 @@ class OpenAIChatCompletionAssassin(Agent):
         else:
             action_prompt = {
                 "role": "user",
-                # "content": ZERO_SHOT_ACTION["intro"] + ZERO_SHOT_ACTION[mode] + '\n' + "Please take only one action using the functions based on the tutorial and your summary" + '\n' + history[-1]['content']
                 "content": history[-1]['content']
             }
             input_messages = history[:-1] + [action_prompt]
@@ -215,18 +180,18 @@ class OpenAIChatCompletionAssassin(Agent):
         }
 
         if mode == 'system':
-            # logger.debug("!!!Input message: " + str(input_messages))
+
             resp = openai_wrapper(
                 messages=input_messages,
                 temperature=0.1,
                 **self.api_args
             )
             resp = resp["choices"][0]["message"]["content"]
-            # logger.info(resp)
+
             result = resp
             return_resp = resp
         elif mode in ["choose_quest_team_action", "vote_on_team", "vote_on_mission", "assassination", "get_believed_sides"]:
-            # logger.debug("!!!Input message: " + str(input_messages))
+
             resp = openai_wrapper(
                 messages=input_messages,
                 temperature=temperature,
@@ -320,15 +285,11 @@ class OpenAIChatCompletionAssassin(Agent):
                     "content": "Please summarize the history. Try to keep all the useful information, including your identification and your observations of the game."
                 }
                 summary_result = openai_wrapper(
-                    messages=history[:-1] + [summary_prompt],
+                    messages=history[1:-1] + [summary_prompt],
                     temperature=0.1,
                     **self.api_args
                 )
                 summary_result = summary_result["choices"][0]["message"]["content"]
-                # summary.append({
-                #     "role": "user",
-                #     "content": "Summary of previous information",
-                # })
                 summary.append({
                     "role": "assistant",
                     "content": "Summary of previous information:\n" + summary_result,
@@ -347,31 +308,12 @@ class OpenAIChatCompletionAssassin(Agent):
                 temperature=0.1,
                 **self.api_args
             )
-        # else:
 
-        # final_prompt = [{
-        #     "role": "user",
-        #     "content": summary_result + ' ' + history[-1]['content']
-        # },
-        # {
-        #     "role": "assistant",
-        #     "content": resp
-        # },
-        # {
-        #     "role": "user",
-        #     "content": "Therefore, your final choices is:"
-        # }]
-
-        # resp = openai.ChatCompletion.create(
-        #     messages=final_prompt,
-        #     **self.api_args
-        # )
             resp = resp["choices"][0]["message"]["content"]
             result = resp
             return_resp = resp
         print(result)
 
-        # time.sleep(5)
 
 
         return result, summary, return_resp, self.player_id

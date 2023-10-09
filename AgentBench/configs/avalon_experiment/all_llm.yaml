@@ -1,12 +1,15 @@
 team_discussion: True
 summarize: True
 thought: True
-test_role: "Assassin"
+test_role: "Servant"
 naive_summary: "full-history"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
 local_llm: False
-game_log: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, None, 0, 0, 0, 0]
+num_games: 1
+rerun: False
+benchmark_assassination: False
+# game_log: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, None, 0, 0, 0, 0]
 
 prompts:
   INTRODUCTION: >

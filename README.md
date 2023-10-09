@@ -2,11 +2,17 @@
 
 This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](TBD). The code is based on [AgentBench]().
 
-## Requirements
+## Getting Started
+
+### Prerequisites
 
 `pip install -r requirements.txt`
 
-## Quick Start
+### Installing
+
+### Unit tests
+
+## Running the experiments
 
 ```bash
 # Run single-player setting with LLM playing as Assassin (w/ discussion)
@@ -24,3 +30,11 @@ python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_l
 ```
 
 ## Configuration
+
+## Using the game engine
+
+## Authors
+
+## License
+
+

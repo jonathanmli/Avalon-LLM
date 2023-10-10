@@ -1,4 +1,4 @@
 .DS_Store
-**/__pycache__/
+__pycache__
 AgentBench/outputs/
 AgentBench/src/tasks/avalon/logs/

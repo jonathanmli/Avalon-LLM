@@ -5,9 +5,10 @@ test_role: "Assassin"
 naive_summary: "full-history"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
-local_llm: True
+local_llm: False
 rerun: False
 num_games: 10
+benchmark_assassination: False
 
 prompts:
   INTRODUCTION: >
@@ -45,15 +46,3 @@ prompts:
     Answer: [player_id_num]
   
   DISCUSSION_PROMPT: "Statement from Leader {player_list[leader]}: \n\"{statement}\"\nAnd words from other players:\n{' '.join(discussion_history)}\n This is discussion phase, and you don't need to take an action. Please discuss about words from the leader and other players with just one sentence."
-
-# To test the with all naive agents, set team_discussion to False
-
-####### Passed Tests #######
-# team_discussion: False 
-# naive_summary: "10-last"
-# agent_summary: "10-last"
-############################
-# team_discussion: True 
-# naive_summary: "10-last"
-# agent_summary: "10-last"
-############################

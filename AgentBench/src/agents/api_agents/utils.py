@@ -53,16 +53,16 @@ def get_statement(last_history: str):
     return last_history.split("Statement: ")[-1]
 
 
-def wrap_langchain(text):
-    api_key = os.getenv('OPENAI_API_KEY')
-    llm = ChatOpenAI(openai_api_key=api_key, temperature=0)
+# def wrap_langchain(text):
+#     api_key = os.getenv('OPENAI_API_KEY')
+#     llm = ChatOpenAI(openai_api_key=api_key, temperature=0)
 
 
-    response = llm.predict(text)
+#     response = llm.predict(text)
 
-    # print(response)
+#     # print(response)
 
-    return response
+#     return response
 
 
 # def get_vote_result(message):

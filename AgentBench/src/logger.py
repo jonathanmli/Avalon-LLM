@@ -6,6 +6,11 @@ logger = logging.getLogger('avalon_logger')
 
 counter = os.listdir('./src/tasks/avalon/logs/')
 
+# Check if the folder exists
+if not os.path.exists("./src/tasks/avalon/logs/"):
+    # If it doesn't exist, create it
+    os.makedirs("./src/tasks/avalon/logs/")
+
 # Create a file handler
 file_handler = logging.FileHandler(f'./src/tasks/avalon/logs/{len(counter)}.log')
 

@@ -67,7 +67,7 @@ python eval.py \
 
 ## Configuration
 
-You can customize your prompt and arguments in `configs/avalon_experiment/*.yaml`
+You can customize your prompts and arguments in `configs/avalon_experiment/*.yaml`
 
 ## Using the game engine
 

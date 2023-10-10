@@ -4,3 +4,4 @@ dataclass_wizard
 jsonlines
 tensorboard
 openai
+unittest

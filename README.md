@@ -1,6 +1,6 @@
 # From Text to Tactic: Evaluating LLMs Playing the Game of Avalon
 
-This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](TBD). The code is based on [AgentBench]().
+This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). The code is based on [AgentBench]().
 
 ## Getting Started
 

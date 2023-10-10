@@ -39,40 +39,40 @@ def get_statement(last_history: str):
     return last_history.split("Statement: ")[-1]
 
 
-def wrap_langchain(text):
-    api_key = os.getenv('OPENAI_API_KEY')
-    llm = ChatOpenAI(openai_api_key=api_key, temperature=0)
+# def wrap_langchain(text):
+#     api_key = os.getenv('OPENAI_API_KEY')
+#     llm = ChatOpenAI(openai_api_key=api_key, temperature=0)
 
 
-    response = llm.predict(text)
+#     response = llm.predict(text)
 
-    # print(response)
+#     # print(response)
 
-    return response
+#     return response
 
 
-def get_vote_result(message):
-    answer = wrap_langchain(message)
+# def get_vote_result(message):
+#     answer = wrap_langchain(message)
 
-    match_vote = "Yes|No"
-    vote_result = []
-    if 'Answer:' in answer:
-        vote_result = re.findall(match_vote, answer)
+#     match_vote = "Yes|No"
+#     vote_result = []
+#     if 'Answer:' in answer:
+#         vote_result = re.findall(match_vote, answer)
 
-    result = None if len(vote_result) == 0 else vote_result[-1]
-    return result
+#     result = None if len(vote_result) == 0 else vote_result[-1]
+#     return result
 
-def get_team_result(message):
-    answer = wrap_langchain(message)
+# def get_team_result(message):
+#     answer = wrap_langchain(message)
 
-    match_num = r"\d+"
-    player_list = []
-    if 'Answer:' in answer:
-        player_list = re.findall(match_num, answer)
+#     match_num = r"\d+"
+#     player_list = []
+#     if 'Answer:' in answer:
+#         player_list = re.findall(match_num, answer)
 
-    player_list = [int(id) for id in player_list]
+#     player_list = [int(id) for id in player_list]
 
-    return player_list
+#     return player_list
 
 
 if __name__ == "__main__":

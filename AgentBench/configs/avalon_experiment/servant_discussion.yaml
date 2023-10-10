@@ -5,6 +5,7 @@ test_role: "Servant"
 naive_summary: "full-history"
 agent_summary: "full-history" # either `10-last` or `full-history`
 logging: "DEBUG"
+rerun: False
 local_llm: False
 
 

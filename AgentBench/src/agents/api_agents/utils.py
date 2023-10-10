@@ -5,7 +5,7 @@ import numpy as np
 import os
 import re
 from tqdm import tqdm
-from langchain.chat_models import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
 import anthropic
 # from prompts import CHECK_VOTE_ON_QUEST_PROMPT
 
@@ -65,46 +65,46 @@ def wrap_langchain(text):
     return response
 
 
-def get_vote_result(message):
-    answer = wrap_langchain(message)
+# def get_vote_result(message):
+#     answer = wrap_langchain(message)
 
-    match_vote = "Yes|No"
-    vote_result = []
-    if 'Answer:' in answer:
-        vote_result = re.findall(match_vote, answer)
+#     match_vote = "Yes|No"
+#     vote_result = []
+#     if 'Answer:' in answer:
+#         vote_result = re.findall(match_vote, answer)
 
-    result = None if len(vote_result) == 0 else vote_result[-1]
-    return result
+#     result = None if len(vote_result) == 0 else vote_result[-1]
+#     return result
 
-def get_team_result(message):
-    answer = wrap_langchain(message)
+# def get_team_result(message):
+#     answer = wrap_langchain(message)
 
-    match_num = r"\d+"
-    player_list = []
-    if 'Answer:' in answer:
-        player_list = re.findall(match_num, answer)
+#     match_num = r"\d+"
+#     player_list = []
+#     if 'Answer:' in answer:
+#         player_list = re.findall(match_num, answer)
 
-    player_list = [int(id) for id in player_list]
+#     player_list = [int(id) for id in player_list]
 
-    return player_list
+#     return player_list
 
-def get_assassinate_result(message):
-    answer = wrap_langchain(message)
+# def get_assassinate_result(message):
+#     answer = wrap_langchain(message)
 
-    match_num = r"\d+"
+#     match_num = r"\d+"
 
-    target = re.findall(match_num, answer)
+#     target = re.findall(match_num, answer)
 
-    return target[-1]
+#     return target[-1]
 
-def get_believed_player_sides(message):
-    answer = wrap_langchain(message)
+# def get_believed_player_sides(message):
+#     answer = wrap_langchain(message)
 
-    # answer = answer["choices"][0]["message"]["content"]
-    # print(answer)
-    scores = eval(answer.split("Answer: ")[-1])
+#     # answer = answer["choices"][0]["message"]["content"]
+#     # print(answer)
+#     scores = eval(answer.split("Answer: ")[-1])
 
-    return scores
+#     return scores
 
 
 if __name__ == "__main__":
@@ -192,21 +192,21 @@ if __name__ == "__main__":
 
     # print(correct_count / total_count)
 
-    # Test Acc for 50 runs: 1.0
-    total_count = 0
-    correct_count = 0
-    for _ in tqdm(range(50)):
-        random_num = np.random.randint(0, 20, 1)
-        # print(random_num[0])
-        input_template = f"As the Assassin, I choose to assassinate Player {random_num[0]}"
-        # print(input_template)
-        input = input_template + '\n' + CHECK_ASSASSINATE_PROMPT
-        # print(input)
-        result = get_assassinate_result(input)
-        # print(result)
-        if int(result) == random_num[0]:
-            correct_count += 1
+    # # Test Acc for 50 runs: 1.0
+    # total_count = 0
+    # correct_count = 0
+    # for _ in tqdm(range(50)):
+    #     random_num = np.random.randint(0, 20, 1)
+    #     # print(random_num[0])
+    #     input_template = f"As the Assassin, I choose to assassinate Player {random_num[0]}"
+    #     # print(input_template)
+    #     input = input_template + '\n' + CHECK_ASSASSINATE_PROMPT
+    #     # print(input)
+    #     result = get_assassinate_result(input)
+    #     # print(result)
+    #     if int(result) == random_num[0]:
+    #         correct_count += 1
 
-        total_count += 1
+    #     total_count += 1
 
-    print(correct_count / total_count)
+    # print(correct_count / total_count)

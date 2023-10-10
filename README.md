@@ -1,6 +1,6 @@
 # From Text to Tactic: Evaluating LLMs Playing the Game of Avalon
 
-This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). The code is based on [AgentBench](https://github.com/THUDM/AgentBench).
+This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
 
 ## Initial Results
 
@@ -24,9 +24,15 @@ We also let LLMs playing against each other. Evil has an 8:2 advantage over Good
 
 ### Prerequisites
 
-`pip install -r requirements.txt`
+python $\ge$ 3.10
 
 ### Installing
+
+`pip install -r requirements.txt`
+
+### OpenAI API Key
+
+You need to fill your OPENAI API KEY in `configs/agents/single_player.yaml` first. Please remember to fill in the keys for all 5 agents. Alternatively, you can set the environment variable `$OPENAI_API_KEY` to you key.
 
 ### Unit tests
 
@@ -37,23 +43,31 @@ To ensure that the code for the engine works, run the following from the root di
 
 - Run single-player setting with LLM playing as Assassin (w/ discussion)
 ```bash
-python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/single_player.yaml\
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/single_player.yaml \
     --config configs/avalon_experiment/assassin_discussion.yaml
 ```
 
 - Run single-player setting with LLM playing as Servant (w/ discussion)
 ```bash
-python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/single_player.yaml\
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/single_player.yaml \
     --config configs/avalon_experiment/servant_discussion.yaml
 ```
 
 - Run multi-player setting (w/ discussion)
 ```bash
-python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_llm.yaml\
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/all_llm.yaml \
     --config configs/avalon_experiment/all_llm.yaml
 ```
 
 ## Configuration
+
+You can customize your prompt and arguments in `configs/avalon_experiment/*.yaml`
 
 ## Using the game engine
 
@@ -65,7 +79,18 @@ First input your game configurations into `AvalonConfig`, then create an `Avalon
 
 For an example of how to use the game engine, see `Avalon/test_engine.py`
 
-## Authors
+<!-- ## Authors -->
+
+## Citation
+
+```
+@article{light2023text,
+  title    =  {From Text to Tactic: Evaluating LLMs Playing the Game of Avalon}, 
+  author   =  {Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
+  year     =  {2023},
+  journal  =  {arXiv preprint arXiv: 2310.05036}
+}
+```
 
 ## License
 

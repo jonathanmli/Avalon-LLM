@@ -4,7 +4,7 @@ The following project explores communication between generative AI (large langua
 
 ChatGPT took the world by storm when it came out, demonstrating impressive language and reasoning capabilities. However, one of the major challenges facing broad usage of these generative agents is that to elicit good answers one needs to provide good prompts. This has led to a flurry of new companies that specialize in prompt engineering, mostly through human prompt engineers. 
 
-We hope to help solve this challenge by automating the prompt engineering process using LLMs. Moreover, through obversing how generative agents interact, we hope to ellucidate how LLMs reason and collaborate with other LLMs and with humans. 
+We hope to help solve this challenge by automating the prompt engineering process using LLMs. Moreover, through obversing how generative agents interact, we hope to ellucidate how LLMs reason and collaborate with other LLMs and with humans!
 
 ## Literature
 

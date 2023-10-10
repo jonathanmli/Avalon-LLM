@@ -28,7 +28,10 @@ python $\ge$ 3.10
 
 ### Installing
 
-`pip install -r requirements.txt`
+```bash
+cd AgentBench
+pip install -r requirements.txt
+```
 
 ### OpenAI API Key
 
@@ -40,6 +43,8 @@ To ensure that the code for the engine works, run the following from the root di
 `python -m unittest discover Avalon`
 
 ## Running the experiments
+
+First of all, also `cd AgentBench`.
 
 - Run single-player setting with LLM playing as Assassin (w/ discussion)
 ```bash

@@ -16,7 +16,7 @@ from copy import deepcopy
 from ...tasks.avalon.api import *
 from .utils import openai_wrapper
 from ...tasks.avalon.prompts import CHECK_CHOOSE_TEAM_PROMPT, CHECK_VOTE_ON_QUEST_PROMPT, CHECK_VOTE_ON_TEAM_PROMPT, CHECK_ASSASSINATE_PROMPT, CHECK_BELIEVED_SIDES_PROMPT
-from langchain.chat_models import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
 import numpy as np
 from ...task import logger
 

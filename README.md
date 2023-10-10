@@ -12,6 +12,9 @@ This is the official code for paper [From Text to Tactic: Evaluating LLMs Playin
 
 ### Unit tests
 
+To ensure that the code for the engine works, run the following from the root directory:
+`python -m unittest discover Avalon`
+
 ## Running the experiments
 
 ```bash
@@ -32,6 +35,14 @@ python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_l
 ## Configuration
 
 ## Using the game engine
+
+You can import and use the game engine by running
+```python
+from engine import AvalonGameEnvironment, AvalonConfig
+```
+First input your game configurations into `AvalonConfig`, then create an `AvalonGameEnvironment` based on that.
+
+For an example of how to use the game engine, see `Avalon/test_engine.py`
 
 ## Authors
 

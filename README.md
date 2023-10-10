@@ -1,47 +1,50 @@
-# Communication Between Generative Agents
+# From Text to Tactic: Evaluating LLMs Playing the Game of Avalon
 
-The following project explores communication between generative AI (large language models in particular) in natural social settings. 
+This is the official code for paper [From Text to Tactic: Evaluating LLMs Playing the Game of Avalon](TBD). The code is based on [AgentBench]().
 
-ChatGPT took the world by storm when it came out, demonstrating impressive language and reasoning capabilities. However, one of the major challenges facing broad usage of these generative agents is that to elicit good answers one needs to provide good prompts. This has led to a flurry of new companies that specialize in prompt engineering, mostly through human prompt engineers. 
+## Getting Started
 
-We hope to help solve this challenge by automating the prompt engineering process using LLMs. Moreover, through obversing how generative agents interact, we hope to ellucidate how LLMs reason and collaborate with other LLMs and with humans. 
+### Prerequisites
 
-## Literature
+`pip install -r requirements.txt`
 
-The literature is relatively new in this area, and there is a lot of enthusiasm for more research. 
+### Installing
 
-### Generative collaborative agents
+### Unit tests
 
-- [CAMEL](https://arxiv.org/pdf/2303.17760.pdf) Introduces a framework where two LLMs interact with each other to complete a task
-- [Generative Society](https://arxiv.org/abs/2304.03442) Simulates LLMs in a fictional virtual village
-- [Socially Aligned LLMs in Society](https://arxiv.org/pdf/2305.16960.pdf) Aligning LLMs through social interactions
+To ensure that the code for the engine works, run the following from the root directory:
+`python -m unittest discover Avalon`
 
-### Playing games with LLMS
+## Running the experiments
 
-- [Repeated Gameplay with LLMs](https://arxiv.org/pdf/2305.16867.pdf) Let GPTs play repeated games with each other
+```bash
+# Run single-player setting with LLM playing as Assassin (w/ discussion)
+python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/single_player.yaml --config configs/avalon_experiment/assassin_discussion.yaml
+```
 
-### AI Multi-agent Gameplay
+```bash
+# Run single-player setting with LLM playing as Servant (w/ discussion)
+python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/single_player.yaml --config configs/avalon_experiment/servant_discussion.yaml
+```
 
-- [Diplomacy](https://arxiv.org/pdf/2010.02923.pdf) Presents an algorithm for effective play of diplomacy agents human and AI opponents
-- [Avalon Assasin](https://arxiv.org/pdf/2209.09331.pdf) Training an AI to assassinate in Avalon
-- [Diplomacy with LLMs](https://noambrown.github.io/downloads/diplomacy_science.pdf) combining strategic reasoning with LLMs
+```bash
+# Run multi-player setting (w/ discussion)
+python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_llm.yaml --config configs/avalon_experiment/all_llm.yaml
+```
 
-### LLM alignment
+## Configuration
 
-- [InstructGPT](https://arxiv.org/pdf/2203.02155.pdf) Model for aligning AI outputs with human feedback
-- [Self-Instruct](https://arxiv.org/pdf/2212.10560.pdf) Aligning LLMS using self generated instructions
-- [Negotiation and Self-Play](https://arxiv.org/pdf/2305.10142.pdf) Can LLMS improve each other through a negotiation game?
-- [Principle-Driven Self-Alignment](https://arxiv.org/pdf/2305.03047.pdf) New self-alignment method
+## Using the game engine
 
-### Hidden Identity Game Strategy
+You can import and use the game engine by running
+```python
+from engine import AvalonGameEnvironment, AvalonConfig
+```
+First input your game configurations into `AvalonConfig`, then create an `AvalonGameEnvironment` based on that.
 
-- [Percival Strategy](http://www.cs.cmu.edu/~ynakamur/fun/avalonstats.pdf) Analysis of strategy for percival
+For an example of how to use the game engine, see `Avalon/test_engine.py`
 
-## Data
+## Authors
 
-- [AvalonLogs](https://github.com/WhoaWhoa/avalonlogs) Logs of quantitative (voting, successes, etc.) data for human players for around 12k games
-- [ProAvalon](https://www.proavalon.com/statistics) Logs can be availiable on request
-- [Avalon and ONUW Recordings](https://aclanthology.org/2023.findings-acl.411.pdf) Contains 8 games of Avalon videos, audio, and dialogue transcript
+## License
 
-## Questions
-- What other alternatives to RLHF exist currently?

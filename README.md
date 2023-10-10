@@ -37,4 +37,3 @@ python eval.py --task configs/tasks/avalon/dev.yaml --agent configs/agents/all_l
 
 ## License
 
-

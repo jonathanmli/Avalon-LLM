@@ -21,3 +21,7 @@ python naive_experiment.py --num_games NUM_GAMES
 ## Code for AgentBench
 
 In `avalon_agent` and `avalon_task`, you will find the code for integrating **AvalonBench** into **AgentBench**. For secondary development, please refer to the [tutorial in AgentBench](https://github.com/THUDM/AgentBench/blob/main/docs/tutorial.md).
+
+## Prompts
+
+Prompts that we use can be found in `avalon_task/prompts.py` and `avalon_task/task.py` (which will also be merged into `avalon_task/prompts.py`).

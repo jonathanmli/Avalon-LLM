@@ -2,7 +2,7 @@
 
 Based on **AgentBench**, we implement AvalonBench, which extends **AgentBench** to support **multi-agent** game play of Avalon.
 
-The specific code for our task can found in `../Avalon/avalon_task/`. Code for the agents are shown in `../Avalon/avalon_agent/`. If you are familiar with **AgentBench**, you can also find the code in their corresponding positions in **AgentBench**.
+The specific code for our task can found in `../Avalon/avalon_task/`. Code for the agents are shown in `../Avalon/avalon_agent/`. If you are familiar with **AgentBench**, you can also find the code in their corresponding positions in **AgentBench**. Specifically, prompts that we use can be found in `../Avalon/avalon_task/prompts.py` and `../Avalon/avalon_task/task.py`. You can also change the prompts in config files in `configs/avalon_experiment/*.yaml`.
 
 
 

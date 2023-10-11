@@ -9,55 +9,19 @@
 
 # AgentBench: Evaluating LLMs as Agents
 
+> This is a modified version of the original README in AgentBench. You can also follow this README to run AvalonBench
 
+**AgentBench** is the first benchmark designed to evaluate **LLM-as-Agent** across a diverse spectrum of different environments. Based on that, we implement AvalonBench, which extends **AgentBench** to support **multi-agent** game play of Avalon.
 
-https://github.com/THUDM/AgentBench/assets/129033897/656eed6e-d9d9-4d07-b568-f43f5a451f04
-
-
-
-**AgentBench** is the first benchmark designed to evaluate **LLM-as-Agent** across a diverse spectrum of different environments. It encompasses 8 distinct environments to provide a more comprehensive evaluation of the LLMs' ability to operate as autonomous agents in various scenarios. These environments include 5 freshly created domains, namely 
-
-- Operating System (OS)
-- Database (DB)
-- Knowledge Graph (KG)
-- Digital Card Game (DCG)
-- Lateral Thinking Puzzles (LTP)
-
-as well as 3 recompiled from published datasets: 
-
-- House-Holding (HH) ([ALFWorld](https://github.com/alfworld/alfworld))
-- Web Shopping (WS) ([WebShop](https://github.com/princeton-nlp/webshop))
-- Web Browsing (WB) ([Mind2Web](https://github.com/OSU-NLP-Group/Mind2Web))
-
-![](./assets/agentbench.png)
+The specific code for our task can found in `../Avalon/avalon_task/`. Code for the agents are shown in `../Avalon/avalon_agent/`. If you are familiar with **AgentBench**, you can also find the code in their corresponding positions in **AgentBench**.
 
 
 ## Table of Contents
 
-- [Dataset Summary](#dataset-summary)
-- [Leaderboard](#leaderboard)
+
 - [Quick Start](#quick-start)
-- [Tutorial](#tutorial)
 - [Citation](#citation)
 
-
-## Dataset Summary
-
-We offer three splits for each dataset: Dev, Test, and Extend. Dev is fully public, while Test and Extend are private. In designing AgentBench, we balance evaluation thoroughness and efficiency. Though the number of problems in Dev and Test may seem small at 289 and 1,141, the multi-turn interaction requires an LLMs to generate around 4k and 13k times, making the testing time-consuming.
-
-![](./assets/statistics.png)
-
-## Leaderboard
-
-Here is the scores on test set (standard) results of AgentBench.
-
-![](./assets/leaderboard.png)
-
-While LLMs begin to manifest their proficiency in LLM-as-Agent, gaps between models and the distance towards practical usability are significant.
-
-![](./assets/intro.png)
-
-Xlsx-format leaderboard data is available [here](https://github.com/THUDM/AgentBench/blob/main/assets/agentbench_leaderboard-230808.xlsx).
 
 ## Quick Start
 
@@ -95,18 +59,34 @@ python create_assignment.py \
     --assignment configs/assignments/example.yaml
 ```
 
-And you can see the target assignment bash script from the output like this:
+### Step 4. Run Scripts for AvalonBench
 
-```yaml
-[System] Run the following command to start evaluation:
-    bash .assignments/<TIMESTAMP>.sh
+> Above are the test code for AgentBench. However, you can simply run the scripts for AvalonBench
+
+Finally, run the following scripts for AvalonBench. After that, you can check your output in the `logs` folder.
+- Run single-player setting with LLM playing as Assassin (w/ discussion)
+```bash
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/single_player.yaml \
+    --config configs/avalon_experiment/assassin_discussion.yaml
 ```
 
-Finally, run the assignment bash script that displayed in the output to start evaluation. After that, you can check your output in the `outputs` folder.
+- Run single-player setting with LLM playing as Servant (w/ discussion)
+```bash
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/single_player.yaml \
+    --config configs/avalon_experiment/servant_discussion.yaml
+```
 
-## Tutorial
-
-For more detailed instructions and advanced usage, please refer to our [tutorial](./docs/tutorial.md).
+- Run multi-player setting (w/ discussion)
+```bash
+python eval.py \
+    --task configs/tasks/avalon/dev.yaml \
+    --agent configs/agents/all_llm.yaml \
+    --config configs/avalon_experiment/all_llm.yaml
+```
 
 ## Citation
 

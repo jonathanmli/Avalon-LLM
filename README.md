@@ -89,12 +89,14 @@ For an example of how to use the game engine, see `Avalon/test_engine.py`
 ## Citation
 
 ```
-@article{light2023text,
-  title    =  {AvalonBench: Evaluating LLMs Playing the Game of Avalon}, 
-  author   =  {Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
-  year     =  {2023},
-  journal  =  {arXiv preprint arXiv: 2310.05036}
-}
+@inproceedings{
+      light2023from,
+      title={From Text to Tactic: Evaluating {LLM}s Playing the Game of Avalon},
+      author={Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
+      booktitle={NeurIPS 2023 Foundation Models for Decision Making Workshop},
+      year={2023},
+      url={https://openreview.net/forum?id=ltUrSryS0K}
+  }
 ```
 
 ## License

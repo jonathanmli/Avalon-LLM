@@ -1,103 +1,70 @@
-# AvalonBench: Evaluating LLMs Playing the Game of Avalon
+# AvalonBench
 
-This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
+## Install requirements
 
-## Initial Results
-
-### LLMs Play Against Baseline Bots
-
-Here are the results of LLMs playing against baseline bots.
-
-![](./assets/sinlge_results.png)
-
-
-### Multi-LLMs Self-Play
-
-We also let LLMs playing against each other. Evil has an 8:2 advantage over Good, which is similar to the stats of rookie human players! Here are also some examples of discussion under this setting.
-
-![](./assets/discussion1.png)
-
-![](./assets/discussion2.png)
-
-
-## Getting Started
-
-### Prerequisites
-
-python $\ge$ 3.10
-
-### Installing
-
-```bash
-cd AgentBench
+```
 pip install -r requirements.txt
 ```
 
-### OpenAI API Key
+## Quick Start
 
-You need to fill your OPENAI API KEY in `configs/agents/single_player.yaml` first. Please remember to fill in the keys for all 5 agents. Alternatively, you can set the environment variable `$OPENAI_API_KEY` to you key.
+### Start the task server and the assigner
 
-### Unit tests
-
-To ensure that the code for the engine works, run the following from the root directory:
-`python -m unittest discover Avalon`
-
-## Running the experiments
-
-First of all, also `cd AgentBench`.
-
-- Run single-player setting with LLM playing as Assassin (w/ discussion)
+Start the game (3 is the number of workers)
 ```bash
-python eval.py \
-    --task configs/tasks/avalon/dev.yaml \
-    --agent configs/agents/single_player.yaml \
-    --config configs/avalon_experiment/assassin_discussion.yaml
+python -m src.start_task -a --start avalon-dev-single 3
 ```
-
-- Run single-player setting with LLM playing as Servant (w/ discussion)
+Start the assigner
 ```bash
-python eval.py \
-    --task configs/tasks/avalon/dev.yaml \
-    --agent configs/agents/single_player.yaml \
-    --config configs/avalon_experiment/servant_discussion.yaml
+python -m src.assigner --config ./configs/assignments/test_avalon.yaml
 ```
 
-- Run multi-player setting (w/ discussion)
+### Customize configurations and data
+
+1. You can modify the file `configs/tasks/avalon.yaml` to configure the agent list. A config file looks like this:
+```yaml
+default:
+  module: "src.server.tasks.avalon.AvalonBench"
+  parameters:
+    num_players: 5
+    discussion: False
+
+avalon-dev-naive:
+  parameters:
+    name: "AvalonBench-dev-naive"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["naive", "naive", "naive", "naive", "naive"]
+
+avalon-dev-single:
+  parameters:
+    name: "AvalonBench-dev-single"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["llm", "naive", "naive", "naive", "naive"]
+```
+where `naive` stands for the naive bots. Agents will play the roles with the same index in the data file (see following).
+```plaintext
+Note: There should only be one "llm" in the `agent_list`
+```
+
+2. You can also add data in `data/avalon/dev.json` (Note: Currently we only support the 5-player game setting, which includes 1 Merlin, 2 Servants, 1 Minion and 1 Assassin). A data item looks like this:
+
+```json
+ {
+     "num_players": 5,
+     "quest_leader": 0,
+     "role_names": ["Assassin", "Servant", "Servant", "Merlin", "Minion"]
+ }
+```
+where `quest_leader` is the id of the initial quest leader in this game. You can change the game setup by altering `quest_leader` with number from 0 to 4, and by permuting `role_names`.
+
+### Naive experiment
+
+You can also start a naive experiment using:
 ```bash
-python eval.py \
-    --task configs/tasks/avalon/dev.yaml \
-    --agent configs/agents/all_llm.yaml \
-    --config configs/avalon_experiment/all_llm.yaml
+python -m src.start_task -a --start avalon-dev-naive 3
 ```
+where all the agents are naive bots. For details of the naive strategies, please refer to the [paper](https://arxiv.org/pdf/2310.05036.pdf).
 
-## Configuration
+## Prompts
 
-You can customize your prompts and arguments in `configs/avalon_experiment/*.yaml`
-
-## Using the game engine
-
-You can import and use the game engine by running
-```python
-from engine import AvalonGameEnvironment, AvalonConfig
-```
-First input your game configurations into `AvalonConfig`, then create an `AvalonGameEnvironment` based on that.
-
-For an example of how to use the game engine, see `Avalon/test_engine.py`
-
-<!-- ## Authors -->
-
-## Citation
-
-```
-@inproceedings{
-      light2023from,
-      title={From Text to Tactic: Evaluating {LLM}s Playing the Game of Avalon},
-      author={Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
-      booktitle={NeurIPS 2023 Foundation Models for Decision Making Workshop},
-      year={2023},
-      url={https://openreview.net/forum?id=ltUrSryS0K}
-  }
-```
-
-## License
-
+All the prompts are maintained in `src/server/tasks/avalon/prompt.py`. You can find the respective prompts used in `src/server/tasks/avalon/agents/llm_with_discussion.py` and `src/server/tasks/avalon/wrapper.py`.

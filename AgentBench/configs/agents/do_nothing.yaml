@@ -1,4 +1,0 @@
-module: "src.agents.DoNothingAgent"
-parameters:
-    name: "Do-Nothing-Agent"
-    sleep: 0.01

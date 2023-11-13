@@ -43,11 +43,11 @@ class GOPSEnvironment():
         self.player1_score = 0
         self.player2_score = 0
         self.contested_points = 0
-        score_card = self.draw_score_card()
+        score_card = self._draw_score_card()
         return (self.done, score_card, self.contested_points)
 
 
-    def draw_score_card(self):
+    def _draw_score_card(self):
         '''
         Draws a score card
         '''
@@ -59,7 +59,55 @@ class GOPSEnvironment():
             self.score_card_deck = np.delete(self.score_card_deck, np.where(self.score_card_deck == score_card))
             self.contested_points += score_card
             return score_card
-
+        
+    def get_player1_hand(self):
+        '''
+        Returns player 1's hand
+        '''
+        return self.player1_hand
+    
+    def get_player2_hand(self):
+        '''
+        Returns player 2's hand
+        '''
+        return self.player2_hand
+    
+    def get_player1_score(self):
+        '''
+        Returns player 1's score
+        '''
+        return self.player1_score
+    
+    def get_player2_score(self):
+        '''
+        Returns player 2's score
+        '''
+        return self.player2_score
+    
+    def get_contested_points(self):
+        '''
+        Returns contested points
+        '''
+        return self.contested_points
+    
+    def get_current_turn(self):
+        '''
+        Returns current turn
+        '''
+        return self.current_turn
+    
+    def get_score_card_deck(self):
+        '''
+        Returns score card deck
+        '''
+        return self.score_card_deck
+    
+    def get_score_cards(self):
+        '''
+        Returns score cards
+        '''
+        return self.config.score_cards
+    
     def play_cards(self, player1_card, player2_card):
         '''
         Plays the cards of the two players
@@ -88,7 +136,7 @@ class GOPSEnvironment():
             self.done = True
         
         # reveal random score card
-        score_card = self.draw_score_card()
+        score_card = self._draw_score_card()
 
         # return done and score card
         return (self.done, score_card, self.contested_points)

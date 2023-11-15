@@ -1,5 +1,7 @@
 # AvalonBench
 
+AvalonBench implemented based on AgentBench v0.2.
+
 ## Install requirements
 
 ```
@@ -68,3 +70,7 @@ where all the agents are naive bots. For details of the naive strategies, please
 ## Prompts
 
 All the prompts are maintained in `src/server/tasks/avalon/prompt.py`. You can find the respective prompts used in `src/server/tasks/avalon/agents/llm_with_discussion.py` and `src/server/tasks/avalon/wrapper.py`.
+
+## TODOs
+- [x] Single-player setting
+- [ ] Multi-LLM Setting

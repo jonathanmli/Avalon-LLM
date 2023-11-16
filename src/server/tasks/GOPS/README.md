@@ -31,4 +31,4 @@ gops-dev-naive:
     name: "gops-dev-naive"
     agent_list: ["naive", "naive"]
 ```
-where you can change the number of games `num_games`, and the number of turns `num_turns`. Advanced agents will be coming soon.
+where you can change the number of games `num_games`, and the number of turns in each game `num_turns`. Advanced agents will be coming soon.

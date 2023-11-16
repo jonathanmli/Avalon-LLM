@@ -11,9 +11,7 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 ## Video Demos
 
-![](./assets/video/single_llm_gpt3.5.mp4)
 
-[](./assets/video/single_llm_gpt_4.mp4)
 
 ## Initial Results
 

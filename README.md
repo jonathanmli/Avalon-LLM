@@ -1,14 +1,46 @@
-# AvalonBench
+# AvalonBench: Evaluating LLMs Playing the Game of Avalon
 
-AvalonBench implemented based on AgentBench v0.2.
+This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
 
-## Install requirements
+**Note**: For Multi-LLM setting, please use the older version in [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1). The support of Multi-LLM setting with this new version will be coming soon.
 
-```
+## News
+
+- [2023/11] 🎴We've added a new game called GOPS (Game of Pure Strategy [[Wiki](https://en.wikipedia.org/wiki/Goofspiel)]). For more details of the code, please refer to [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/src/server/tasks/GOPS)
+- [2023/10] 🤖We've updated our code based on AgentBench v0.2. For the older version, please visit [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1)
+
+## Initial Results
+
+### LLMs Play Against Baseline Bots
+
+Here are the results of LLMs playing against baseline bots.
+
+![](./assets/sinlge_results.png)
+
+
+### Multi-LLMs Self-Play
+
+We also let LLMs playing against each other. Evil has an 8:2 advantage over Good, which is similar to the stats of rookie human players! Here are also some examples of discussion under this setting.
+
+![](./assets/discussion1.png)
+
+![](./assets/discussion2.png)
+
+## Getting Started
+
+### Prerequisites
+
+Install the dependencies.
+
+```bash
+conda create -n avalonbench python=3.9
+conda activate avalonbench
 pip install -r requirements.txt
 ```
 
-## Quick Start
+### OpenAI API Key
+
+You need to fill your OPENAI API KEY in `configs/agents/openai-chat` first. Please replace `<OPENAI_API_KEY>` in `Bearer <OPENAI_API_KEY>` with your key.
 
 ### Start the task server and the assigner
 
@@ -71,6 +103,36 @@ where all the agents are naive bots. For details of the naive strategies, please
 
 All the prompts are maintained in `src/server/tasks/avalon/prompt.py`. You can find the respective prompts used in `src/server/tasks/avalon/agents/llm_with_discussion.py` and `src/server/tasks/avalon/wrapper.py`.
 
+## Using game engines
+
+We also provide our engines along with examples of usage for developers in `avalonbench_dev`.
+
+You can import and use the game engine by running
+```python
+from engine import AvalonGameEnvironment, AvalonConfig
+```
+First input your game configurations into `AvalonBasicConfig`, then create an `AvalonGameEnvironment` based on that.
+
+For an example of how to use the game engine, see `avalonbench_dev/avalon/test_engine.py`
+
 ## TODOs
 - [x] Single-player setting
 - [ ] Multi-LLM Setting
+
+<!-- ## Authors -->
+
+## Citation
+
+```
+@inproceedings{
+      light2023from,
+      title={From Text to Tactic: Evaluating {LLM}s Playing the Game of Avalon},
+      author={Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
+      booktitle={NeurIPS 2023 Foundation Models for Decision Making Workshop},
+      year={2023},
+      url={https://openreview.net/forum?id=ltUrSryS0K}
+  }
+```
+
+## License
+

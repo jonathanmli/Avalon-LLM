@@ -1,12 +1,6 @@
 # AvalonBench: Evaluating LLMs Playing the Game of Avalon
 
-<div align="center">
-  <a href="avalonbench.github.io">
-    🏠Homepage
-  </a>
-</div>
-
-This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
+This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*. [🏠Homepage](https://avalonbench.github.io)
 
 **Note**: For Multi-LLM setting, please use the older version in [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1). The support of Multi-LLM setting with this new version will be coming soon.
 

@@ -9,6 +9,7 @@ from src.utils import ColorMessage
 
 from .engine import *
 from .agents.naive import NaiveGOPSAgent
+from .agents.llmagent import LLMGOPSAgent
 
 from .wrapper import FakeSession, SessionWrapper
 
@@ -16,6 +17,7 @@ from src.typings import AgentContextLimitException
 
 AGENT_FINDER = {
     'naive': NaiveGOPSAgent,
+    'llm': LLMGOPSAgent
 }
 
 class GOPSBench(Task):
@@ -30,7 +32,6 @@ class GOPSBench(Task):
 
 
     def calculate_overall(self, results: List[TaskOutput]) -> Dict[str, Any]:
-        print("testtesttest")
         outputs = [None for _ in range(len(self.data))]
         for result in results:
             outputs[result.index] = result.result
@@ -77,15 +78,31 @@ class GOPSBench(Task):
             session =   sessions[1]
         )
 
+        for player in [player1, player2]:
+            await player.initialize()
+
         print(f"Welcome {player1} and {player2} to GOPS!")
         while not done:
             print(f"Current score: {player1}: {env.player1_score}, {player2}: {env.player2_score}")
             print(f"Current contested points: {contested_points}, current contested score card: {score_card}")
 
             print(f"{player1}, play a card out of {env.player1_hand}")
-            move1 = await player1.play_card()
+            move1 = await player1.play_card(contested_points, score_card)
             print(f"{player2}, play a card out of {env.player2_hand}")
-            move2 = await player2.play_card()
+            move2 = await player2.play_card(contested_points, score_card)
+
+            await player1.observe_round(
+                contested_points    =   contested_points,
+                score_card          =   score_card,
+                your_card           =   move1,
+                opponent_card       =   move2
+            )
+            await player2.observe_round(
+                contested_points    =   contested_points,
+                score_card          =   score_card,
+                your_card           =   move2,
+                opponent_card       =   move1
+            )
 
             (done, score_card, contested_points) = env.play_cards(int(move1), int(move2))
             print(f"{player1} played {move1}, {player2} played {move2}")

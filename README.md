@@ -6,11 +6,18 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 ## News
 
-- [2023/11] ♠️We've added a new game called GOPS (Game of Pure Strategy [[Wiki](https://en.wikipedia.org/wiki/Goofspiel)]). For more details of the code, please refer to [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/src/server/tasks/GOPS)
-- [2023/10] 🤖We've updated our code based on AgentBench v0.2. For the older version, please visit [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1)
+- [2023/11] ♠️We've added a new game called GOPS (Game of Pure Strategy [[Wiki](https://en.wikipedia.org/wiki/Goofspiel)]). For more details of the code, please refer to [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/src/server/tasks/GOPS).
+- [2023/10] 🤖We've updated our code based on AgentBench v0.2. For the older version, please visit [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1).
 
 ## Video Demos
 
+GPT-3.5-turbo🤖 playing against rule-based bots in AvalonBench
+
+![gpt3 5_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/f16b976b-4ea5-44d5-9f5f-d27c8ca7ca1c)
+
+GPT-4-turbo🤖 playing against rule-based bots in AvalonBench
+
+![gpt4_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/954beb84-7bba-4a2f-afd7-ea5c08e6c47c)
 
 
 ## Initial Results

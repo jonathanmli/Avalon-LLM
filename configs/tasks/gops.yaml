@@ -2,10 +2,15 @@ default:
   module: "src.server.tasks.GOPS.GOPSBench"
   parameters:
     concurrency: 5
-    num_games: 3
+    num_games: 10
     num_turns: 5
 
 gops-dev-naive:
   parameters:
     name: "gops-dev-naive"
     agent_list: ["naive", "naive"]
+
+gops-dev-single:
+  parameters:
+    name: "gops-dev-single"
+    agent_list: ["llm", "naive"]

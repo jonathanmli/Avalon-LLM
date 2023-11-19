@@ -13,11 +13,13 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 GPT-3.5-turbo🤖 playing against rule-based bots in AvalonBench
 
-![gpt3 5_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/f16b976b-4ea5-44d5-9f5f-d27c8ca7ca1c)
+https://github.com/jonathanmli/Avalon-LLM/assets/24936331/e15eadc0-60e6-448d-88a0-854ba35d628c
 
 GPT-4-turbo🤖 playing against rule-based bots in AvalonBench
 
-![gpt4_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/954beb84-7bba-4a2f-afd7-ea5c08e6c47c)
+https://github.com/jonathanmli/Avalon-LLM/assets/24936331/23fcb204-7570-4449-8777-b179c25251ad
+
+
 
 
 ## Initial Results

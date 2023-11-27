@@ -183,7 +183,7 @@ class LLMAgentWithDiscussion(Agent):
             )
         
     
-    async def vote_on_team(self, team, mission_id):
+    async def vote_on_team(self, team, mission_id, discussion_history):
         """Vote to approve or reject a team.
 
         If there's no discussion phase, we will summarize the history before the vote phase.

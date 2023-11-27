@@ -8,6 +8,8 @@ from src.typings import AgentContextLimitException
 from .avalon_exception import AvalonAgentActionException
 from src.utils import ColorMessage
 
+from multi_agent.typings import FakeSession, Proxy
+
 class FakeSession:
     history: list=[]    # Fake history
 
@@ -22,8 +24,12 @@ class FakeSession:
         pass
 
 class SessionWrapper:
-    def __init__(self, session: Union[Session, FakeSession]):
+    def __init__(self, session: Union[Session, FakeSession], proxy: Proxy):
         self.session = session
+        self.proxy = proxy
+        self.decorate_method('action')
+        self.decorate_method('inject')
+        self.decorate_method('parse_result')
 
     def balance_history(self):
         '''
@@ -34,6 +40,13 @@ class SessionWrapper:
                 'role': 'user',
                 'content': ''
             })
+
+    def decorate_method(self, method_name):
+        # Get the method
+        method = getattr(self, method_name)
+
+        # Decorate and replace the method
+        setattr(self, method_name, self.proxy.method_wrapper(method))
 
     def get_history(self):
         return self.session.history

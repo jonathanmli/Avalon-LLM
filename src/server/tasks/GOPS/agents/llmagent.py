@@ -33,18 +33,21 @@ class LLMGOPSAgent(GOPSAgent):
         })
 
     async def play_card(self, contested_points, score_card) -> int:
+        print(f"This is player {self.id}, my hand is {self.hand}")
         card = await self.session.action({
             "role": "user",
             "content": f"Your current hand is {self.hand}.\nCurrent contested points: {contested_points}\nCurrent score card: {score_card}\nPlease play a card from your hand.",
             "mode": "play_card"
         })
+        card = int(card)
         if card not in self.hand:
             card = await self.session.action({
                 "role": "user",
                 "content": "You do not have that card in your hand. Please play a card from your hand.",
                 "mode": "play_card"
             })
+            card = int(card)
         if card not in self.hand:
-            raise GOPSAgentActionException("Invalid team size with retry.")
+            raise GOPSAgentActionException("Invalid card with retry.")
         self.hand = np.delete(self.hand, np.where(self.hand == card))
         return int(card)

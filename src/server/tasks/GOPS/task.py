@@ -11,9 +11,12 @@ from .engine import *
 from .agents.naive import NaiveGOPSAgent
 from .agents.llmagent import LLMGOPSAgent
 
-from .wrapper import FakeSession, SessionWrapper
+from .wrapper import SessionWrapper
+from multi_agent.typings import FakeSession
 
 from src.typings import AgentContextLimitException
+
+from multi_agent.proxy import MultiAgentProxy
 
 AGENT_FINDER = {
     'naive': NaiveGOPSAgent,
@@ -58,10 +61,17 @@ class GOPSBench(Task):
 
     async def start_sample(self, index: SampleIndex, session: Session) -> TaskSampleExecutionResult:
         assert isinstance(index, int), "Index must be an integer"
+        proxy = MultiAgentProxy(session, num_agents=2)
+        sessions = [SessionWrapper(FakeSession(), proxy), SessionWrapper(FakeSession(), proxy)]
+        proxy.initialize_sessions(sessions)
+        print(proxy.session_list)
+
         config = GOPSConfig(self.num_turns)
         env = GOPSEnvironment(config)
 
-        sessions = [SessionWrapper(session), SessionWrapper(FakeSession())]
+        # sessions = proxy.get_sessions()
+        # sessions = [SessionWrapper(session), SessionWrapper(FakeSession())]
+        # sessions = [SessionWrapper(session), SessionWrapper(session)]
 
         (done, score_card, contested_points) = env.reset()
 
@@ -80,6 +90,7 @@ class GOPSBench(Task):
 
         for player in [player1, player2]:
             await player.initialize()
+            pid = proxy.get_next_agent()
 
         print(f"Welcome {player1} and {player2} to GOPS!")
         while not done:
@@ -88,8 +99,10 @@ class GOPSBench(Task):
 
             print(f"{player1}, play a card out of {env.player1_hand}")
             move1 = await player1.play_card(contested_points, score_card)
+            pid = proxy.get_next_agent()
             print(f"{player2}, play a card out of {env.player2_hand}")
             move2 = await player2.play_card(contested_points, score_card)
+            pid = proxy.get_next_agent()
 
             await player1.observe_round(
                 contested_points    =   contested_points,
@@ -97,12 +110,16 @@ class GOPSBench(Task):
                 your_card           =   move1,
                 opponent_card       =   move2
             )
+            pid = proxy.get_next_agent()
+            print("Next player: ", pid)
             await player2.observe_round(
                 contested_points    =   contested_points,
                 score_card          =   score_card,
                 your_card           =   move2,
                 opponent_card       =   move1
             )
+            pid = proxy.get_next_agent()
+            print("Next player: ", pid)
 
             (done, score_card, contested_points) = env.play_cards(int(move1), int(move2))
             print(f"{player1} played {move1}, {player2} played {move2}")
@@ -114,5 +131,7 @@ class GOPSBench(Task):
 
         return TaskSampleExecutionResult(status=finish_reason, result={
             "player1_score": int(env.player1_score),
-            "player2_score": int(env.player2_score)
+            "player2_score": int(env.player2_score),
+            "history of player 1": proxy.history[0],
+            "history of player 2": proxy.history[1],
         })

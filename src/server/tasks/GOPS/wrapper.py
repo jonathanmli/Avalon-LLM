@@ -5,18 +5,14 @@ from src.typings import SampleStatus
 from src.typings import AgentContextLimitException
 import re
 
-class FakeSession:
-    history: list=[]    # Fake history
-
-    async def action(self, input: Dict):
-        pass
-
-    def inject(self, input: Dict):
-        pass
+from multi_agent.typings import FakeSession, Proxy
 
 class SessionWrapper:
-    def __init__(self, session: Union[Session, FakeSession]):
+    def __init__(self, session: Union[Session, FakeSession], proxy: Proxy):
         self.session = session
+        self.proxy = proxy
+        self.decorate_method('action')
+        self.decorate_method('inject')
 
     def balance_history(self):
         '''
@@ -28,8 +24,16 @@ class SessionWrapper:
                 'content': ''
             })
 
+    def decorate_method(self, method_name):
+        # Get the method
+        method = getattr(self, method_name)
+
+        # Decorate and replace the method
+        setattr(self, method_name, self.proxy.method_wrapper(method))
+
     async def action(self, input: Dict):
         if isinstance(self.session, Session):
+            print("SESSION")
             self.balance_history()
             self.inject({
                 "role": input['role'],
@@ -47,7 +51,9 @@ class SessionWrapper:
             else:
                 return None
         elif isinstance(self.session, FakeSession):
+            print("FAKE SESSION")
             return input.pop('naive_result', None)
     
     def inject(self, input: Dict):
+        print("INJECT")
         return self.session.inject(input)

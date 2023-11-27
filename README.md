@@ -112,6 +112,14 @@ python -m src.start_task -a --start avalon-dev-naive 3
 ```
 where all the agents are naive bots. For details of the naive strategies, please refer to the [paper](https://arxiv.org/pdf/2310.05036.pdf).
 
+### Play with Multi-LLM
+
+You can also start a Multi-LLM experiment using:
+```bash
+python -m src.start_task -a --start avalon-dev-multi 3
+```
+where all the agents will be Large Language Models.
+
 ## Prompts
 
 All the prompts are maintained in `src/server/tasks/avalon/prompt.py`. You can find the respective prompts used in `src/server/tasks/avalon/agents/llm_with_discussion.py` and `src/server/tasks/avalon/wrapper.py`.

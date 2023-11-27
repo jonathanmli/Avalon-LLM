@@ -69,10 +69,6 @@ class GOPSBench(Task):
         config = GOPSConfig(self.num_turns)
         env = GOPSEnvironment(config)
 
-        # sessions = proxy.get_sessions()
-        # sessions = [SessionWrapper(session), SessionWrapper(FakeSession())]
-        # sessions = [SessionWrapper(session), SessionWrapper(session)]
-
         (done, score_card, contested_points) = env.reset()
 
         # Initialize players

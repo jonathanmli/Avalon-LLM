@@ -6,6 +6,7 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 ## News
 
+- [2023/11] 🎶Multi-LLM setting with AgentBench v0.2 is ready to roll! Details of the multi-agent submodule can be found [here]()
 - [2023/11] ♠️We've added a new game called GOPS (Game of Pure Strategy [[Wiki](https://en.wikipedia.org/wiki/Goofspiel)]). For more details of the code, please refer to [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/src/server/tasks/GOPS).
 - [2023/10] 🤖We've updated our code based on AgentBench v0.2. For the older version, please visit [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1).
 
@@ -127,10 +128,6 @@ from engine import AvalonGameEnvironment, AvalonConfig
 First input your game configurations into `AvalonBasicConfig`, then create an `AvalonGameEnvironment` based on that.
 
 For an example of how to use the game engine, see `avalonbench_dev/avalon/test_engine.py`
-
-## TODOs
-- [x] Single-player setting
-- [ ] Multi-LLM Setting
 
 <!-- ## Authors -->
 

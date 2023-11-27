@@ -87,13 +87,6 @@ class AvalonBench(Task):
         game_env_log = []
 
         llm_idx = 0
-        # llm_counter = 0
-        # for idx, agent_name in enumerate(self.agent_list):
-        #     if agent_name != "naive":
-        #         llm_idx = idx
-        #         sessions[idx] = SessionWrapper(session)
-        #         llm_counter += 1
-        # assert llm_counter <= 1, "Only at most one LLM agent is allowed."
 
         num_players = self.num_players
 

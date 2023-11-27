@@ -14,3 +14,8 @@ gops-dev-single:
   parameters:
     name: "gops-dev-single"
     agent_list: ["llm", "naive"]
+
+gops-dev-multi:
+  parameters:
+    name: "gops-dev-multi"
+    agent_list: ["llm", "llm"]

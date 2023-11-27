@@ -1,12 +1,6 @@
 # AvalonBench: Evaluating LLMs Playing the Game of Avalon
 
-<div align="center">
-  <a href="avalonbench.github.io">
-    🏠Homepage
-  </a>
-</div>
-
-This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
+This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf). Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*. [🏠Homepage](https://avalonbench.github.io)
 
 **Note**: For Multi-LLM setting, please use the older version in [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.1). The support of Multi-LLM setting with this new version will be coming soon.
 
@@ -19,11 +13,13 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 GPT-3.5-turbo🤖 playing against rule-based bots in AvalonBench
 
-![gpt3 5_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/f16b976b-4ea5-44d5-9f5f-d27c8ca7ca1c)
+https://github.com/jonathanmli/Avalon-LLM/assets/24936331/e15eadc0-60e6-448d-88a0-854ba35d628c
 
 GPT-4-turbo🤖 playing against rule-based bots in AvalonBench
 
-![gpt4_demo](https://github.com/jonathanmli/Avalon-LLM/assets/24936331/954beb84-7bba-4a2f-afd7-ea5c08e6c47c)
+https://github.com/jonathanmli/Avalon-LLM/assets/24936331/23fcb204-7570-4449-8777-b179c25251ad
+
+
 
 
 ## Initial Results
@@ -143,7 +139,7 @@ For an example of how to use the game engine, see `avalonbench_dev/avalon/test_e
 ```
 @inproceedings{
       light2023from,
-      title={From Text to Tactic: Evaluating {LLM}s Playing the Game of Avalon},
+      title={AvalonBench: Evaluating {LLM}s Playing the Game of Avalon},
       author={Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
       booktitle={NeurIPS 2023 Foundation Models for Decision Making Workshop},
       year={2023},

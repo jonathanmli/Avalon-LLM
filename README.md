@@ -21,9 +21,6 @@ https://github.com/jonathanmli/Avalon-LLM/assets/24936331/23fcb204-7570-4449-877
 
 
 
-
-**Note**: Implemention based on AgentBench v0.2 can be found in [here](https://github.com/jonathanmli/Avalon-LLM/tree/v0.2).
-
 ## Initial Results
 
 ### LLMs Play Against Baseline Bots

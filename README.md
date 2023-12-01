@@ -60,7 +60,7 @@ Start the game (3 is the number of workers)
 ```bash
 python -m src.start_task -a --start avalon-dev-single 3
 ```
-Start the assigner
+**Open a new terminal** and start the assigner
 ```bash
 python -m src.assigner --config ./configs/assignments/test_avalon.yaml
 ```

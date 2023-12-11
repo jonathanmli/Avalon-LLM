@@ -21,7 +21,7 @@ class GOPSAgent:
         """
         pass
 
-    async def observe_round(self, contested_points: int, score_card: int, your_card: int, opponent_card: int) -> None:
+    async def observe_round(self, contested_points: int, your_card: int, opponent_card: int, round_id: int) -> None:
         r"""Observe the current round. This method is called at the beginning of each round.
 
         Args:

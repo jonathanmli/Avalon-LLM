@@ -3,6 +3,7 @@ import: definition.yaml
 concurrency:
   task:
     avalon-dev-multi: 3
+    avalon-dev-single: 3
   agent:
     gpt-3.5-turbo-0613: 3
 
@@ -10,6 +11,7 @@ assignments: # List[Assignment] | Assignment
   - agent: # "task": List[str] | str ,  "agent": List[str] | str
       - gpt-3.5-turbo-0613
     task:
-      - avalon-dev-multi
+      # - avalon-dev-multi
+      - avalon-dev-single
 
 output: "outputs/{TIMESTAMP}"

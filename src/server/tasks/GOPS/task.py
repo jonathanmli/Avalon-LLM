@@ -42,6 +42,10 @@ class GOPSBench(Task):
         player1_wins = 0
         player2_wins = 0
         ties = 0
+
+        player1_total_score = 0
+        player2_total_score = 0
+
         for output in outputs:
             if output["player1_score"] > output["player2_score"]:
                 player1_wins += 1
@@ -50,10 +54,17 @@ class GOPSBench(Task):
             else:
                 ties += 1
 
+            player1_total_score += output["player1_score"]
+            player2_total_score += output["player2_score"]
+
         return {
+            "player 1": self.agent_list[0],
+            "player 2": self.agent_list[1],
             "winrate of player 1": player1_wins / len(self.data),
             "winrate of player 2": player2_wins / len(self.data),
-            "tie rate": ties / len(self.data)
+            "tie rate": ties / len(self.data),
+            "player 1 average score": player1_total_score / len(self.data),
+            "player 2 average score": player2_total_score / len(self.data)
         }
 
     def get_indices(self) -> List[SampleIndex]:
@@ -89,30 +100,48 @@ class GOPSBench(Task):
             pid = proxy.get_next_agent()
 
         print(f"Welcome {player1} and {player2} to GOPS!")
+        state = ''
         while not done:
             print(f"Current score: {player1}: {env.player1_score}, {player2}: {env.player2_score}")
             print(f"Current contested points: {contested_points}, current contested score card: {score_card}")
 
             print(f"{player1}, play a card out of {env.player1_hand}")
-            move1 = await player1.play_card(contested_points, score_card)
+
+            score_card_left = list(env.get_score_card_deck())
+            round_id = env.get_current_turn()
+
+            reserved_p1_hand = list(player1.hand)
+            reserved_p2_hand = list(player2.hand)
+
+            move1 = await player1.step(
+                state               =    state,
+                opponent_hand       =    reserved_p2_hand,
+                contested_scores    =    contested_points,
+                score_card_left     =    score_card_left
+            )
             pid = proxy.get_next_agent()
             print(f"{player2}, play a card out of {env.player2_hand}")
-            move2 = await player2.play_card(contested_points, score_card)
+            move2 = await player2.step(
+                state               =    state,
+                opponent_hand       =    reserved_p1_hand,
+                contested_scores    =    contested_points,
+                score_card_left     =    score_card_left
+            )
             pid = proxy.get_next_agent()
 
             await player1.observe_round(
                 contested_points    =   contested_points,
-                score_card          =   score_card,
                 your_card           =   move1,
-                opponent_card       =   move2
+                opponent_card       =   move2,
+                round_id            =   round_id
             )
             pid = proxy.get_next_agent()
             print("Next player: ", pid)
             await player2.observe_round(
                 contested_points    =   contested_points,
-                score_card          =   score_card,
                 your_card           =   move2,
-                opponent_card       =   move1
+                opponent_card       =   move1,
+                round_id            =   round_id
             )
             pid = proxy.get_next_agent()
             print("Next player: ", pid)
@@ -125,7 +154,15 @@ class GOPSBench(Task):
 
         finish_reason = SampleStatus.COMPLETED
 
+        # return TaskSampleExecutionResult(status=finish_reason, result={
+        #     "player1_score": int(env.player1_score),
+        #     "player2_score": int(env.player2_score),
+        #     "history of player 1": proxy.history[0],
+        #     "history of player 2": proxy.history[1],
+        # })
         return TaskSampleExecutionResult(status=finish_reason, result={
+            "player1": self.agent_list[0],
+            "player2": self.agent_list[1],
             "player1_score": int(env.player1_score),
             "player2_score": int(env.player2_score),
             "history of player 1": proxy.history[0],

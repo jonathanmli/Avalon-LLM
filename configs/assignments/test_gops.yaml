@@ -3,8 +3,8 @@ import: definition.yaml
 concurrency:
   task:
     # gops-dev-naive: 3
-    # gops-dev-single: 3
-    gops-dev-multi: 3
+    gops-dev-single: 3
+    # gops-dev-multi: 3
   agent:
     gpt-3.5-turbo-0613: 3
 
@@ -13,7 +13,7 @@ assignments: # List[Assignment] | Assignment
       - gpt-3.5-turbo-0613
     task:
       # - gops-dev-naive
-      # - gops-dev-single
-      - gops-dev-multi
+      - gops-dev-single
+      # - gops-dev-multi
 
 output: "outputs/{TIMESTAMP}"

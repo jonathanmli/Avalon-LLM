@@ -45,9 +45,11 @@ class SessionWrapper:
             if response.content is None:
                 raise RuntimeError("Response content is None.")
             print(response.content)
+            filtered_response = response.content.split("Decision:")[-1]
             if input['mode'] != "system":
-                matches = re.findall(r'\d+', response.content)
-                return int(matches[-1])
+                matches = re.findall(r'\d+', filtered_response)
+                print("List of possible cards: ", list(matches))
+                return list(matches)
             else:
                 return None
         elif isinstance(self.session, FakeSession):

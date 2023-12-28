@@ -1,3 +1,5 @@
+import numpy as np
+
 class Node:
     '''
     Abstract node class for the search algorithms

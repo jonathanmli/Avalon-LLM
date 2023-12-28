@@ -1,0 +1,561 @@
+[(5, 'Servant', True), (0, 'Merlin', True), (6, 'Minion', False), (5, 'Servant', True), (7, 'Assassin', False)]
+Player 0 is Servant
+Player 1 is Merlin
+Player 2 is Minion
+Player 3 is Servant
+Player 4 is Assassin
+--------------------------------------------------
+Player 4 is Assassin
+Team Selection
+Player 0 proposed team (0, 4)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 1 proposed team [3, 0, 1]
+Team Voting
+Team votes: [0, 1, 0, 0, 0], team outcome: False
+Team Selection
+Player 2 proposed team [1, 3, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 3 proposed team (1, 2, 3)
+Team Voting
+Team votes: [0, 0, 1, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 4 proposed team [1, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team (0, 2)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(0, 'Merlin', True), (7, 'Assassin', False), (6, 'Minion', False), (5, 'Servant', True), (5, 'Servant', True)]
+Player 0 is Merlin
+Player 1 is Assassin
+Player 2 is Minion
+Player 3 is Servant
+Player 4 is Servant
+--------------------------------------------------
+Player 4 is Servant
+Team Selection
+Player 3 proposed team (2, 3)
+Team Voting
+Team votes: [0, 1, 1, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 4 proposed team (0, 1, 4)
+Team Voting
+Team votes: [0, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 0 proposed team [3, 0]
+Team Voting
+Team votes: [1, 0, 0, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team [3, 1]
+Team Voting
+Team votes: [0, 1, 1, 0, 0], team outcome: False
+Team Selection
+Player 2 proposed team [0, 2]
+Team Voting
+Team votes: [0, 1, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team (0, 3)
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (2, 4)
+Team Voting
+Team votes: [0, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(5, 'Servant', True), (5, 'Servant', True), (6, 'Minion', False), (0, 'Merlin', True), (7, 'Assassin', False)]
+Player 0 is Servant
+Player 1 is Servant
+Player 2 is Minion
+Player 3 is Merlin
+Player 4 is Assassin
+--------------------------------------------------
+Player 4 is Assassin
+Team Selection
+Player 3 proposed team [0, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team [1, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team (0, 1)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 1 proposed team (0, 1, 4)
+Team Voting
+Team votes: [1, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [0, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 3 proposed team [1, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team [1, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team (0, 2)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 1 proposed team (1, 2, 4)
+Team Voting
+Team votes: [0, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 0], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(5, 'Servant', True), (5, 'Servant', True), (7, 'Assassin', False), (0, 'Merlin', True), (6, 'Minion', False)]
+Player 0 is Servant
+Player 1 is Servant
+Player 2 is Assassin
+Player 3 is Merlin
+Player 4 is Minion
+--------------------------------------------------
+Player 4 is Minion
+Team Selection
+Player 0 proposed team (0, 4)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 1 proposed team (1, 2, 3)
+Team Voting
+Team votes: [0, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [3, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 3 proposed team [0, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team [3, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team (0, 2)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(0, 'Merlin', True), (5, 'Servant', True), (6, 'Minion', False), (5, 'Servant', True), (7, 'Assassin', False)]
+Player 0 is Merlin
+Player 1 is Servant
+Player 2 is Minion
+Player 3 is Servant
+Player 4 is Assassin
+--------------------------------------------------
+Player 4 is Assassin
+Team Selection
+Player 3 proposed team (3, 4)
+Team Voting
+Team votes: [0, 0, 1, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 4 proposed team [3, 1, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [1, 3, 0]
+Team Voting
+Team votes: [1, 0, 0, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (0, 1, 2)
+Team Voting
+Team votes: [0, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [3, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 3 proposed team (1, 3)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 4 proposed team [3, 0, 4]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [3, 1, 0]
+Team Voting
+Team votes: [1, 0, 0, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (0, 1, 3)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [3, 1, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 1], team outcome: False
+Team Selection
+Player 3 proposed team (0, 1, 3)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 1], mission outcome: True
+--------------------------------------------------
+Assassination
+Assassination target: 1
+Assassination outcome: True
+Good wins!
+[(6, 'Minion', False), (5, 'Servant', True), (7, 'Assassin', False), (0, 'Merlin', True), (5, 'Servant', True)]
+Player 0 is Minion
+Player 1 is Servant
+Player 2 is Assassin
+Player 3 is Merlin
+Player 4 is Servant
+--------------------------------------------------
+Player 4 is Servant
+Team Selection
+Player 0 proposed team [4, 0]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 2)
+Team Voting
+Team votes: [1, 1, 1, 0, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [1, 4, 2]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team [4, 1, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (0, 3, 4)
+Team Voting
+Team votes: [1, 0, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [0, 1, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 0 proposed team [3, 0]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 4)
+Team Voting
+Team votes: [0, 1, 0, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [3, 1, 2]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team [4, 1, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (0, 1, 4)
+Team Voting
+Team votes: [1, 1, 1, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [0, 1, 1], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(6, 'Minion', False), (7, 'Assassin', False), (5, 'Servant', True), (0, 'Merlin', True), (5, 'Servant', True)]
+Player 0 is Minion
+Player 1 is Assassin
+Player 2 is Servant
+Player 3 is Merlin
+Player 4 is Servant
+--------------------------------------------------
+Player 4 is Servant
+Team Selection
+Player 3 proposed team [4, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (1, 4)
+Team Voting
+Team votes: [1, 1, 0, 0, 1], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 0 proposed team [4, 3, 0]
+Team Voting
+Team votes: [1, 1, 0, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team [3, 2, 1]
+Team Voting
+Team votes: [1, 1, 0, 0, 0], team outcome: False
+Team Selection
+Player 2 proposed team (0, 2, 3)
+Team Voting
+Team votes: [1, 1, 1, 0, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 3 proposed team [4, 3]
+Team Voting
+Team votes: [0, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (3, 4)
+Team Voting
+Team votes: [0, 0, 0, 1, 1], team outcome: False
+Team Selection
+Player 0 proposed team [2, 0]
+Team Voting
+Team votes: [1, 1, 0, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team [3, 1]
+Team Voting
+Team votes: [1, 1, 0, 0, 0], team outcome: False
+Team Selection
+Player 2 proposed team (1, 2)
+Team Voting
+Team votes: [1, 1, 1, 0, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(7, 'Assassin', False), (5, 'Servant', True), (6, 'Minion', False), (5, 'Servant', True), (0, 'Merlin', True)]
+Player 0 is Assassin
+Player 1 is Servant
+Player 2 is Minion
+Player 3 is Servant
+Player 4 is Merlin
+--------------------------------------------------
+Player 4 is Merlin
+Team Selection
+Player 0 proposed team [1, 0]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 2)
+Team Voting
+Team votes: [1, 1, 1, 0, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [1, 3, 2]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team (0, 3, 4)
+Team Voting
+Team votes: [1, 0, 1, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 4 proposed team [1, 4]
+Team Voting
+Team votes: [0, 0, 0, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [1, 0]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 4)
+Team Voting
+Team votes: [0, 1, 0, 0, 1], team outcome: False
+Team Selection
+Player 2 proposed team [1, 2]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team (1, 3)
+Team Voting
+Team votes: [0, 1, 0, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 4 proposed team [1, 3, 4]
+Team Voting
+Team votes: [0, 0, 0, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [4, 3, 0]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 3, 4)
+Team Voting
+Team votes: [0, 1, 0, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 1], mission outcome: True
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [4, 1, 2]
+Team Voting
+Team votes: [1, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team (1, 3, 4)
+Team Voting
+Team votes: [0, 1, 0, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 1, 1], mission outcome: True
+--------------------------------------------------
+Assassination
+Assassination target: 4
+Assassination outcome: False
+Evil wins!
+[(6, 'Minion', False), (5, 'Servant', True), (5, 'Servant', True), (7, 'Assassin', False), (0, 'Merlin', True)]
+Player 0 is Minion
+Player 1 is Servant
+Player 2 is Servant
+Player 3 is Assassin
+Player 4 is Merlin
+--------------------------------------------------
+Player 4 is Merlin
+Team Selection
+Player 3 proposed team [2, 3]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team [2, 4]
+Team Voting
+Team votes: [0, 0, 0, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [2, 0]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 4)
+Team Voting
+Team votes: [0, 1, 0, 0, 1], team outcome: False
+Team Selection
+Player 2 proposed team (2, 3)
+Team Voting
+Team votes: [1, 0, 1, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 3 proposed team [1, 2, 3]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team [1, 2, 4]
+Team Voting
+Team votes: [0, 0, 0, 0, 1], team outcome: False
+Team Selection
+Player 0 proposed team [4, 2, 0]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 1 proposed team (0, 1, 4)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team (0, 2)
+Team Voting
+Team votes: [1, 0, 1, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Evil wins!
+[(7, 'Assassin', False), (5, 'Servant', True), (0, 'Merlin', True), (6, 'Minion', False), (5, 'Servant', True)]
+Player 0 is Assassin
+Player 1 is Servant
+Player 2 is Merlin
+Player 3 is Minion
+Player 4 is Servant
+--------------------------------------------------
+Player 4 is Servant
+Team Selection
+Player 1 proposed team (0, 1)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 2 proposed team [4, 1, 2]
+Team Voting
+Team votes: [0, 0, 1, 0, 0], team outcome: False
+Team Selection
+Player 3 proposed team [4, 1, 3]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 4 proposed team (2, 3, 4)
+Team Voting
+Team votes: [1, 0, 0, 1, 1], team outcome: True
+Quest Voting
+Quest votes: [1, 0, 1], mission outcome: False
+--------------------------------------------------
+Team Selection
+Player 0 proposed team [1, 0]
+Team Voting
+Team votes: [1, 0, 0, 1, 0], team outcome: False
+Team Selection
+Player 1 proposed team (1, 3)
+Team Voting
+Team votes: [1, 1, 0, 1, 0], team outcome: True
+Quest Voting
+Quest votes: [1, 0], mission outcome: False
+--------------------------------------------------
+Evil wins!
+Win rate: 0.1

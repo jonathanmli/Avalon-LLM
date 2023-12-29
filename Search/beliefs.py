@@ -61,7 +61,7 @@ class MinValueNode(ValueNode):
     '''
 
     def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set()):
-        super().__init__(state, parents, children, actions)
+        super().__init__(state, parents, children)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
         self.action_to_next_state_probs = dict() # maps action to probabilities over next states

@@ -195,19 +195,18 @@ class GPT35OpponentActionEnumerator(OpponentActionEnumerator):
         '''
         self.model = model
 
-    def enumerate(self, state: State, action) -> List[int]:
+    def enumerate(self, state: State) -> List[int]:
         '''
-        Enumerates the possible opponent actions given the current state and action
+        Enumerates the possible opponent actions given the current state
 
         Args:
             state: current state
-            action: action to take
 
         Returns:
             opponent_actions: list of opponent actions; for goopspiel, the actions are the card to play
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state.notes, action=action)
+        input_prompt = "Current State: {state}\n".format(state=state.notes)
         input_prompt += OPPONENT_ACTION_ENUMERATOR_PROMPT
 
         # Call the model
@@ -268,7 +267,7 @@ class GPT35ValueHeuristic(ValueHeuristic):
         '''
         self.model = model
 
-    def predict(self, state: State) -> Dict:
+    def evaluate(self, state: State) -> Dict:
         '''
         Predicts the value of the state
 

@@ -92,5 +92,109 @@ class GOPSForwardPredictor(ForwardPredictor):
         probs[next_states[0]] = 1.0
         return probs
 
+class GOPSActionEnumerator(ActionEnumerator):
 
+    def __init__(self):
+        super().__init__()
+
+    def enumerate(self, state: State):
+        '''
+        Enumerates the possible actions that the player can take given the current state
+
+        Args:
+            state: current state
+
+        Returns:
+            actions: list of actions
+        '''
+        prize_cards = state.prize_cards
+        player_cards = state.player_cards
+        opponent_cards = state.opponent_cards
+        num_cards = state.num_cards
+        state_type = state.state_type
+
+        starting_deck = list(range(1, num_cards+1))
+        actions = list(set(starting_deck) - set(player_cards))
+        return actions
+    
+class GOPSOpponentActionEnumerator(ActionEnumerator):
+
+    def __init__(self):
+        super().__init__()
+
+    def enumerate(self, state: State):
+        '''
+        Enumerates the possible actions that the opponent can take given the current state
+
+        Args:
+            state: current state
+
+        Returns:
+            actions: list of actions
+        '''
+        prize_cards = state.prize_cards
+        player_cards = state.player_cards
+        opponent_cards = state.opponent_cards
+        num_cards = state.num_cards
+        state_type = state.state_type
+
+        starting_deck = list(range(1, num_cards+1))
+        actions = list(set(starting_deck) - set(opponent_cards))
+        return actions
+    
+class GOPSRandomStateEnumerator(RandomStateEnumerator):
+
+    def __init__(self):
+        super().__init__()
+
+    def enumerate(self, state: State):
+        '''
+        Enumerates the possible next states given the current state
+
+        Args:
+            state: current state
+
+        Returns:
+            next_states: set of next states
+        '''
+        prize_cards = state.prize_cards
+        player_cards = state.player_cards
+        opponent_cards = state.opponent_cards
+        num_cards = state.num_cards
+        state_type = state.state_type
+
+        starting_deck = list(range(1, num_cards+1))
+        actions = list(set(starting_deck) - set(prize_cards))
+
+        next_states = set()
+
+        for action in actions:
+            prize_cards = list(prize_cards)
+            prize_cards.append(action)
+            prize_cards = tuple(prize_cards)
+            next_state = GOPSState((state_type+1)%3, prize_cards, player_cards, opponent_cards, num_cards)
+            next_states.add(next_state)
+
+        return next_states
+    
+class GOPSRandomStatePredictor(RandomStatePredictor):
+
+    def __init__(self):
+        super().__init__()
+
+    def predict(self, state: State, next_states):
+        '''
+        Predicts the probabilities over next states given the current state
+
+        Args:
+            state: current state
+            next_states: set of next states
+
+        Returns:
+            probs: dictionary of probabilities over next states
+        '''
+        probs = dict()
+        for next_state in next_states:
+            probs[next_state] = 1.0/len(next_states)
+        return probs
         

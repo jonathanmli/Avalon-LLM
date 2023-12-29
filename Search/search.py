@@ -37,10 +37,6 @@ class ValueBFS(Search):
         super().__init__(forward_predictor, forward_enumerator, value_heuristic, action_enumerator, 
                          random_state_enumerator, random_state_predictor,
                          opponent_action_enumerator, opponent_action_predictor)
-        # self.queue = deque()
-        # self.visited = set()
-        # self.queue.append(graph.root)
-        # self.visited.add(graph.root.id)
 
     def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3):
         '''

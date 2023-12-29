@@ -70,6 +70,27 @@ class GOPSForwardEnumerator(ForwardEnumerator):
         next_state = GOPSState((state_type+1)%3, prize_cards, player_cards, opponent_cards, num_cards)
 
         return set([next_state])
+    
+class GOPSForwardPredictor(ForwardPredictor):
+
+    def __init__(self):
+        super().__init__()
+
+    def predict(self, state: State, action, next_states):
+        '''
+        Predicts the probabilities over next states given the current state and action
+
+        Args:
+            state: current state
+            action: action to take, which should be an integer indicating which card to play
+            next_states: set of next states
+
+        Returns:
+            probs: dictionary of probabilities over next states
+        '''
+        probs = dict()
+        probs[next_states[0]] = 1.0
+        return probs
 
 
         

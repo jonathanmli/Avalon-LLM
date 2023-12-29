@@ -76,20 +76,20 @@ class ValueBFS(Search):
                 
                 if not node.next_states:
                     for action in node.actions:
-                        node.next_states.update(self.forward_enumerator.enumerate(state, action))
+                        node.next_states.extend(self.forward_enumerator.enumerate(state, action))
                     
                 for next_state in node.next_states:
                     value = self.expand(graph, next_state, node, depth-1)
                     next_state_to_values[next_state] = value
 
                 for action in node.actions:
-                    if action not in self.action_to_next_state_probs:
-                        self.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
+                    if action not in node.action_to_next_state_probs:
+                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
                 
                     # calculate expected value
                     expected_value = 0.0
                     for next_state in node.next_states:
-                        expected_value += next_state_to_values[next_state] * self.action_to_next_state_probs[action][next_state]
+                        expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
                     action_to_expected_value[action] = expected_value
 
                     # find max action and max value
@@ -119,13 +119,13 @@ class ValueBFS(Search):
                     next_state_to_values[next_state] = value
 
                 for action in node.actions:
-                    if action not in self.action_to_next_state_probs:
-                        self.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
+                    if action not in node.action_to_next_state_probs:
+                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
                 
                     # calculate expected value
                     expected_value = 0.0
                     for next_state in node.next_states:
-                        expected_value += next_state_to_values[next_state] * self.action_to_next_state_probs[action][next_state]
+                        expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
                     action_to_expected_value[action] = expected_value
 
                     # find min action and min value
@@ -139,13 +139,13 @@ class ValueBFS(Search):
 
             elif state.state_type == state.STATE_TYPES[2]: # random 
                 value = 0.0
-                if state.next_states is None:
-                    state.next_states = self.random_state_enumerator.enumerate(state)
-                if not state.probs_over_next_states:
+                if node.next_states is None:
+                    node.next_states = self.random_state_enumerator.enumerate(state)
+                if not node.probs_over_next_states:
                     # Dictionary is empty
-                    state.probs_over_next_states = self.random_state_predictor.predict(state, state.next_states)
-                for next_state in state.next_states:
-                    value += self.expand(graph, next_state, node, depth-1) * state.probs_over_next_states[next_state]
+                    node.probs_over_next_states = self.random_state_predictor.predict(state, node.next_states)
+                for next_state in node.next_states:
+                    value += self.expand(graph, next_state, node, depth-1) * node.probs_over_next_states[next_state]
             
             return value
 

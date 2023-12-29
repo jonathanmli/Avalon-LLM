@@ -245,3 +245,31 @@ class QHeuristic():
             value: value of the state
         '''
         raise NotImplementedError
+
+class State:
+    '''
+    Abstract class for a state
+
+    state_type: 'max', 'min', 'random', 'player'
+    'max': max value node, for the player
+    'min': min value node, for the opponent trying to minimize the value
+    'random': random value node, for the environment
+    'player': player node, for other players with different goals
+    '''
+    def __init__(self, id, state_type, notes = None):
+        self.id = id
+        self.state_type = state_type # 'max', 'min', 'random', 'player'
+        self.notes = notes
+
+    def __repr__(self):
+        return f"State({self.id}, {self.state_type}, {self.notes})"
+    
+    def __str__(self):
+        return f"State({self.id}, {self.state_type}, {self.notes})"
+    
+    def __hash__(self):
+        return hash(self.id)
+    
+    def __eq__(self, other):
+        return self.id == other.id
+    

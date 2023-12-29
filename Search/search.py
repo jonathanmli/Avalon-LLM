@@ -45,6 +45,8 @@ class ValueBFS(Search):
 
         node = graph.get_node(node_id)
 
+
+
         if depth == 0:
             value = self.value_heuristic.evaluate(node_id)
             return value
@@ -52,13 +54,15 @@ class ValueBFS(Search):
             value = 0.0
             next_states = set()
             next_state_to_values = dict()
-            actions = self.action_enumerator.enumerate(node_id)
-            for action in actions:
-                next_states.add(self.forward_enumerator.enumerate(node_id, action))
-                
-            for next_state in next_states:
-                value = self.expand(graph, next_state, depth-1, revise)
-                next_state_to_values[next_state] = value
+
+            if isinstance(node, MaxValueNode):
+                actions = self.action_enumerator.enumerate(node_id)
+                for action in actions:
+                    next_states.add(self.forward_enumerator.enumerate(node_id, action))
+                    
+                for next_state in next_states:
+                    value = self.expand(graph, next_state, depth-1, revise)
+                    next_state_to_values[next_state] = value
                 
             if revise:
                 node.value = value

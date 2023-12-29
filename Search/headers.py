@@ -150,7 +150,7 @@ class RandomStateEnumerator():
     def __init__(self):
         pass
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: State, action):
         '''
         Enumerates the possible next states given the current state and action
 

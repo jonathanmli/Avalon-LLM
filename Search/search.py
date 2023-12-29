@@ -6,11 +6,12 @@ class Search:
     '''
     Abstract class for search algorithms
     '''
-    def __init__(self, forward_predictor, forward_enumerator, value_heuristic):
+    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator):
         # self.graph = graph
         self.forward_predictor = forward_predictor
         self.forward_enumerator = forward_enumerator
         self.value_heuristic = value_heuristic
+        self.action_enumerator = action_enumerator
 
     def expand(self, node_id):
         '''
@@ -18,12 +19,12 @@ class Search:
         '''
         raise NotImplementedError
     
-class BFS(Search):
+class ValueBFS(Search):
     '''
     Used to perform breadth-first search
     '''
-    def __init__(self, forward_predictor, forward_enumerator, value_heuristic):
-        super().__init__(forward_predictor, forward_enumerator, value_heuristic)
+    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator):
+        super().__init__(forward_predictor, forward_enumerator, value_heuristic, action_enumerator)
         # self.queue = deque()
         # self.visited = set()
         # self.queue.append(graph.root)
@@ -37,8 +38,31 @@ class BFS(Search):
             node_id: id of the node to expand
             depth: depth to expand to
             revise: whether to revise the graph or not
+
+        Returns:
+            value: updated value of the node
         '''
-        
+
+        node = graph.get_node(node_id)
+
+        if depth == 0:
+            value = self.value_heuristic.evaluate(node_id)
+            return value
+        else:
+            value = 0.0
+            next_states = set()
+            next_state_to_values = dict()
+            actions = self.action_enumerator.enumerate(node_id)
+            for action in actions:
+                next_states.add(self.forward_enumerator.enumerate(node_id, action))
+                
+            for next_state in next_states:
+                value = self.expand(graph, next_state, depth-1, revise)
+                next_state_to_values[next_state] = value
+                
+            if revise:
+                node.value = value
+            return value
 
         # queue = deque()
         # node = self.graph.nodes[node_id]
@@ -59,4 +83,5 @@ class BFS(Search):
         #                 child.parents.append(node)
         #                 node.children.append(child)
         # return self.graph
+        
  

@@ -82,9 +82,9 @@ class ActionEnumerator():
         '''
         raise NotImplementedError
 
-class HiddenStatePredictor():
+class RandomStatePredictor():
     '''
-    Abstract class for a hidden dynamics predictor
+    Abstract class for a random dynamics predictor
     '''
 
     def __init__(self):
@@ -103,9 +103,9 @@ class HiddenStatePredictor():
         '''
         raise NotImplementedError
     
-class HiddenStateEnumerator():
+class RandomStateEnumerator():
     '''
-    Abstract class for a hidden dynamics enumerator
+    Abstract class for a random dynamics enumerator
     '''
 
     def __init__(self):
@@ -113,13 +113,13 @@ class HiddenStateEnumerator():
 
     def enumerate(self, state):
         '''
-        Enumerates the possible hidden states given the current state and action
+        Enumerates the possible next states given the current state and action
 
         Args:
             state: current state
 
         Returns:
-            hidden_states: list of hidden states
+            next_states: list of next states
         '''
         raise NotImplementedError
 

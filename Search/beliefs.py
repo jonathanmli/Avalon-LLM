@@ -77,6 +77,7 @@ class MaxValueNode(ValueNode):
         self.value = -np.inf
         self.actions = actions # list of actions
         self.action_to_next_state_probs = dict() # maps action to probabilities over next states
+        self.best_action = None # best action to take
 
     # def backward(self, value):
     #     '''
@@ -126,7 +127,23 @@ class Graph:
     A DAG
     '''
     def __init__(self):
+        self.id_to_node = dict() # maps id to node
         pass
+
+    def get_node(self, id):
+        '''
+        Returns the node corresponding to the id
+
+        Args:
+            id: id to get node of
+
+        Returns:
+            node: node corresponding to the id, or None if it does not exist
+        '''
+        if id not in self.id_to_node:
+            return None
+        else:
+            return self.id_to_node[id]
 
 class ValueGraph(Graph):
     '''
@@ -135,7 +152,7 @@ class ValueGraph(Graph):
 
     def __init__(self):
         super().__init__()
-        self.state_to_node = dict() # maps state to node
+        
 
     def get_value(self, state):
         '''
@@ -147,19 +164,7 @@ class ValueGraph(Graph):
         Returns:
             value: value of the state
         '''
-        return self.state_to_node[state].value
-    
-    def get_node(self, state):
-        '''
-        Returns the node corresponding to the state
-
-        Args:
-            state: state to get node of
-
-        Returns:
-            node: node corresponding to the state
-        '''
-        return self.state_to_node[state]
+        return self.id_to_node[state].value
     
     def add_state(self, state, parent_states = [], child_states = [], actions = []):
         '''
@@ -168,10 +173,10 @@ class ValueGraph(Graph):
         Args:
             state: state to add
         '''
-        parents = [self.state_to_node[parent_state] for parent_state in parent_states]
-        children = [self.state_to_node[child_state] for child_state in child_states]
+        parents = [self.id_to_node[parent_state] for parent_state in parent_states]
+        children = [self.id_to_node[child_state] for child_state in child_states]
         node = ValueNode(state, parents=parents, children=children)
-        self.state_to_node[state] = node
+        self.id_to_node[state] = node
     
     def backward(self, state, value):
         '''
@@ -182,7 +187,7 @@ class ValueGraph(Graph):
             state: state to backward
             value: value to backward
         '''
-        node = self.state_to_node[state]
+        node = self.id_to_node[state]
 
         
 
@@ -197,7 +202,7 @@ class ValueGraph(Graph):
         Returns:
             qvalue: qvalue of the state and action
         '''
-        node = self.state_to_node[state]
+        node = self.id_to_node[state]
         qvalue = 0.0
         for child in node.children:
             if child.action == action:

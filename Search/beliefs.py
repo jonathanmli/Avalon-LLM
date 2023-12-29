@@ -179,3 +179,16 @@ class ValueGraph(Graph):
             if child.action == action:
                 qvalue += child.value
         return qvalue
+    
+    def get_best_action(self, state):
+        '''
+        Returns the best action to take at the state
+
+        Args:
+            state: state to get best action of
+
+        Returns:
+            best_action: best action to take at the state
+        '''
+        node = self.id_to_node[state]
+        return node.best_action

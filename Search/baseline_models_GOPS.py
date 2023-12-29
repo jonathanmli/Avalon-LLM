@@ -1,4 +1,39 @@
+import re
+from typing import Dict, List
 from headers import *
+from prompts import *
+
+# Parse helper funcs
+def parse_bracketed_list(string: str) -> List[str]:
+    pattern = r'\[([^\]]+)\]'
+
+    matches = re.findall(pattern, string)
+
+    items = [item.strip() for item in matches[0].split(',')] if matches else []
+
+    return items
+
+def parse_dict_with_any_key(text):
+    pattern = r'([^:{}]+)\s*:\s*(\w+)'
+
+    matches = re.findall(pattern, text)
+
+    return {key.strip(): value for key, value in matches}
+
+def parse_int_value(string: str) -> int:
+    pattern = r'\b\d+\b'
+
+    integers = [int(num) for num in re.findall(pattern, string)]
+
+    return integers[-1] if len(integers) > 0 else None # should be designed in the prompt that the last num is the value
+
+def parse_prob_value(string: str) -> float:
+    pattern = r'\b\d+\.\d+|\b\d+|\.\d+\b'
+
+    floats = [float(num) for num in re.findall(pattern, string)]
+
+    return floats[-1] if len(floats) > 0 else None
+
 
 class GOPSState(State):
     '''
@@ -198,3 +233,75 @@ class GOPSRandomStatePredictor(RandomStatePredictor):
             probs[next_state] = 1.0/len(next_states)
         return probs
         
+class GPT35OpponentActionPredictor(OpponentActionPredictor):
+    '''
+    Opponent action predictor for GPT-3.5
+    '''
+
+    def __init__(self, model):
+        '''
+        Args:
+            model: GPT-3.5 model
+        '''
+        self.model = model
+
+    def predict(self, state: State, actions) -> Dict:
+        '''
+        Predicts the advantage of each opponent action given the current state and action
+
+        Args:
+            state: current state
+            actions: actions to take
+
+        Returns:
+            advantage: list of relative advantages of each opponent action (probs for current implementation)
+        '''
+        # Prepare input
+        input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions)
+        input_prompt += OPPONENT_ACTION_PREDICTOR_PROMPT
+
+        # Call the model
+        output = self.model.single_action(input_prompt)
+
+        # Parse the output
+        advantages = parse_dict_with_any_key(output)
+
+        return advantages
+    
+class GPT35ValueHeuristic(ValueHeuristic):
+    '''
+    Value heuristic for GPT-3.5
+    '''
+
+    def __init__(self, model):
+        '''
+        Args:
+            model: GPT-3.5 model
+        '''
+        self.model = model
+
+    def evaluate(self, state: State) -> Dict:
+        '''
+        Predicts the value of the state
+
+        Args:
+            state: current state
+
+        Returns:
+            value: value of the state
+        '''
+        # Prepare input
+        prob_prompt = "Current State: {state}\n".format(state=state.notes)
+        prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
+        value_prompt = "Current State: {state}\n".format(state=state.notes)
+        value_prompt += VALUE_PREDICTOR_PROMPTS[1]
+
+        # Call the model
+        prob_output = self.model.single_action(prob_prompt)
+        value_output = self.model.single_action(value_prompt)
+
+        # Parse the output
+        prob_value = parse_prob_value(prob_output)
+        value = parse_int_value(value_output)
+
+        return value

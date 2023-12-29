@@ -30,7 +30,19 @@ your thoughts here
 Probabilities:
 gather your thoughts in a python dict, for example: {state1: prob1, state2: prob2, state3: prob3}'''
 
-VALUE_PREDICTOR_PROMPTS = ['''Given the current situation, what is the probability of winning?''', '''Given the current situation, what is the value of the game? Rate on a scale from 0 (no value) to 10 (extremely valuable).''']
+VALUE_PREDICTOR_PROMPTS = ['''Given the current situation, what is the probability of winning? Write down your thoughts and output the probability.
+
+Thought:
+your thoughts here
+
+Probability:
+the probability here''', '''Given the current situation, what is the value of the game? Write down your thoughts and rate on a scale from 0 (no value) to 10 (extremely valuable).
+
+Thoughts:
+your thoughts here
+
+Value:
+the value here''']
 
 OPPONENT_ACTION_ENUMERATOR_PROMPT = '''Recall the rules of the game and enumerate the possible actions that the opponent could take currently. Write down your thoughts and output the list of actions.
 

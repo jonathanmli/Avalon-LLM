@@ -3,7 +3,7 @@ from prompts import *
 import re
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
-from typing import List, float
+from typing import List, Dict
 
 # Parse helper funcs
 def parse_bracketed_list(string: str) -> List[str]:
@@ -15,19 +15,26 @@ def parse_bracketed_list(string: str) -> List[str]:
 
     return items
 
+def parse_dict_with_any_key(text):
+    pattern = r'([^:{}]+)\s*:\s*(\w+)'
+
+    matches = re.findall(pattern, text)
+
+    return {key.strip(): value for key, value in matches}
+
 def parse_int_value(string: str) -> int:
     pattern = r'\b\d+\b'
 
     integers = [int(num) for num in re.findall(pattern, string)]
 
-    return integers[-1] # should be designed in the prompt that the last num is the value
+    return integers[-1] if len(integers) > 0 else None # should be designed in the prompt that the last num is the value
 
 def parse_prob_value(string: str) -> float:
     pattern = r'\b\d+\.\d+|\b\d+|\.\d+\b'
 
     floats = [float(num) for num in re.findall(pattern, string)]
 
-    return floats[-1]
+    return floats[-1] if len(floats) > 0 else None
 
 
 class GPT35ForwardEnumerator(ForwardEnumerator):
@@ -54,7 +61,7 @@ class GPT35ForwardEnumerator(ForwardEnumerator):
             next_states: list of next states
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state, action=action)
+        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state.notes, action=action)
         input_prompt += FORWARD_ENUMERATOR_PROMPT
 
         # Call the model
@@ -62,7 +69,7 @@ class GPT35ForwardEnumerator(ForwardEnumerator):
 
         # Parse the output
         verbal_states = parse_bracketed_list(output)
-        next_states = [State(id=id, state_type='max') for id in verbal_states]
+        next_states = [State(id=id, state_type='min') for id in verbal_states]
 
         return next_states
     
@@ -78,7 +85,7 @@ class GPT35ForwardPredictor(ForwardPredictor):
         '''
         self.model = model
 
-    def predict(self, state: State, action, next_states) -> List[float]:
+    def predict(self, state: State, action, next_states) -> Dict:
         '''
         Predicts the next state given the current state and action
 
@@ -91,7 +98,7 @@ class GPT35ForwardPredictor(ForwardPredictor):
         '''
         # Prepare input
         input_prompt = "Current State: {state}\nCurrent Action: {action}\nNext States: {next_states}".format(
-            state       =   state,
+            state       =   state.notes,
             action      =   action,
             next_states =   next_states
         )
@@ -101,8 +108,7 @@ class GPT35ForwardPredictor(ForwardPredictor):
         output = self.model.single_action(input_prompt)
 
         # Parse the output
-        verbal_probs = parse_bracketed_list(output)
-        probs = [float(prob) for prob in verbal_probs]
+        probs = parse_dict_with_any_key(output)
 
         return probs
     
@@ -130,7 +136,7 @@ class GPT35RandomStateEnumerator(RandomStateEnumerator):
             next_hidden_states: list of next hidden states
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state, action=action)
+        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state.notes, action=action)
         input_prompt += HIDDEN_STATE_ENUMERATOR_PROMPT
 
         # Call the model
@@ -154,7 +160,7 @@ class GPT35RandomStatePredictor(RandomStatePredictor):
         '''
         self.model = model
 
-    def predict(self, state: State, action) -> List[float]:
+    def predict(self, state: State, action) -> Dict:
         '''
         Predicts the probabilities over next hidden states given the current state and action
 
@@ -166,15 +172,14 @@ class GPT35RandomStatePredictor(RandomStatePredictor):
             hidden_probs: list of probabilities over hidden states
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state, action=action)
+        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state.notes, action=action)
         input_prompt += HIDDEN_STATE_PREDICTOR_PROMPT
 
         # Call the model
         output = self.model.single_action(input_prompt)
 
         # Parse the output
-        verbal_probs = parse_bracketed_list(output)
-        hidden_probs = [float(prob) for prob in verbal_probs]
+        hidden_probs = parse_bracketed_list(output)
 
         return hidden_probs
     
@@ -202,7 +207,7 @@ class GPT35OpponentActionEnumerator(OpponentActionEnumerator):
             opponent_actions: list of opponent actions; for goopspiel, the actions are the card to play
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state, action=action)
+        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state.notes, action=action)
         input_prompt += OPPONENT_ACTION_ENUMERATOR_PROMPT
 
         # Call the model
@@ -228,7 +233,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         '''
         self.model = model
 
-    def predict(self, state: State, actions) -> List[float]:
+    def predict(self, state: State, actions) -> Dict:
         '''
         Predicts the advantage of each opponent action given the current state and action
 
@@ -240,15 +245,14 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
             advantage: list of relative advantages of each opponent action (probs for current implementation)
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\nCurrent Action: {action}\n".format(state=state, action=action)
+        input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions)
         input_prompt += OPPONENT_ACTION_PREDICTOR_PROMPT
 
         # Call the model
         output = self.model.single_action(input_prompt)
 
         # Parse the output
-        verbal_output = parse_bracketed_list(output)
-        advantages = [float(advantage) for advantage in verbal_output]
+        advantages = parse_dict_with_any_key(output)
 
         return advantages
     
@@ -264,7 +268,7 @@ class GPT35ValueHeuristic(ValueHeuristic):
         '''
         self.model = model
 
-    def predict(self, state: State) -> int:
+    def predict(self, state: State) -> Dict:
         '''
         Predicts the value of the state
 
@@ -275,9 +279,9 @@ class GPT35ValueHeuristic(ValueHeuristic):
             value: value of the state
         '''
         # Prepare input
-        prob_prompt = "Current State: {state}\n".format(state=state)
+        prob_prompt = "Current State: {state}\n".format(state=state.notes)
         prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
-        value_prompt = "Current State: {state}\n".format(state=state)
+        value_prompt = "Current State: {state}\n".format(state=state.notes)
         value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
         # Call the model
@@ -313,7 +317,7 @@ class GPT35ActionEnumerator(ActionEnumerator):
             actions: list of actions
         '''
         # Prepare input
-        input_prompt = "Current State: {state}\n".format(state=state)
+        input_prompt = "Current State: {state}\n".format(state=state.notes)
         input_prompt += ACTION_ENUMERATOR_PROMPT
 
         # Call the model
@@ -332,12 +336,16 @@ if __name__ == "__main__":
             key = os.environ.get("OPENAI_API_KEY")
             self.model = ChatOpenAI(temperature=0.1, openai_api_key=key)
         def single_action(self, input_prompt: str):
-            input_prompt = HumanMessage(content=input_prompt)
+            input_prompt = [HumanMessage(content=input_prompt)]
             output = self.model(input_prompt).content
+
+            print(output)
 
             return output
 
     model = GPT35()
+
+    static_state = State(id='test', state_type='random', notes='test')
 
     # Instantiate the dynamics
     actionenumerator = GPT35ActionEnumerator(model)
@@ -348,4 +356,14 @@ if __name__ == "__main__":
     hiddenstateenumerator = GPT35RandomStateEnumerator(model)
     forwardpredictor = GPT35ForwardPredictor(model)
     forwardenumerator = GPT35ForwardEnumerator(model)
+
+    # Test the methods
+    actionenumerator.enumerate(state=static_state)
+    valueheuristic.predict(state=static_state)
+    opponentactionpredictor.predict(state=static_state, actions=[1,2,3])
+    opponentactionenumerator.enumerate(state=static_state, action=1)
+    hiddenstatepredictor.predict(state=static_state, action=1)
+    hiddenstateenumerator.enumerate(state=static_state, action=1)
+    forwardpredictor.predict(state=static_state, action=1, next_states=[State(id='test', state_type='max')])
+    forwardenumerator.enumerate(state=static_state, action=1)
 

@@ -257,6 +257,12 @@ class State:
     'player': player node, for other players with different goals
     '''
     def __init__(self, id, state_type, notes = None):
+        '''
+        Args:
+            id: id of the state, should be unique, usually the name of the state
+            state_type: type of the state
+            notes: any notes about the state
+        '''
         self.id = id
         self.state_type = state_type # 'max', 'min', 'random', 'player'
         self.notes = notes

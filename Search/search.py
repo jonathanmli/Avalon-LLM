@@ -76,7 +76,7 @@ class ValueBFS(Search):
                 
                 if not node.next_states:
                     for action in node.actions:
-                        node.next_states.extend(self.forward_enumerator.enumerate(state, action))
+                        node.next_states.update(self.forward_enumerator.enumerate(state, action))
                     
                 for next_state in node.next_states:
                     value = self.expand(graph, next_state, node, depth-1)

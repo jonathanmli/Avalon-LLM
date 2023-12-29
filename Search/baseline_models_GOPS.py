@@ -69,5 +69,7 @@ class GOPSForwardEnumerator(ForwardEnumerator):
         # create next state
         next_state = GOPSState((state_type+1)%3, prize_cards, player_cards, opponent_cards, num_cards)
 
+        return set([next_state])
+
 
         

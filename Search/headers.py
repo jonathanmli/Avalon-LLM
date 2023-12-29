@@ -45,7 +45,7 @@ class ForwardPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, action, next_states):
+    def predict(self, state: State, action, next_states) -> dict:
         '''
         Predicts the probabilities over next states given the current state and action
 
@@ -55,7 +55,7 @@ class ForwardPredictor():
             next_states: list of next states
 
         Returns:
-            probs: list of probabilities over next states
+            probs: dictionary of probabilities over next states
         '''
         raise NotImplementedError
     
@@ -88,7 +88,7 @@ class ActionPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions):
+    def predict(self, state: State, actions) -> dict:
         '''
         Predicts the advantage of each action given the current state
 
@@ -97,7 +97,7 @@ class ActionPredictor():
             actions: list of actions
 
         Returns:
-            advantage: list of relative advantages of each action
+            advantage: dictionary of relative advantages of each action
         '''
         raise NotImplementedError
     
@@ -129,7 +129,7 @@ class RandomStatePredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, next_states):
+    def predict(self, state: State, next_states) -> dict:
         '''
         Predicts the probabilities over next states given the current state and action
 
@@ -138,7 +138,7 @@ class RandomStatePredictor():
             next_states: list of next states
 
         Returns:
-            probs: list of probabilities over next states
+            probs: dictionary of probabilities over next states
         '''
         raise NotImplementedError
     
@@ -170,7 +170,7 @@ class OpponentActionPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions):
+    def predict(self, state: State, actions)-> dict:
         '''
         Predicts the advantage of each action given the current state
 
@@ -179,7 +179,7 @@ class OpponentActionPredictor():
             actions: list of actions
 
         Returns:
-            advantage: list of relative advantages of each action
+            advantage: dictionary of relative advantages of each action
         '''
         raise NotImplementedError
     
@@ -211,7 +211,7 @@ class PolicyPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions):
+    def predict(self, state: State, actions)-> dict:
         '''
         Predicts the probabilities over actions given the current state
 
@@ -220,7 +220,7 @@ class PolicyPredictor():
             actions: list of actions
 
         Returns:
-            probs: list of probabilities over actions
+            probs: dictionary of probabilities over actions
         '''
         raise NotImplementedError
     

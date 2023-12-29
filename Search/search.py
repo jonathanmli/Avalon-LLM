@@ -6,12 +6,14 @@ class Search:
     '''
     Abstract class for search algorithms
     '''
-    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator):
+    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, 
+                 value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator, random_state_enumerator: RandomStateEnumerator):
         # self.graph = graph
         self.forward_predictor = forward_predictor
         self.forward_enumerator = forward_enumerator
         self.value_heuristic = value_heuristic
         self.action_enumerator = action_enumerator
+        self.random_state_enumerator = random_state_enumerator
 
     def expand(self, node_id):
         '''
@@ -23,14 +25,15 @@ class ValueBFS(Search):
     '''
     Used to perform breadth-first search
     '''
-    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator):
-        super().__init__(forward_predictor, forward_enumerator, value_heuristic, action_enumerator)
+    def __init__(self, forward_predictor: ForwardPredictor, forward_enumerator: ForwardEnumerator, 
+                 value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator, random_state_enumerator: RandomStateEnumerator):
+        super().__init__(forward_predictor, forward_enumerator, value_heuristic, action_enumerator, random_state_enumerator)
         # self.queue = deque()
         # self.visited = set()
         # self.queue.append(graph.root)
         # self.visited.add(graph.root.id)
 
-    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, revise=False):
+    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3):
         '''
         Expand starting from a node
         
@@ -72,9 +75,19 @@ class ValueBFS(Search):
                     expected_value = 0.0
                     for next_state in next_states:
                         expected_value += next_state_to_values[next_state] * self.forward_predictor.predict(state, action, next_state)  
-                
-            if revise:
-                node.value = value
+            
+            elif state.state_type == state.STATE_TYPES[1]: # min
+                value = float('inf')
+
+            elif state.state_type == state.STATE_TYPES[2]: # random 
+                value = 0.0
+                if state.next_states is None:
+                    state.next_states = self.random_state_enumerator.enumerate(state)
+                if not state.probs_over_next_states:
+                    # Dictionary is empty
+                    pass
+            
+            node.value = value
             return value
 
         # queue = deque()

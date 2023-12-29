@@ -29,7 +29,7 @@ class Node:
 
 class ValueNode(Node):
 
-    def __init__(self, state, parents=set(), children=set(), actions=[]):
+    def __init__(self, state, parents=set(), children=set()):
         super().__init__(state, parents, children)
         self.state = state # state of the game that this node represents
         self.value = 0.0 # value to be updated by the rollout policy
@@ -47,7 +47,7 @@ class MaxValueNode(ValueNode):
     State where the protagonist is trying to maximize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=[]):
+    def __init__(self, state, parents=set(), children=set(), actions=None):
         super().__init__(state, parents, children, actions)
         self.value = -np.inf
         self.actions = actions # list of actions
@@ -59,7 +59,7 @@ class MinValueNode(ValueNode):
     State where the opponents are trying to minimize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=[]):
+    def __init__(self, state, parents=set(), children=set(), actions=None):
         super().__init__(state, parents, children, actions)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
@@ -70,10 +70,12 @@ class RandomValueNode(ValueNode):
     State where the environment progresses to random states
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=[]):
-        super().__init__(state, parents, children, actions)
+    def __init__(self, state, parents=set(), children=set(), next_states = None):
+        super().__init__(state, parents, children)
         self.value = 0.0
+        self.next_states = next_states # set of next states
         self.probs_over_next_states = dict() # maps next state to probability 
+
 
 class Graph:
     '''

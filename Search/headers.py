@@ -113,13 +113,13 @@ class HiddenStateEnumerator():
 
     def enumerate(self, state):
         '''
-        Enumerates the possible next states given the current state and action
+        Enumerates the possible hidden states given the current state and action
 
         Args:
             state: current state
 
         Returns:
-            next_states: list of next states
+            hidden_states: list of hidden states
         '''
         raise NotImplementedError
 

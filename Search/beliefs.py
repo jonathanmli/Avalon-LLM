@@ -47,23 +47,26 @@ class MaxValueNode(ValueNode):
     State where the protagonist is trying to maximize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None):
+    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set()):
         super().__init__(state, parents, children, actions)
         self.value = -np.inf
         self.actions = actions # list of actions
         self.action_to_next_state_probs = dict() # maps action to probabilities over next states (child nodes)
         self.best_action = None # best action to take
+        self.next_states = next_states # set of next states (child nodes)
 
 class MinValueNode(ValueNode):
     '''
     State where the opponents are trying to minimize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None):
+    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set()):
         super().__init__(state, parents, children, actions)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
         self.action_to_next_state_probs = dict() # maps action to probabilities over next states
+        self.best_action = None # best action to take
+        self.next_states = next_states # set of next states (child nodes)
 
 class RandomValueNode(ValueNode):
     '''

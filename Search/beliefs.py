@@ -78,6 +78,7 @@ class RandomValueNode(ValueNode):
         self.value = 0.0
         self.next_states = next_states # set of next states
         self.probs_over_next_states = dict() # maps next state to probability 
+        self.best_action = None # best action to take
 
 
 class Graph:

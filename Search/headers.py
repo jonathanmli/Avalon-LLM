@@ -8,6 +8,10 @@ class State:
     'random': random value node, for the environment
     'player': player node, for other players with different goals
     '''
+    STATE_TYPES = ['max', 'min', 'random', 'player']
+
+    
+
     def __init__(self, id, state_type, notes = None):
         '''
         Args:
@@ -17,6 +21,8 @@ class State:
         '''
         self.id = id
         self.state_type = state_type # 'max', 'min', 'random', 'player'
+        if state_type not in self.STATE_TYPES:
+            raise ValueError(f"state_type must be one of {self.STATE_TYPES}")
         self.notes = notes
 
     def __repr__(self):

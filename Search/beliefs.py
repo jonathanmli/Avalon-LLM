@@ -4,36 +4,11 @@ class Node:
     '''
     Abstract node class for the search algorithms
     '''
-    def __init__(self, id, parents = [], children=[]):
+    def __init__(self, id, parents=set(), children=set()):
         self.id = id # state of the game that this node represents
-        self.parents = parents # parent node
-        self.children = children # list of children nodes
-        # self.visits = 0
-        # self.value = 0.0 # value to be updated by the rollout policy
-        # # self.untried_actions = state.legal_actions()
+        self.parents = parents # parent nodes
+        self.children = children # child nodes
 
-    # def select_child(self):
-    #     '''
-    #     Selects a child node
-    #     '''
-    #     return self.children[np.argmax([c.value/c.visits + np.sqrt(2*np.log(self.visits)/c.visits) for c in self.children])]
-
-    # def expand(self, action, state):
-    #     '''
-    #     Expands the node
-    #     '''
-    #     child = Node(state, self, action)
-    #     self.untried_actions.remove(action)
-    #     self.children.append(child)
-    #     return child
-
-    # def update(self, result):
-    #     '''
-    #     Updates the node
-    #     '''
-    #     self.visits += 1
-    #     self.value += result
-        
     def __repr__(self):
         return f"Node({self.id})"
 
@@ -54,7 +29,7 @@ class Node:
 
 class ValueNode(Node):
 
-    def __init__(self, state, parents = [], children=[], actions = []):
+    def __init__(self, state, parents=set(), children=set(), actions=[]):
         super().__init__(state, parents, children)
         self.state = state # state of the game that this node represents
         self.value = 0.0 # value to be updated by the rollout policy
@@ -72,52 +47,30 @@ class MaxValueNode(ValueNode):
     State where the protagonist is trying to maximize the value by taking actions
     '''
 
-    def __init__(self, state, parents = [], children=[], actions = []):
+    def __init__(self, state, parents=set(), children=set(), actions=[]):
         super().__init__(state, parents, children, actions)
         self.value = -np.inf
         self.actions = actions # list of actions
-        self.action_to_next_state_probs = dict() # maps action to probabilities over next states
+        self.action_to_next_state_probs = dict() # maps action to probabilities over next states (child nodes)
         self.best_action = None # best action to take
-
-    # def backward(self, value):
-    #     '''
-    #     Updates the node
-    #     '''
-    #     self.visits += 1
-    #     # only update if value is greater than current value
-    #     if value > self.value:
-    #         self.value = value
-    #         for parent in self.parents:
-    #             parent.backward(value)
 
 class MinValueNode(ValueNode):
     '''
     State where the opponents are trying to minimize the value by taking actions
     '''
 
-    def __init__(self, state, parents = [], children=[], actions = []):
+    def __init__(self, state, parents=set(), children=set(), actions=[]):
         super().__init__(state, parents, children, actions)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
         self.action_to_next_state_probs = dict() # maps action to probabilities over next states
-
-    # def backward(self, value):
-    #     '''
-    #     Updates the node
-    #     '''
-    #     self.visits += 1
-    #     # only update if value is less than current value
-    #     if value < self.value:
-    #         self.value = value
-    #         for parent in self.parents:
-    #             parent.backward(value)
 
 class RandomValueNode(ValueNode):
     '''
     State where the environment progresses to random states
     '''
 
-    def __init__(self, state, parents = [], children=[], actions = []):
+    def __init__(self, state, parents=set(), children=set(), actions=[]):
         super().__init__(state, parents, children, actions)
         self.value = 0.0
         self.probs_over_next_states = dict() # maps next state to probability 
@@ -128,7 +81,6 @@ class Graph:
     '''
     def __init__(self):
         self.id_to_node = dict() # maps id to node
-        pass
 
     def get_node(self, id):
         '''
@@ -144,6 +96,8 @@ class Graph:
             return None
         else:
             return self.id_to_node[id]
+        
+)
 
 class ValueGraph(Graph):
     '''
@@ -152,7 +106,6 @@ class ValueGraph(Graph):
 
     def __init__(self):
         super().__init__()
-        
 
     def get_value(self, state):
         '''
@@ -166,17 +119,32 @@ class ValueGraph(Graph):
         '''
         return self.id_to_node[state].value
     
-    def add_state(self, state, parent_states = [], child_states = [], actions = []):
+    def add_state(self, state, parent_states=[], child_states=[]):
         '''
         Adds a state to the tree
 
         Args:
             state: state to add
+
+        Returns:
+            node: node corresponding to the state added
         '''
-        parents = [self.id_to_node[parent_state] for parent_state in parent_states]
-        children = [self.id_to_node[child_state] for child_state in child_states]
-        node = ValueNode(state, parents=parents, children=children)
-        self.id_to_node[state] = node
+        parents = set([self.id_to_node[parent_state] for parent_state in parent_states])
+        children = set([self.id_to_node[child_state] for child_state in child_states])
+        if state not in self.id_to_node:
+            if state.state_type == state.STATE_TYPES[0]:
+                node = MaxValueNode(state, parents, children)
+            elif state.state_type == state.STATE_TYPES[1]:
+                node = MinValueNode(state, parents, children)
+            elif state.state_type == state.STATE_TYPES[2]:
+                node = RandomValueNode(state, parents, children)
+            else:
+                raise NotImplementedError
+            self.id_to_node[state] = node
+            return node
+        else:
+            raise ValueError(f"state {state} already exists in the graph")
+
     
     def backward(self, state, value):
         '''
@@ -188,8 +156,6 @@ class ValueGraph(Graph):
             value: value to backward
         '''
         node = self.id_to_node[state]
-
-        
 
     def compute_qvalue(self, state, action):
         '''

@@ -19,6 +19,12 @@ GPT-4-turbo🤖 playing against rule-based bots in AvalonBench
 
 https://github.com/jonathanmli/Avalon-LLM/assets/24936331/23fcb204-7570-4449-8777-b179c25251ad
 
+GPT-3.5-turbos🤖 playing against each other
+
+
+https://github.com/jonathanmli/Avalon-LLM/assets/24936331/9257d081-67ff-43d4-bbcf-b20415b32595
+
+
 
 
 ## Initial Results

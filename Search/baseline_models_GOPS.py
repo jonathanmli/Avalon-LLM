@@ -1,7 +1,7 @@
 import re
 from typing import Dict, List
-from headers import *
-from prompts import *
+from Search.headers import *
+from Search.prompts import *
 
 # Parse helper funcs
 def parse_bracketed_list(string: str) -> List[str]:
@@ -49,15 +49,16 @@ class GOPSState(State):
     '''
 
     def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards):
+        # should call super first, otherwise state_type will be overwritten
+        id = tuple([prize_cards, player_cards, opponent_cards, num_cards, state_type])
+        turn = self.STATE_TYPES[state_type]
+        super().__init__(id, turn)
+
         self.prize_cards = tuple(prize_cards)
         self.player_cards = tuple(player_cards)
         self.opponent_cards = tuple(opponent_cards)
         self.num_cards = num_cards
         self.state_type = state_type
-
-        id = tuple([self.prize_cards, self.player_cards, self.opponent_cards, self.num_cards, state_type])
-        turn = self.STATE_TYPES[state_type]
-        super().__init__(id, turn)
         
 
 
@@ -66,7 +67,7 @@ class GOPSForwardEnumerator(ForwardEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: State, action):
+    def enumerate(self, state: GOPSState, action):
         '''
         Enumerates the possible next states given the current state and action
 
@@ -82,6 +83,10 @@ class GOPSForwardEnumerator(ForwardEnumerator):
         opponent_cards = state.opponent_cards
         num_cards = state.num_cards
         state_type = state.state_type
+
+        # There used to be a type error for state_type here
+        print(state_type)
+        assert isinstance(state_type, int)
 
         if state_type == 0:
             # append action to player cards
@@ -111,7 +116,7 @@ class GOPSForwardPredictor(ForwardPredictor):
     def __init__(self):
         super().__init__()
 
-    def predict(self, state: State, action, next_states):
+    def predict(self, state: GOPSState, action, next_states):
         '''
         Predicts the probabilities over next states given the current state and action
 
@@ -132,7 +137,7 @@ class GOPSActionEnumerator(ActionEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: GOPSState):
         '''
         Enumerates the possible actions that the player can take given the current state
 
@@ -157,7 +162,7 @@ class GOPSOpponentActionEnumerator(ActionEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: GOPSState):
         '''
         Enumerates the possible actions that the opponent can take given the current state
 
@@ -182,7 +187,7 @@ class GOPSRandomStateEnumerator(RandomStateEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: GOPSState):
         '''
         Enumerates the possible next states given the current state
 
@@ -217,7 +222,7 @@ class GOPSRandomStatePredictor(RandomStatePredictor):
     def __init__(self):
         super().__init__()
 
-    def predict(self, state: State, next_states):
+    def predict(self, state: GOPSState, next_states):
         '''
         Predicts the probabilities over next states given the current state
 
@@ -245,7 +250,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         '''
         self.model = model
 
-    def predict(self, state: State, actions) -> Dict:
+    def predict(self, state: GOPSState, actions) -> Dict:
         '''
         Predicts the advantage of each opponent action given the current state and action
 
@@ -280,7 +285,7 @@ class GPT35ValueHeuristic(ValueHeuristic):
         '''
         self.model = model
 
-    def evaluate(self, state: State) -> Dict:
+    def evaluate(self, state: GOPSState) -> Dict:
         '''
         Predicts the value of the state
 

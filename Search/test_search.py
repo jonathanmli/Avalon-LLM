@@ -1,9 +1,11 @@
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
-from headers import State
-from search import *
+from Search.beliefs import ValueGraph
+# from Tree_Search.headers import ValueBFS
+from Search.headers import State
+from Search.search import *
 # from dynamics import *
-from baseline_models_GOPS import *
+from Search.baseline_models_GOPS import *
 
 SYS_PROMPT = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
@@ -53,6 +55,14 @@ if __name__ == "__main__":
     )
     bfs.expand(
         graph = graph,
-        state = State(1, state_type="max", notes=""),
+        state = GOPSState(
+            state_type=0,
+            prize_cards=tuple([3,1]),
+            player_cards=tuple([5]),
+            opponent_cards=tuple([3]),
+            num_cards=6
+        ),
         depth = 3
     )
+
+# run with python -m Search.test_search

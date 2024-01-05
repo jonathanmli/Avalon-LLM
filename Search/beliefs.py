@@ -137,11 +137,15 @@ class ValueGraph(Graph):
         parents = set([self.id_to_node[parent_state] for parent_state in parent_states])
         children = set([self.id_to_node[child_state] for child_state in child_states])
         if state not in self.id_to_node:
-            if state.state_type == state.STATE_TYPES[0]:
+            # TODO: should 
+            # if state.state_type == state.STATE_TYPES[0]:
+            if state.state_type == 0:
                 node = MaxValueNode(state, parents, children)
-            elif state.state_type == state.STATE_TYPES[1]:
+            # elif state.state_type == state.STATE_TYPES[1]:
+            elif state.state_type == 1:
                 node = MinValueNode(state, parents, children)
-            elif state.state_type == state.STATE_TYPES[2]:
+            # elif state.state_type == state.STATE_TYPES[2]:
+            elif state.state_type == 2:
                 node = RandomValueNode(state, parents, children)
             else:
                 raise NotImplementedError

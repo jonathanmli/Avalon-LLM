@@ -1,5 +1,5 @@
-from beliefs import Graph, MaxValueNode, MinValueNode, RandomValueNode, ValueGraph
-from headers import *
+from Search.beliefs import Graph, MaxValueNode, MinValueNode, RandomValueNode, ValueGraph
+from Search.headers import *
 from collections import deque
 
 class Search:
@@ -65,7 +65,8 @@ class ValueBFS(Search):
             value = 0.0
             next_state_to_values = dict()
             
-            if state.state_type == state.STATE_TYPES[0]: # max
+            # if state.state_type == state.STATE_TYPES[0]: # max
+            if state.state_type == 0: # max
                 max_value = float('-inf')
                 max_action = None
                 action_to_expected_value = dict()
@@ -101,8 +102,8 @@ class ValueBFS(Search):
                 node.value = max_value
                 value = max_value
             
-            elif state.state_type == state.STATE_TYPES[1]: # min
-
+            # elif state.state_type == state.STATE_TYPES[1]: # min
+            elif state.state_type == 1: # min
                 min_value = float('inf')
                 min_action = None
                 action_to_expected_value = dict()
@@ -137,7 +138,8 @@ class ValueBFS(Search):
                 node.value = min_value
                 value = min_value
 
-            elif state.state_type == state.STATE_TYPES[2]: # random 
+            # elif state.state_type == state.STATE_TYPES[2]: # random 
+            elif state.state_type == 2: # random
                 value = 0.0
                 if node.next_states is None:
                     node.next_states = self.random_state_enumerator.enumerate(state)

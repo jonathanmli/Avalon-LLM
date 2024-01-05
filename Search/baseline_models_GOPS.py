@@ -129,7 +129,10 @@ class GOPSForwardPredictor(ForwardPredictor):
             probs: dictionary of probabilities over next states
         '''
         probs = dict()
-        probs[next_states[0]] = 1.0
+        if isinstance(next_states, GOPSState):
+            probs[next_states] = 1.0
+        else:
+            probs[next_states[0]] = 1.0
         return probs
 
 class GOPSActionEnumerator(ActionEnumerator):
@@ -265,11 +268,15 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions)
         input_prompt += OPPONENT_ACTION_PREDICTOR_PROMPT
 
-        # Call the model
-        output = self.model.single_action(input_prompt)
+        # Uncomment the following to use the model
 
-        # Parse the output
-        advantages = parse_dict_with_any_key(output)
+        # # Call the model
+        # output = self.model.single_action(input_prompt)
+
+        # # Parse the output
+        # advantages = parse_dict_with_any_key(output)
+
+        advantages = {action: 1.0/len(actions) for action in actions}
 
         return advantages
     
@@ -301,12 +308,15 @@ class GPT35ValueHeuristic(ValueHeuristic):
         value_prompt = "Current State: {state}\n".format(state=state.notes)
         value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
-        # Call the model
-        prob_output = self.model.single_action(prob_prompt)
-        value_output = self.model.single_action(value_prompt)
+        # Uncomment the following to use the model
 
-        # Parse the output
-        prob_value = parse_prob_value(prob_output)
-        value = parse_int_value(value_output)
+        # # Call the model
+        # prob_output = self.model.single_action(prob_prompt)
+        # value_output = self.model.single_action(value_prompt)
+
+        # # Parse the output
+        # prob_value = parse_prob_value(prob_output)
+        # value = parse_int_value(value_output)
+        value = 5
 
         return value

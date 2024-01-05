@@ -57,12 +57,19 @@ if __name__ == "__main__":
         graph = graph,
         state = GOPSState(
             state_type=0,
-            prize_cards=tuple([3,1]),
-            player_cards=tuple([5]),
-            opponent_cards=tuple([3]),
+            prize_cards=tuple([3]),
+            player_cards=tuple([]),
+            opponent_cards=tuple([]),
             num_cards=6
         ),
         depth = 3
     )
+    print(graph.get_best_action(GOPSState(
+            state_type=0,
+            prize_cards=tuple([3]),
+            player_cards=tuple([]),
+            opponent_cards=tuple([]),
+            num_cards=6
+        )))
 
 # run with python -m Search.test_search

@@ -1,6 +1,7 @@
 from Search.beliefs import Graph, MaxValueNode, MinValueNode, RandomValueNode, ValueGraph
 from Search.headers import *
 from collections import deque
+import warnings
 
 class Search:
     '''
@@ -85,12 +86,16 @@ class ValueBFS(Search):
 
                 for action in node.actions:
                     if action not in node.action_to_next_state_probs:
+                        # TODO: should next_state be node.next_states?
                         node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
                 
                     # calculate expected value
                     expected_value = 0.0
                     for next_state in node.next_states:
-                        expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
+                        try:
+                            expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
+                        except:
+                            warnings.warn(f"next_state {next_state} not in node.action_to_next_state_probs[action] {node.action_to_next_state_probs[action]}")
                     action_to_expected_value[action] = expected_value
 
                     # find max action and max value
@@ -121,12 +126,17 @@ class ValueBFS(Search):
 
                 for action in node.actions:
                     if action not in node.action_to_next_state_probs:
+                        # TODO: should next_state be node.next_states?
                         node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
                 
                     # calculate expected value
                     expected_value = 0.0
                     for next_state in node.next_states:
-                        expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
+                        try:
+                            print("Work")
+                            expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
+                        except:
+                            warnings.warn(f"next_state {next_state} not in node.action_to_next_state_probs[action] {node.action_to_next_state_probs[action]}")
                     action_to_expected_value[action] = expected_value
 
                     # find min action and min value

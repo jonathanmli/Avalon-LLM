@@ -51,7 +51,13 @@ your thoughts here
 
 Actions:
 list of actions here, which should be a python list of card numbers, for example: [1, 2, 3]'''
-OPPONENT_ACTION_PREDICTOR_PROMPT = '''Given the current situation and what the opponent is trying to achieve, what is the probability of the opponent taking each action?'''
+OPPONENT_ACTION_PREDICTOR_PROMPT = b'''Given the current situation and what the opponent is trying to achieve, what is the probability of the opponent taking each action? Write down your thoughts and output the dict of probabilities
+
+Thought:
+your thoughts here
+
+Probabilities:
+gather your thoughts in a python dict, for example: {action1: prob1, action2: prob2, action3: prob3}'''
 
 ACTION_ENUMERATOR_PROMPT = '''Recall the rules of the game and enumerate the possible actions that we could take currently. Write down your thoughts and output the list of actions.
 

@@ -87,7 +87,7 @@ class ValueBFS(Search):
                 for action in node.actions:
                     if action not in node.action_to_next_state_probs:
                         # TODO: should next_state be node.next_states?
-                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
+                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, node.next_states)
                 
                     # calculate expected value
                     expected_value = 0.0
@@ -127,7 +127,7 @@ class ValueBFS(Search):
                 for action in node.actions:
                     if action not in node.action_to_next_state_probs:
                         # TODO: should next_state be node.next_states?
-                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, next_state)
+                        node.action_to_next_state_probs[action] = self.forward_predictor.predict(state, action, node.next_states)
                 
                     # calculate expected value
                     expected_value = 0.0

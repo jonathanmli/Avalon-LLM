@@ -133,7 +133,6 @@ class ValueBFS(Search):
                     expected_value = 0.0
                     for next_state in node.next_states:
                         try:
-                            print("Work")
                             expected_value += next_state_to_values[next_state] * node.action_to_next_state_probs[action][next_state]
                         except:
                             warnings.warn(f"next_state {next_state} not in node.action_to_next_state_probs[action] {node.action_to_next_state_probs[action]}")

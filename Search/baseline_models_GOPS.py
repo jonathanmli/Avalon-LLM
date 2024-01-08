@@ -85,7 +85,6 @@ class GOPSForwardEnumerator(ForwardEnumerator):
         state_type = state.state_type
 
         # There used to be a type error for state_type here
-        print(state_type)
         assert isinstance(state_type, int)
 
         if state_type == 0:
@@ -131,8 +130,8 @@ class GOPSForwardPredictor(ForwardPredictor):
         probs = dict()
         if isinstance(next_states, GOPSState):
             probs[next_states] = 1.0
-        else:
-            probs[next_states[0]] = 1.0
+        elif isinstance(next_states, set):
+            probs[list(next_states)[0]] = 1.0
         return probs
 
 class GOPSActionEnumerator(ActionEnumerator):

@@ -275,7 +275,10 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         # # Parse the output
         # advantages = parse_dict_with_any_key(output)
 
-        advantages = {action: 1.0/len(actions) for action in actions}
+        import random
+        advantages = {action: (1.0 * random.randint(0, len(actions)))/len(actions) for action in actions}
+
+        # print(advantages)
 
         return advantages
     
@@ -316,6 +319,9 @@ class GPT35ValueHeuristic(ValueHeuristic):
         # # Parse the output
         # prob_value = parse_prob_value(prob_output)
         # value = parse_int_value(value_output)
-        value = 5
+        import numpy as np
+        value = np.random.randint(0, 10)
+
+        print(f"State: {state} Value: {value}")
 
         return value

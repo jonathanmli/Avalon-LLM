@@ -71,6 +71,11 @@ if __name__ == "__main__":
     player_cards = [] # cards that have been played
     opponent_cards = [] # cards that the opponent has played
     played_prize_cards = [] # prize/score cards that have been shwon to the players
+
+    player_score = 0
+    opponent_score = 0
+    current_score = 0
+
     while len(system.card_deck) > 0:
         # Instantiate the search
         # TODO: do we need to instantiate the search every time?
@@ -85,7 +90,9 @@ if __name__ == "__main__":
             opponent_action_enumerator=opponent_action_enumerator,
             opponent_action_predictor=opponent_action_predictor,
         )
-        played_prize_cards.append(system.draw_score_card())
+        current_score_card = system.draw_score_card()
+        current_score += current_score_card
+        played_prize_cards.append(current_score_card)
         state = GOPSState(
             state_type=0,
             prize_cards=tuple(played_prize_cards),
@@ -93,6 +100,7 @@ if __name__ == "__main__":
             opponent_cards=tuple(opponent_cards),
             num_cards=6
         )
+        # print("State: {state}".format(state=state))
         bfs.expand(
             graph = graph,
             state = state,
@@ -101,9 +109,22 @@ if __name__ == "__main__":
         player_card = graph.get_best_action(state=state)
         opponent_card = opponent.single_action()
 
-        print("Player plays {player_card}, Opponent plays {opponent_card}".format(player_card=player_card, opponent_card=opponent_card))
+        print("Played Prize Cards: {played_prize_cards}, Player plays {player_card}, Opponent plays {opponent_card}".format(
+            played_prize_cards=played_prize_cards,
+            player_card=player_card,
+            opponent_card=opponent_card
+        ))
 
         player_cards.append(player_card)
         opponent_cards.append(opponent_card)
+
+        if player_card > opponent_card:
+            player_score += current_score
+            current_score = 0
+        elif player_card < opponent_card:
+            opponent_score += current_score
+            current_score = 0
+
+    print("Player score: {player_score}, Opponent score: {opponent_score}".format(player_score=player_score, opponent_score=opponent_score))
 
 # run with python -m Search.test_search

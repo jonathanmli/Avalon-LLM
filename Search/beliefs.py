@@ -1,4 +1,13 @@
 import numpy as np
+import networkx as nx
+# import pygraphviz as pgv
+from networkx.drawing.nx_agraph import to_agraph
+import matplotlib.pyplot as plt
+import time 
+
+
+# TODO: create tree visualization 
+# TODO: refactor the code so that all randomness is determined in random nodes
 
 class Node:
     '''
@@ -80,6 +89,28 @@ class RandomValueNode(ValueNode):
         self.probs_over_next_states = dict() # maps next state to probability 
         self.best_action = None # best action to take
 
+class SimultaneousValueNode(ValueNode):
+    '''
+    State where the protagonist and opponents are trying to maximize the value by taking actions simultaneously
+    '''
+
+    def __init__(self, state, parents=set(), children=set(), proactions=None, antactions = None, next_states = set()):
+        '''
+        Args:
+            state: state of the game that this node represents
+            parents: parent nodes
+            children: child nodes
+            proactions: actions that the protagonist can take
+            antactions: actions that the opponents can take
+            next_states: set of next states
+        '''
+        super().__init__(state, parents, children)
+        self.value = -np.inf
+        self.proactions = proactions # actions that the protagonist can take
+        self.antactions = antactions # actions that the opponents can take
+        self.action_to_next_state_probs = dict() # maps action to probabilities over next states (child nodes)
+        self.best_action = None # best action to take
+        self.next_states = next_states # set of next states (child nodes)
 
 class Graph:
     '''
@@ -196,3 +227,41 @@ class ValueGraph(Graph):
         '''
         node = self.id_to_node[state]
         return node.best_action
+
+    def to_networkx(self):
+        '''
+        Returns the graph as a networkx graph, with values as node.values
+        '''
+        G = nx.DiGraph()
+        for node in self.id_to_node.values():
+            # round value to 4 significant figures
+            value = round(node.value, 4)
+            G.add_node(node.id, value = value)
+            for child in node.children:
+                G.add_edge(node.id, child.id)
+        return G
+    
+    def to_pygraphviz(self):
+        '''
+        Returns the graph as a pygraphviz graph, with values as node.values
+        '''
+        G = to_agraph(self.to_networkx())
+        return G
+    
+    def to_mathplotlib(self):
+        '''
+        Returns the graph as a matplotlib graph, with values as node.values
+        '''
+        G = self.to_networkx()
+
+        pos = nx.spring_layout(G)
+        nx.draw_networkx_nodes(G, pos)
+        nx.draw_networkx_edges(G, pos)
+        node_labels = nx.get_node_attributes(G, 'value')
+        nx.draw_networkx_labels(G, pos, labels = node_labels)
+
+        # title should be value graph at time 
+        title = "Value Graph at time " + str(time.time())
+        plt.title(title)
+        plt.axis('off')
+        return plt

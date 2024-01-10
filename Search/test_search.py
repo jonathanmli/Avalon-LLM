@@ -104,7 +104,8 @@ if __name__ == "__main__":
         bfs.expand(
             graph = graph,
             state = state,
-            depth = 3
+            depth = 3,
+            render=True
         )
         player_card = graph.get_best_action(state=state)
         opponent_card = opponent.single_action()

@@ -140,3 +140,4 @@ class GOPSEnvironment():
 
         # return done and score card
         return (self.done, score_card, self.contested_points)
+    

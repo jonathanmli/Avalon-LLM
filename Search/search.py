@@ -3,6 +3,10 @@ from Search.headers import *
 from collections import deque
 import warnings
 
+# TODO: implement MinMaxStats
+# TODO: implement UCT search
+
+
 class Search:
     '''
     Abstract class for search algorithms
@@ -39,7 +43,7 @@ class ValueBFS(Search):
                          random_state_enumerator, random_state_predictor,
                          opponent_action_enumerator, opponent_action_predictor)
 
-    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3):
+    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False):
         '''
         Expand starting from a node
         
@@ -158,6 +162,10 @@ class ValueBFS(Search):
                 for next_state in node.next_states:
                     value += self.expand(graph, next_state, node, depth-1) * node.probs_over_next_states[next_state]
             
+            if render:
+                plt = graph.to_mathplotlib()
+                plt.show()
+                
             return value
 
  

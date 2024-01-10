@@ -82,7 +82,7 @@ class ForwardEnumerator():
     
 class ActionPredictor():
     '''
-    Abstract class for an action predictor
+    Abstract class for an action predictor (policy predictor)
     '''
 
     def __init__(self):
@@ -90,7 +90,7 @@ class ActionPredictor():
     
     def predict(self, state: State, actions) -> dict:
         '''
-        Predicts the advantage of each action given the current state
+        Predicts the advantage or policy probabilities of each action given the current state
 
         Args:
             state: current state

@@ -6,6 +6,7 @@ from Search.headers import State
 from Search.search import *
 # from dynamics import *
 from Search.baseline_models_GOPS import *
+from Search.engine import *
 
 SYS_PROMPT = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
@@ -38,24 +39,10 @@ if __name__ == "__main__":
             card = random.choice(self.hand)
             self.hand.remove(card)
             return card
-        
-
-    class GOPSSystem:
-        def __init__(self, cards: List[int]):
-            self.card_deck = cards
-
-        def draw_score_card(self):
-            import random
-            card = random.choice(self.card_deck)
-            self.card_deck.remove(card)
-            return card
 
     model = GPT35()
 
-    # Instantiate the game system
-    system = GOPSSystem([1,2,3,4,5,6])
-
-    opponent = RandomPlayer([1,2,3,4,5,6])
+    opponent = RandomPlayer([1,2,3])
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()
@@ -67,40 +54,42 @@ if __name__ == "__main__":
     forward_predictor = GOPSForwardPredictor()
     forward_enumerator = GOPSForwardEnumerator()
 
-    player_hand = [1,2,3,4,5,6]
-    player_cards = [] # cards that have been played
-    opponent_cards = [] # cards that the opponent has played
+    # using the engine defined earlier
+    config = GOPSConfig(num_turns=3)
+    env = GOPSEnvironment(config)
+
+    (done, score_card, contested_points) = env.reset()
+
     played_prize_cards = [] # prize/score cards that have been shwon to the players
+    player_cards = []
+    opponent_cards = []
 
-    player_score = 0
-    opponent_score = 0
-    current_score = 0
 
-    while len(system.card_deck) > 0:
+    bfs = ValueBFS(
+        forward_predictor=forward_predictor, 
+        forward_enumerator=forward_enumerator, 
+        value_heuristic=value_heuristic, 
+        action_enumerator=action_enumerator, 
+        random_state_enumerator=hidden_state_enumerator,
+        random_state_predictor=hidden_state_predictor,
+        opponent_action_enumerator=opponent_action_enumerator,
+        opponent_action_predictor=opponent_action_predictor,
+    )
+
+    while not done:
         # Instantiate the search
         # TODO: do we need to instantiate the search every time?
         graph = ValueGraph()
-        bfs = ValueBFS(
-            forward_predictor=forward_predictor, 
-            forward_enumerator=forward_enumerator, 
-            value_heuristic=value_heuristic, 
-            action_enumerator=action_enumerator, 
-            random_state_enumerator=hidden_state_enumerator,
-            random_state_predictor=hidden_state_predictor,
-            opponent_action_enumerator=opponent_action_enumerator,
-            opponent_action_predictor=opponent_action_predictor,
-        )
-        current_score_card = system.draw_score_card()
-        current_score += current_score_card
-        played_prize_cards.append(current_score_card)
+
+        played_prize_cards.append(score_card)
+
         state = GOPSState(
             state_type=0,
             prize_cards=tuple(played_prize_cards),
             player_cards=tuple(player_cards),
             opponent_cards=tuple(opponent_cards),
-            num_cards=6
+            num_cards=3
         )
-        # print("State: {state}".format(state=state))
         bfs.expand(
             graph = graph,
             state = state,
@@ -110,22 +99,21 @@ if __name__ == "__main__":
         player_card = graph.get_best_action(state=state)
         opponent_card = opponent.single_action()
 
+        player_cards.append(player_card)
+        opponent_cards.append(opponent_card)
+
         print("Played Prize Cards: {played_prize_cards}, Player plays {player_card}, Opponent plays {opponent_card}".format(
             played_prize_cards=played_prize_cards,
             player_card=player_card,
             opponent_card=opponent_card
         ))
 
-        player_cards.append(player_card)
-        opponent_cards.append(opponent_card)
+        # update the game state
+        (done, score_card, contested_points) = env.play_cards(
+            player1_card=player_card,
+            player2_card=opponent_card
+        )
 
-        if player_card > opponent_card:
-            player_score += current_score
-            current_score = 0
-        elif player_card < opponent_card:
-            opponent_score += current_score
-            current_score = 0
-
-    print("Player score: {player_score}, Opponent score: {opponent_score}".format(player_score=player_score, opponent_score=opponent_score))
+    print("Player score: {player_score}, Opponent score: {opponent_score}".format(player_score=env.player1_score, opponent_score=env.player2_score))
 
 # run with python -m Search.test_search

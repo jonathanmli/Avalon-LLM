@@ -45,7 +45,7 @@ class ValueBFS(Search):
                          random_state_enumerator, random_state_predictor,
                          opponent_action_enumerator, opponent_action_predictor)
 
-    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False):
+    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False, revise = False):
         '''
         Expand starting from a node
         
@@ -65,30 +65,96 @@ class ValueBFS(Search):
             node.parents.add(prev_node)
             prev_node.children.add(node)
 
+        node.visits += 1
+
         if depth == 0:
             value = self.value_heuristic.evaluate(state)
             return value
         else:
             value = 0.0
             next_state_to_values = dict()
+            next_depth = depth if node.virtual else depth -1 # skip virtual nodes
             
             if state.state_type == 'control':
-                raise NotImplementedError
-            
+                # enumerate actions
+                if node.actions is None or revise:
+                    node.actions = self.action_enumerator.enumerate(state)
+
+                # find next states
+                if not node.next_states or revise:
+                    for action in node.actions:
+                        next_state = self.forward_transistor.transition(state, action)
+                        node.next_states.add(next_state)
+                        node.action_to_next_state[action] = next_state
+
+                # expand next states
+                for next_state in node.next_states:
+                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+
+                # add action to value
+                for action in node.actions:
+                    next_state = node.action_to_next_state[action]
+                    node.action_to_value[action] = next_state_to_values[next_state]
+
+                # value should be max of actions
+                value = max(node.action_to_value.values())
+
             elif state.state_type == 'adversarial':
-                raise NotImplementedError
+                # enumerate opponents
+                if node.opponents is None or revise:
+                    node.opponents = self.opponent_enumerator.enumerate(state)
+
+                # enumerate actions
+                if not node.adactions or revise:
+                    for opponent in node.opponents:
+                        node.adactions[opponent] = self.opponent_action_enumerator.enumerate(state, opponent)
+
+                # predict probabilities over actions
+                if not node.opponent_to_probs_over_actions or revise:
+                    for opponent in node.opponents:
+                        node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent])
+
+                # enumerate joint adversarial actions
+                if node.joint_adversarial_actions is None or revise:
+                    node.joint_adversarial_actions = list(itertools.product(*node.adactions.values()))
+
+                # find joint adversarial actions to probabilities over actions
+                if not node.joint_adversarial_actions_to_probs or revise:
+                    for joint_adversarial_action in node.joint_adversarial_actions:
+                        node.joint_adversarial_actions_to_probs[joint_adversarial_action] = 1.0
+                        for i, opponent in enumerate(node.opponents):
+                            action = joint_adversarial_action[i]
+                            prob = node.opponent_to_probs_over_actions[opponent][action]
+                            node.joint_adversarial_actions_to_probs[joint_adversarial_action] *= prob
+                        
+                # find next states
+                if not node.next_states or revise:
+                    for joint_adversarial_action in node.joint_adversarial_actions:
+                        next_state = self.forward_transistor.transition(state, joint_adversarial_action)
+                        node.next_states.add(next_state)
+                        node.joint_adversarial_actions_to_next_states[joint_adversarial_action] = next_state
+
+                # expand next states
+                for next_state in node.next_states:
+                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+
+                # add expected value over actions
+                for joint_adversarial_action in node.joint_adversarial_actions:
+                    prob = node.joint_adversarial_actions_to_probs[joint_adversarial_action]
+                    next_state = node.joint_adversarial_actions_to_next_states[joint_adversarial_action]
+                    value += prob*next_state_to_values[next_state]
 
             elif state.state_type == 'stochastic': # random
                 value = 0.0
-                if node.actions is None:
+                if node.actions is None or revise:
                     node.actions = self.random_state_enumerator.enumerate(state)
-                if not node.action_to_next_state: # Dictionary is empty
+                if not node.action_to_next_state or revise: # Dictionary is empty
                     for action in node.actions:
                         node.action_to_next_state[action] = self.forward_transistor.transition(state, action)
-                if not node.probs_over_actions: # Dictionary is empty
+                if not node.probs_over_actions or revise: # Dictionary is empty
                     node.probs_over_actions = self.random_state_predictor.predict(state, node.actions)
                 for next_state in set(node.action_to_next_state.values()):
-                    next_state_to_values[next_state] = self.expand(graph, next_state, node, depth-1)
+                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
 
                 # add expected value over actions 
                 for action in node.actions:
@@ -97,33 +163,71 @@ class ValueBFS(Search):
                     value += prob*next_state_to_values[next_state]
 
             elif state.state_type == 'simultaneous':
-
+                
                 # enumerate opponents
-                if node.opponents is None:
+                if node.opponents is None or revise:
                     node.opponents = self.opponent_enumerator.enumerate(state)
 
-                # enumerate actions
-                if not node.adactions:
+                # enumerate adactions
+                if not node.adactions or revise:
                     for opponent in node.opponents:
                         node.adactions[opponent] = self.opponent_action_enumerator.enumerate(state, opponent)
 
                 # predict probabilities over actions
-                if not node.opponent_to_probs_over_actions:
+                if not node.opponent_to_probs_over_actions or revise:
                     for opponent in node.opponents:
                         node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent])
+                
+                # enumerate joint adversarial actions
+                if node.joint_adversarial_actions is None or revise:
+                    node.joint_adversarial_actions = list(itertools.product(*node.adactions.values()))
+
+                # find joint adversarial actions to probabilities over actions
+                if not node.joint_adversarial_actions_to_probs or revise:
+                    for joint_adversarial_action in node.joint_adversarial_actions:
+                        node.joint_adversarial_actions_to_probs[joint_adversarial_action] = 1.0
+                        for i, opponent in enumerate(node.opponents):
+                            action = joint_adversarial_action[i]
+                            prob = node.opponent_to_probs_over_actions[opponent][action]
+                            node.joint_adversarial_actions_to_probs[joint_adversarial_action] *= prob
 
                 # enumerate proagonist actions
-                if node.proactions is None:
+                if node.proactions is None or revise:
                     node.proactions = self.action_enumerator.enumerate(state)
                         
                 # enumerate all possible joint actions. first dimension always protagonist. dimensions after that are opponents
-                joint_adversarial_actions = list(itertools.product(node.proactions, *node.adactions.values()))
+                if node.joint_actions is None or revise:
+                    node.joint_actions = list(itertools.product(node.proactions, *node.adactions.values()))
 
-                # first find probabilities over opponent actions for each opponent
-                joint_adversarial_actions_to_probs = dict()
+                # find next states
+                if not node.next_states or revise:
+                    for joint_action in node.joint_actions:
+                        next_state = self.forward_transistor.transition(state, joint_action)
+                        node.next_states.add(next_state)
+                        node.joint_actions_to_next_states[joint_action] = next_state
+
+                # expand next states
+                for next_state in node.next_states:
+                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+
+                # reset action_to_value to 0
+                node.action_to_value = dict()
+                for action in node.proactions:
+                    node.action_to_value[action] = 0.0
+
+                # add expected value over actions
+                for joint_action in node.joint_actions:
+                    prob = node.joint_adversarial_actions_to_probs[joint_action[1:]]
+                    next_state = node.joint_actions_to_next_states[joint_action]
+                    node.action_to_value[joint_action[1]] += prob*next_state_to_values[next_state]
+
+                # value should be max of actions
+                value = max(node.action_to_value.values())
+
+                    
             
 
-            if render:
+            if render and not node.virtual:
                 plt = graph.to_mathplotlib()
                 plt.show()
                 

@@ -14,10 +14,11 @@ class Node:
     '''
     Abstract node class for the search algorithms
     '''
-    def __init__(self, id, parents=set(), children=set()):
+    def __init__(self, id, parents=set(), children=set(), virtual=False):
         self.id = id # state of the game that this node represents
         self.parents = parents # parent nodes
         self.children = children # child nodes
+        self.virtual = virtual # whether the node is virtual or not
 
     def __repr__(self):
         return f"Node({self.id})"
@@ -39,8 +40,8 @@ class Node:
 
 class ValueNode(Node):
 
-    def __init__(self, state, parents=set(), children=set()):
-        super().__init__(state, parents, children)
+    def __init__(self, state, parents=set(), children=set(), virtual=False):
+        super().__init__(state, parents, children, virtual)
         self.state = state # state of the game that this node represents
         # self.value = 0.0 # value to be updated by the rollout policy
         self.visits = 0
@@ -60,32 +61,36 @@ class ControlValueNode(ValueNode):
     State where the protagonist is trying to maximize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set()):
-        super().__init__(state, parents, children)
+    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set(), virtual=False):
+        super().__init__(state, parents, children, virtual)
         self.value = -np.inf
         self.actions = actions # list of actions
-        self.best_action = None # best action to take
         self.next_states = next_states # set of next states (child nodes)
+        self.action_to_next_state = dict() # maps action to next state
+        self.action_to_value = dict() # maps action to value (ie. Q-value)
 
 class AdversarialValueNode(ValueNode):
     '''
     State where the opponents are trying to minimize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set()):
-        super().__init__(state, parents, children)
+    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set(), virtual=False):
+        super().__init__(state, parents, children, virtual)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
         self.best_action = None # best action to take
         self.next_states = next_states # set of next states (child nodes)
+        self.joint_adversarial_actions = None # list of joint adversarial actions
+        self.joint_adversarial_actions_to_probs = dict() # dictionary of joint adversarial actions to probabilities over actions
+        self.joint_adversarial_actions_to_next_states = dict() # dictionary of joint adversarial actions to next states
 
 class StochasticValueNode(ValueNode):
     '''
     State where the environment progresses to random states
     '''
 
-    def __init__(self, state, parents=set(), children=set(), next_states = None):
-        super().__init__(state, parents, children)
+    def __init__(self, state, parents=set(), children=set(), next_states = None, virtual=False):
+        super().__init__(state, parents, children, virtual)
         self.value = 0.0
         self.next_states = next_states # set of next states
         self.actions = None # actions that the environment can take
@@ -96,7 +101,7 @@ class SimultaneousValueNode(ValueNode):
     State where the protagonist and opponents are trying to maximize the value by taking actions simultaneously
     '''
 
-    def __init__(self, state, parents=set(), children=set(), proactions=None, adactions = dict(), next_states = set(), opponents = None):
+    def __init__(self, state, parents=set(), children=set(), proactions=None, adactions = dict(), next_states = set(), opponents = None, virtual=False):
         '''
         Args:
             state: state of the game that this node represents
@@ -106,13 +111,17 @@ class SimultaneousValueNode(ValueNode):
             antactions: actions that the opponents can take
             next_states: set of next states
         '''
-        super().__init__(state, parents, children)
+        super().__init__(state, parents, children, virtual)
         self.proactions = proactions # actions that the protagonist can take
         self.adactions = adactions # dictionary of actions that the opponents can take
-        self.best_action = None # best action for the protagonist to take
         self.next_states = next_states # set of next states (child nodes)
         self.opponent_to_probs_over_actions = dict() # dictionary of dictionaries of probabilities over actions for each opponent
         self.opponents = opponents # list of opponents who take actions at this state
+        self.joint_adversarial_actions = None # list of joint adversarial actions
+        self.joint_adversarial_actions_to_probs = dict() # dictionary of joint adversarial actions to probabilities over actions
+        self.action_to_value = dict() # maps action to value (ie. Q-value)
+        self.joint_actions = None # list of joint actions
+        self.joint_actions_to_next_states = dict() # dictionary of joint actions to next states
 
 class Graph:
     '''
@@ -231,7 +240,14 @@ class ValueGraph(Graph):
             best_action: best action to take at the state
         '''
         node = self.id_to_node[state]
-        return node.best_action
+        # best action should be argmax of qvalues (node.action_to_value)
+        best_action = None
+        best_value = -np.inf
+        for action, value in node.action_to_value.items():
+            if value > best_value:
+                best_action = action
+                best_value = value
+        return best_action
 
     def to_networkx(self):
         '''

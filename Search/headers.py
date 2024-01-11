@@ -2,16 +2,15 @@ class State:
     '''
     Abstract class for a state
 
-    state_type: 'max', 'min', 'random', 'player'
-    'max': max value node, for the player
-    'min': min value node, for the opponent trying to minimize the value
-    'random': random value node, for the environment
-    'player': player node, for other players with different goals
+    state_type: 'control', 'adversarial', 'stochastic', 'simultaneous'
+    'control': control value node, for the player
+    'adversarial': adversarial value node, for the opponent trying to minimize the value
+    'stochastic': stochastic value node, for the environment
+    'simultaneous': simultaneous value node, for players
     '''
-    STATE_TYPES = ['max', 'min', 'random', 'player']
-
     
-
+    STATE_TYPES = ['control', 'adversarial', 'stochastic', 'simultaneous',]
+    
     def __init__(self, id, state_type, notes = None):
         '''
         Args:
@@ -20,9 +19,13 @@ class State:
             notes: any notes about the state
         '''
         self.id = id
-        self.state_type = state_type # 'max', 'min', 'random', 'player'
+        self.state_type = state_type 
         if state_type not in self.STATE_TYPES:
-            raise ValueError(f"state_type must be one of {self.STATE_TYPES}")
+            # if state_type is a int, convert to string
+            if isinstance(state_type, int):
+                self.state_type = self.STATE_TYPES[state_type]
+            else:
+                raise ValueError(f"state_type must be one of {self.STATE_TYPES}")
         self.notes = notes
 
     def __repr__(self):
@@ -36,6 +39,26 @@ class State:
     
     def __eq__(self, other):
         return self.id == other.id
+    
+class ForwardTransitor():
+    '''
+    Abstract class for a forward dynamics transitor
+    '''
+    def __init__(self):
+        pass
+
+    def transition(self, state: State, actions)->State:
+        '''
+        Transits to the next state given the current state and action
+
+        Args:
+            state: current state
+            actions: actions taken by the players
+
+        Returns:
+            next_state: next state
+        '''
+        raise NotImplementedError
 
 class ForwardPredictor():
     '''
@@ -129,16 +152,16 @@ class RandomStatePredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, next_states) -> dict:
+    def predict(self, state: State, actions) -> dict:
         '''
-        Predicts the probabilities over next states given the current state and action
+        Predicts the probabilities over actions given the current state and action
 
         Args:
             state: current state
-            next_states: list of next states
+            actions: list of actions
 
         Returns:
-            probs: dictionary of probabilities over next states
+            probs: dictionary of probabilities over actions
         '''
         raise NotImplementedError
     
@@ -152,13 +175,13 @@ class RandomStateEnumerator():
 
     def enumerate(self, state: State, action):
         '''
-        Enumerates the possible next states given the current state and action
+        Enumerates the possible actions given the current state and action
 
         Args:
             state: current state
 
         Returns:
-            next_states: list of next states
+            actions: list of actions
         '''
         raise NotImplementedError
 
@@ -170,18 +193,38 @@ class OpponentActionPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions)-> dict:
+    def predict(self, state: State, actions, player = 0)-> dict:
         '''
         Predicts the advantage of each action given the current state
 
         Args:
             state: current state
             actions: list of actions
+            player: player to predict advantage for
 
         Returns:
             advantage: dictionary of relative advantages of each action
         '''
         raise NotImplementedError
+    
+class OpponentEnumerator():
+    '''
+    Abstract class for an opponent enumerator
+    '''
+    def __init__(self):
+        pass
+
+    def enumerate(self, state: State):
+        '''
+        Enumerates the opponents that may take actions at the current state
+
+        Args:
+            state: current state
+
+        Returns:
+            opponents: list of opponents
+        '''
+        return set([0])
     
 class OpponentActionEnumerator():
     '''
@@ -191,15 +234,16 @@ class OpponentActionEnumerator():
     def __init__(self):
         pass
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: State, player = 0):
         '''
         Enumerates the possible actions given the current state 
 
         Args:
             state: current state
+            player: player to enumerate actions for
 
         Returns:
-            actions: list of actions
+            actions: list or set of actions
         '''
         raise NotImplementedError
     

@@ -4,6 +4,7 @@ import networkx as nx
 from networkx.drawing.nx_agraph import to_agraph
 import matplotlib.pyplot as plt
 import time 
+from headers import State
 
 
 # TODO: create tree visualization 
@@ -41,17 +42,20 @@ class ValueNode(Node):
     def __init__(self, state, parents=set(), children=set()):
         super().__init__(state, parents, children)
         self.state = state # state of the game that this node represents
-        self.value = 0.0 # value to be updated by the rollout policy
+        # self.value = 0.0 # value to be updated by the rollout policy
         self.visits = 0
+        self.simulated_values = [] # values from the rollout policy
+        self.action_to_next_state = dict() # maps action to next state
         
     def backward(self, value):
         '''
         Updates the node
         '''
         self.visits += 1
-        self.value += value
+        # self.value += value
+        self.simulated_values.append(value)
 
-class MaxValueNode(ValueNode):
+class ControlValueNode(ValueNode):
     '''
     State where the protagonist is trying to maximize the value by taking actions
     '''
@@ -60,11 +64,10 @@ class MaxValueNode(ValueNode):
         super().__init__(state, parents, children)
         self.value = -np.inf
         self.actions = actions # list of actions
-        self.action_to_next_state_probs = dict() # maps action to probabilities over next states (child nodes)
         self.best_action = None # best action to take
         self.next_states = next_states # set of next states (child nodes)
 
-class MinValueNode(ValueNode):
+class AdversarialValueNode(ValueNode):
     '''
     State where the opponents are trying to minimize the value by taking actions
     '''
@@ -73,11 +76,10 @@ class MinValueNode(ValueNode):
         super().__init__(state, parents, children)
         self.value = np.inf
         self.actions = actions # actions that the opponent can take
-        self.action_to_next_state_probs = dict() # maps action to probabilities over next states
         self.best_action = None # best action to take
         self.next_states = next_states # set of next states (child nodes)
 
-class RandomValueNode(ValueNode):
+class StochasticValueNode(ValueNode):
     '''
     State where the environment progresses to random states
     '''
@@ -86,15 +88,15 @@ class RandomValueNode(ValueNode):
         super().__init__(state, parents, children)
         self.value = 0.0
         self.next_states = next_states # set of next states
-        self.probs_over_next_states = dict() # maps next state to probability 
-        self.best_action = None # best action to take
+        self.actions = None # actions that the environment can take
+        self.probs_over_actions = dict() # maps action to probability
 
 class SimultaneousValueNode(ValueNode):
     '''
     State where the protagonist and opponents are trying to maximize the value by taking actions simultaneously
     '''
 
-    def __init__(self, state, parents=set(), children=set(), proactions=None, antactions = None, next_states = set()):
+    def __init__(self, state, parents=set(), children=set(), proactions=None, adactions = dict(), next_states = set(), opponents = None):
         '''
         Args:
             state: state of the game that this node represents
@@ -105,12 +107,12 @@ class SimultaneousValueNode(ValueNode):
             next_states: set of next states
         '''
         super().__init__(state, parents, children)
-        self.value = -np.inf
         self.proactions = proactions # actions that the protagonist can take
-        self.antactions = antactions # actions that the opponents can take
-        self.action_to_next_state_probs = dict() # maps action to probabilities over next states (child nodes)
-        self.best_action = None # best action to take
+        self.adactions = adactions # dictionary of actions that the opponents can take
+        self.best_action = None # best action for the protagonist to take
         self.next_states = next_states # set of next states (child nodes)
+        self.opponent_to_probs_over_actions = dict() # dictionary of dictionaries of probabilities over actions for each opponent
+        self.opponents = opponents # list of opponents who take actions at this state
 
 class Graph:
     '''
@@ -155,7 +157,7 @@ class ValueGraph(Graph):
         '''
         return self.id_to_node[state].value
     
-    def add_state(self, state, parent_states=[], child_states=[]):
+    def add_state(self, state: State, parent_states=[], child_states=[]):
         '''
         Adds a state to the tree
 
@@ -168,16 +170,19 @@ class ValueGraph(Graph):
         parents = set([self.id_to_node[parent_state] for parent_state in parent_states])
         children = set([self.id_to_node[child_state] for child_state in child_states])
         if state not in self.id_to_node:
-            # TODO: should 
+            # TODO: should be generalized
             # if state.state_type == state.STATE_TYPES[0]:
-            if state.state_type == 0:
-                node = MaxValueNode(state, parents, children)
+            if state.state_type == 'control':
+                node = ControlValueNode(state, parents, children)
             # elif state.state_type == state.STATE_TYPES[1]:
-            elif state.state_type == 1:
-                node = MinValueNode(state, parents, children)
+            elif state.state_type == 'adversarial':
+                node = AdversarialValueNode(state, parents, children)
             # elif state.state_type == state.STATE_TYPES[2]:
-            elif state.state_type == 2:
-                node = RandomValueNode(state, parents, children)
+            elif state.state_type == 'stochastic':
+                node = StochasticValueNode(state, parents, children)
+            # elif state.state_type == state.STATE_TYPES[3]:
+            elif state.state_type == 'simultaneous':
+                node = SimultaneousValueNode(state, parents, children)
             else:
                 raise NotImplementedError
             self.id_to_node[state] = node

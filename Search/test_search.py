@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     model = GPT35()
 
-    opponent = RandomPlayer([1,2,3])
+    opponent = RandomPlayer([1,2,3]) 
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()

@@ -1,11 +1,15 @@
-from Search.beliefs import Graph, ValueGraph
+from Search.beliefs import ValueGraph
 from Search.headers import *
+from Search.estimators import *
 from collections import deque
 import warnings
 import itertools
 
 # TODO: implement MinMaxStats
 # TODO: implement UCT search
+
+
+    
 
 
 class Search:
@@ -16,6 +20,7 @@ class Search:
                  value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator, 
                  random_state_enumerator: RandomStateEnumerator, random_state_predictor: RandomStatePredictor,
                  opponent_action_enumerator: OpponentActionEnumerator, opponent_action_predictor: OpponentActionPredictor, 
+                 utility_estimator: UtilityEstimator,
                  opponent_enumerator: OpponentEnumerator = OpponentEnumerator()):
         # self.graph = graph
         self.forward_transistor = forward_transistor
@@ -26,6 +31,7 @@ class Search:
         self.opponent_action_enumerator = opponent_action_enumerator
         self.opponent_action_predictor = opponent_action_predictor
         self.opponent_enumerator = opponent_enumerator
+        self.utility_estimator = utility_estimator
 
     def expand(self, node_id):
         '''
@@ -40,10 +46,12 @@ class ValueBFS(Search):
     def __init__(self, forward_transistor: ForwardTransitor,
                  value_heuristic: ValueHeuristic, action_enumerator: ActionEnumerator, 
                  random_state_enumerator: RandomStateEnumerator, random_state_predictor: RandomStatePredictor,
-                 opponent_action_enumerator: OpponentActionEnumerator, opponent_action_predictor: OpponentActionPredictor):
+                 opponent_action_enumerator: OpponentActionEnumerator, opponent_action_predictor: OpponentActionPredictor, 
+                 utility_estimator: UtilityEstimator):
         super().__init__(forward_transistor, value_heuristic, action_enumerator, 
                          random_state_enumerator, random_state_predictor,
-                         opponent_action_enumerator, opponent_action_predictor)
+                         opponent_action_enumerator, opponent_action_predictor, 
+                         utility_estimator, opponent_enumerator = OpponentEnumerator())
 
     def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False, revise = False):
         '''
@@ -65,11 +73,11 @@ class ValueBFS(Search):
             node.parents.add(prev_node)
             prev_node.children.add(node)
 
-        node.visits += 1
-
         if depth == 0:
             value = self.value_heuristic.evaluate(state)
-            return value
+            node.values_estimates.append(value)
+            utility = self.utility_estimator.estimate(node)
+            return utility
         else:
             value = 0.0
             next_state_to_values = dict()
@@ -145,7 +153,6 @@ class ValueBFS(Search):
                     value += prob*next_state_to_values[next_state]
 
             elif state.state_type == 'stochastic': # random
-                value = 0.0
                 if node.actions is None or revise:
                     node.actions = self.random_state_enumerator.enumerate(state)
                 if not node.action_to_next_state or revise: # Dictionary is empty
@@ -167,7 +174,7 @@ class ValueBFS(Search):
                 # enumerate opponents
                 if node.opponents is None or revise:
                     node.opponents = self.opponent_enumerator.enumerate(state)
-
+                    
                 # enumerate adactions
                 if not node.adactions or revise:
                     for opponent in node.opponents:
@@ -176,12 +183,11 @@ class ValueBFS(Search):
                 # predict probabilities over actions
                 if not node.opponent_to_probs_over_actions or revise:
                     for opponent in node.opponents:
-                        print(node.adactions[opponent])
                         node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent], player=opponent, prob=True)
                 
-                # enumerate joint adversarial actions
+                # enumerate joint adversarial actions. make sure they are tuples
                 if node.joint_adversarial_actions is None or revise:
-                    node.joint_adversarial_actions = list(itertools.product(*node.adactions.values()))
+                    node.joint_adversarial_actions = itertools.product(*node.adactions.values())
 
                 # find joint adversarial actions to probabilities over actions
                 if not node.joint_adversarial_actions_to_probs or revise:
@@ -198,9 +204,11 @@ class ValueBFS(Search):
                         
                 # enumerate all possible joint actions. first dimension always protagonist. dimensions after that are opponents
                 if node.joint_actions is None or revise:
-                    node.joint_actions = list(itertools.product(node.proactions, *node.adactions.values()))
+                    node.joint_actions = itertools.product(node.proactions, *node.adactions.values())
 
                 # find next states
+                # TODO: some weird bug here where node.next_states is not empty but node.joint_actions_to_next_states is empty
+                # UPDATE: fixed. dicts are mutable so when I was adding to node.joint_actions_to_next_states, I was adding to the same dict
                 if not node.next_states or revise:
                     for joint_action in node.joint_actions:
                         next_state = self.forward_transistor.transition(state, joint_action)
@@ -220,18 +228,18 @@ class ValueBFS(Search):
                 for joint_action in node.joint_actions:
                     prob = node.joint_adversarial_actions_to_probs[joint_action[1:]]
                     next_state = node.joint_actions_to_next_states[joint_action]
-                    node.action_to_value[joint_action[1]] += prob*next_state_to_values[next_state]
+                    node.action_to_value[joint_action[0]] += prob*next_state_to_values[next_state]
 
                 # value should be max of actions
                 value = max(node.action_to_value.values())
-
-                    
-            
+                
 
             if render and not node.virtual:
                 plt = graph.to_mathplotlib()
                 plt.show()
-                
-            return value
+            
+            node.values_estimates.append(value)
+            utility = self.utility_estimator.estimate(node)
+            return utility
 
  

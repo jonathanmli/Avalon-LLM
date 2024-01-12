@@ -232,13 +232,15 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         '''
         self.model = model
 
-    def predict(self, state: State, actions) -> Dict:
+    def predict(self, state: State, actions, player = 0, probs = True) -> Dict:
         '''
         Predicts the advantage of each opponent action given the current state and action
 
         Args:
             state: current state
             actions: actions to take
+            player: player to predict advantage for
+            probs: whether to return probs or advantage
 
         Returns:
             advantage: list of relative advantages of each opponent action (probs for current implementation)

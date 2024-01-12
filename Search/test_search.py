@@ -51,8 +51,7 @@ if __name__ == "__main__":
     opponent_action_enumerator = GOPSOpponentActionEnumerator()
     hidden_state_predictor = GOPSRandomStatePredictor()
     hidden_state_enumerator = GOPSRandomStateEnumerator()
-    forward_predictor = GOPSForwardPredictor()
-    forward_enumerator = GOPSForwardEnumerator()
+    forward_transitor = GOPSForwardTransitor()
 
     # using the engine defined earlier
     config = GOPSConfig(num_turns=3)
@@ -60,14 +59,13 @@ if __name__ == "__main__":
 
     (done, score_card, contested_points) = env.reset()
 
-    played_prize_cards = [] # prize/score cards that have been shwon to the players
+    played_prize_cards = [] # prize/score cards that have been shown to the players
     player_cards = []
     opponent_cards = []
 
 
     bfs = ValueBFS(
-        forward_predictor=forward_predictor, 
-        forward_enumerator=forward_enumerator, 
+        forward_transistor=forward_transitor,
         value_heuristic=value_heuristic, 
         action_enumerator=action_enumerator, 
         random_state_enumerator=hidden_state_enumerator,
@@ -76,27 +74,27 @@ if __name__ == "__main__":
         opponent_action_predictor=opponent_action_predictor,
     )
 
+    knowledge_graph = ValueGraph() # what the player knows about the game
+
     while not done:
         # Instantiate the search
-        # TODO: do we need to instantiate the search every time?
-        graph = ValueGraph()
-
         played_prize_cards.append(score_card)
 
         state = GOPSState(
-            state_type=0,
+            state_type='simultaneous',
             prize_cards=tuple(played_prize_cards),
             player_cards=tuple(player_cards),
             opponent_cards=tuple(opponent_cards),
             num_cards=3
         )
+
         bfs.expand(
-            graph = graph,
+            graph = knowledge_graph,
             state = state,
             depth = 3,
             render=True
         )
-        player_card = graph.get_best_action(state=state)
+        player_card = knowledge_graph.get_best_action(state=state)
         opponent_card = opponent.single_action()
 
         player_cards.append(player_card)

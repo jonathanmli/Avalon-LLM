@@ -4,7 +4,7 @@ import networkx as nx
 from networkx.drawing.nx_agraph import to_agraph
 import matplotlib.pyplot as plt
 import time 
-from headers import State
+from Search.headers import State
 
 
 # TODO: create tree visualization 

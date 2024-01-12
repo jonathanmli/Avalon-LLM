@@ -73,7 +73,12 @@ class GOPSForwardTransitor(ForwardTransitor):
         Args:
             state: current state
             actions: actions taken by the protagonist and the antagonist (ie cards played by the player and the opponent)
+
+        Returns:
+            next_state: next state
         '''
+
+        # we need to be careful to copy the state, otherwise the state will be changed
         prize_cards = state.prize_cards
         player_cards = state.player_cards
         opponent_cards = state.opponent_cards
@@ -99,6 +104,9 @@ class GOPSForwardTransitor(ForwardTransitor):
             opponent_cards.append(actions[1])
             opponent_cards = tuple(opponent_cards)
 
+            # change state_type to stochastic
+            state_type = 'stochastic'
+
         elif state_type == 'stochastic': # random state
             # assert that len of actions is 1
             assert len(actions) == 1
@@ -110,6 +118,14 @@ class GOPSForwardTransitor(ForwardTransitor):
             prize_cards = list(prize_cards)
             prize_cards.append(actions[0])
             prize_cards = tuple(prize_cards)
+
+            # change state_type to simultaneous
+            state_type = 'simultaneous'
+
+        else:
+            raise ValueError('Invalid state type: ' + state_type)
+        
+        return GOPSState(state_type, prize_cards, player_cards, opponent_cards, num_cards)
 
 class GOPSActionEnumerator(ActionEnumerator):
 
@@ -141,7 +157,7 @@ class GOPSOpponentActionEnumerator(ActionEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: GOPSState):
+    def enumerate(self, state: GOPSState, player = 0):
         '''
         Enumerates the possible actions that the opponent can take given the current state
 
@@ -216,7 +232,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         '''
         self.model = model
 
-    def predict(self, state: GOPSState, actions) -> Dict:
+    def predict(self, state: GOPSState, actions, player=0, prob=True) -> Dict:
         '''
         Predicts the advantage of each opponent action given the current state and action
 
@@ -228,7 +244,11 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
             advantage: list of relative advantages of each opponent action (probs for current implementation)
         '''
         # Prepare input
+        print(actions[0])
         input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions[0])
+        print(input_prompt)
+        print(type(input_prompt))
+        print(type(OPPONENT_ACTION_PREDICTOR_PROMPT))
         input_prompt += OPPONENT_ACTION_PREDICTOR_PROMPT
 
         # Uncomment the following to use the model

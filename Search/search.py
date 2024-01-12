@@ -1,4 +1,4 @@
-from Search.beliefs import Graph, MaxValueNode, MinValueNode, RandomValueNode, ValueGraph
+from Search.beliefs import Graph, ValueGraph
 from Search.headers import *
 from collections import deque
 import warnings
@@ -112,7 +112,7 @@ class ValueBFS(Search):
                 # predict probabilities over actions
                 if not node.opponent_to_probs_over_actions or revise:
                     for opponent in node.opponents:
-                        node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent])
+                        node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent], opponent)
 
                 # enumerate joint adversarial actions
                 if node.joint_adversarial_actions is None or revise:
@@ -176,7 +176,8 @@ class ValueBFS(Search):
                 # predict probabilities over actions
                 if not node.opponent_to_probs_over_actions or revise:
                     for opponent in node.opponents:
-                        node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent])
+                        print(node.adactions[opponent])
+                        node.opponent_to_probs_over_actions[opponent] = self.opponent_action_predictor.predict(state, node.adactions[opponent], player=opponent, prob=True)
                 
                 # enumerate joint adversarial actions
                 if node.joint_adversarial_actions is None or revise:

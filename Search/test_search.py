@@ -10,6 +10,7 @@ from Search.baseline_models_GOPS import *
 from Search.engine import *
 from Search.estimators import *
 import logging
+from datetime import datetime
 
 SYS_PROMPT = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
@@ -21,7 +22,9 @@ Basically, you need to win the rounds with high scores. And you should also cons
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 # set output dir of logger
-fh = logging.FileHandler('Search/output/test.log', mode='w')
+timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+filename = f'Search/output/output_log_{timestamp}.log'
+fh = logging.FileHandler(filename, mode='w')
 logger.addHandler(fh)
 
 if __name__ == "__main__":

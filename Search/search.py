@@ -4,6 +4,7 @@ from Search.estimators import *
 from collections import deque
 import warnings
 import itertools
+from datetime import datetime
 
 # TODO: implement MinMaxStats
 # TODO: implement UCT search
@@ -236,7 +237,10 @@ class ValueBFS(Search):
 
             if render and not node.virtual:
                 plt = graph.to_mathplotlib()
-                plt.show()
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f'output_graph_{timestamp}.png'
+                plt.savefig(filename)
+                # plt.show()
             
             node.values_estimates.append(value)
             utility = self.utility_estimator.estimate(node)

@@ -5,6 +5,9 @@ from networkx.drawing.nx_agraph import to_agraph
 import matplotlib.pyplot as plt
 import time 
 from Search.headers import State
+import matplotlib.colors as mcolors
+
+
 
 
 # TODO: create tree visualization 
@@ -14,7 +17,7 @@ class Node:
     '''
     Abstract node class for the search algorithms
     '''
-    def __init__(self, id, parents=set(), children=set(), virtual=False):
+    def __init__(self, id, parents=None, children=None, virtual=False):
         self.id = id # state of the game that this node represents
         self.parents = parents # parent nodes
         self.children = children # child nodes
@@ -40,30 +43,51 @@ class Node:
 
 class ValueNode(Node):
 
-    def __init__(self, state, parents=set(), children=set(), virtual=False):
+    def __init__(self, state, parents=None, children=None, virtual=False):
         super().__init__(state, parents, children, virtual)
         self.state = state # state of the game that this node represents
-        # self.value = 0.0 # value to be updated by the rollout policy
-        self.visits = 0
-        self.simulated_values = [] # values from the rollout policy
+        self.values_estimates = [] # values from the rollout policy, in temporal order
         self.action_to_next_state = dict() # maps action to next state
+
+    def get_mean_value(self):
+        '''
+        Returns the mean value of the node
+        '''
+        if len(self.values_estimates) == 0:
+            return 0.0
+        else:
+            return np.mean(self.values_estimates)
         
-    def backward(self, value):
+    def get_last_value(self):
         '''
-        Updates the node
+        Returns the last value of the node
         '''
-        self.visits += 1
-        # self.value += value
-        self.simulated_values.append(value)
+        if len(self.values_estimates) == 0:
+            return 0.0
+        else:
+            return self.values_estimates[-1]
+        
+    def get_visits(self):
+        '''
+        Returns the number of visits to the node
+        '''
+        return len(self.values_estimates)
+        
+    # def backward(self, value):
+    #     '''
+    #     Updates the node
+    #     '''
+    #     self.visits += 1
+    #     # self.value += value
+    #     self.simulated_values.append(value)
 
 class ControlValueNode(ValueNode):
     '''
     State where the protagonist is trying to maximize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set(), virtual=False):
+    def __init__(self, state, parents=None, children=None, actions=None, next_states = None, virtual=False):
         super().__init__(state, parents, children, virtual)
-        self.value = -np.inf
         self.actions = actions # list of actions
         self.next_states = next_states # set of next states (child nodes)
         self.action_to_next_state = dict() # maps action to next state
@@ -74,9 +98,8 @@ class AdversarialValueNode(ValueNode):
     State where the opponents are trying to minimize the value by taking actions
     '''
 
-    def __init__(self, state, parents=set(), children=set(), actions=None, next_states = set(), virtual=False):
+    def __init__(self, state, parents=None, children=None, actions=None, next_states = None, virtual=False):
         super().__init__(state, parents, children, virtual)
-        self.value = np.inf
         self.actions = actions # actions that the opponent can take
         self.best_action = None # best action to take
         self.next_states = next_states # set of next states (child nodes)
@@ -89,9 +112,8 @@ class StochasticValueNode(ValueNode):
     State where the environment progresses to random states
     '''
 
-    def __init__(self, state, parents=set(), children=set(), next_states = None, virtual=False):
+    def __init__(self, state, parents=None, children=None, next_states = None, virtual=False):
         super().__init__(state, parents, children, virtual)
-        self.value = 0.0
         self.next_states = next_states # set of next states
         self.actions = None # actions that the environment can take
         self.probs_over_actions = dict() # maps action to probability
@@ -101,7 +123,7 @@ class SimultaneousValueNode(ValueNode):
     State where the protagonist and opponents are trying to maximize the value by taking actions simultaneously
     '''
 
-    def __init__(self, state, parents=set(), children=set(), proactions=None, adactions = dict(), next_states = set(), opponents = None, virtual=False):
+    def __init__(self, state, parents=None, children=None, proactions=None, adactions = None, next_states = None, opponents = None, virtual=False):
         '''
         Args:
             state: state of the game that this node represents
@@ -114,7 +136,11 @@ class SimultaneousValueNode(ValueNode):
         super().__init__(state, parents, children, virtual)
         self.proactions = proactions # actions that the protagonist can take
         self.adactions = adactions # dictionary of actions that the opponents can take
+        if self.adactions is None:
+            self.adactions = dict()
         self.next_states = next_states # set of next states (child nodes)
+        if self.next_states is None:
+            self.next_states = set()
         self.opponent_to_probs_over_actions = dict() # dictionary of dictionaries of probabilities over actions for each opponent
         self.opponents = opponents # list of opponents who take actions at this state
         self.joint_adversarial_actions = None # list of joint adversarial actions
@@ -195,6 +221,8 @@ class ValueGraph(Graph):
             else:
                 raise NotImplementedError
             self.id_to_node[state] = node
+            
+            
             return node
         else:
             raise ValueError(f"state {state} already exists in the graph")
@@ -255,9 +283,11 @@ class ValueGraph(Graph):
         '''
         G = nx.DiGraph()
         for node in self.id_to_node.values():
+            value = node.get_mean_value()
             # round value to 4 significant figures
-            value = round(node.value, 4)
-            G.add_node(node.id, value = value)
+            value = round(value, 4)
+            visits = node.get_visits()
+            G.add_node(node.id, value = value, visits = visits)
             for child in node.children:
                 G.add_edge(node.id, child.id)
         return G
@@ -273,13 +303,38 @@ class ValueGraph(Graph):
         '''
         Returns the graph as a matplotlib graph, with values as node.values
         '''
+
+        # create graph
         G = self.to_networkx()
 
+        # Extract 'node.visits' values and normalize them
+        visits = [G.nodes[node]['visits'] for node in G.nodes()]
+        max_visits = max(visits)
+        min_visits = min(visits)
+        norm_visits = [(visit - min_visits) / (max_visits - min_visits) for visit in visits]
+
+        # Choose a colormap
+        cmap = plt.cm.viridis
+
+        # Map normalized visits to colors
+        node_colors = [cmap(norm) for norm in norm_visits]
+        
+        # Draw the graph
         pos = nx.spring_layout(G)
-        nx.draw_networkx_nodes(G, pos)
+        fig, ax = plt.subplots()
         nx.draw_networkx_edges(G, pos)
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors)
+        
         node_labels = nx.get_node_attributes(G, 'value')
         nx.draw_networkx_labels(G, pos, labels = node_labels)
+        # edge_labels = nx.get_edge_attributes(G, 'action')
+        # nx.draw_networkx_edge_labels(G, pos, edge_labels = edge_labels)
+        
+
+        # Create an Axes for the color bar
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_visits, vmax=max_visits))
+        sm.set_array([])
+        cbar = plt.colorbar(sm, ax=ax, label='Node Visits')
 
         # title should be value graph at time 
         title = "Value Graph at time " + str(time.time())

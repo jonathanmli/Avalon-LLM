@@ -72,7 +72,7 @@ class GOPSForwardTransitor(ForwardTransitor):
 
         Args:
             state: current state
-            actions: actions taken by the protagonist and the antagonist (ie cards played by the player and the opponent)
+            actions: actions taken by the protagonist and the antagonist (ie cards played by the player and the opponent), or prize card played by the environment
 
         Returns:
             next_state: next state
@@ -109,14 +109,14 @@ class GOPSForwardTransitor(ForwardTransitor):
 
         elif state_type == 'stochastic': # random state
             # assert that len of actions is 1
-            assert len(actions) == 1
+            # assert len(actions) == 1
 
             # assert that actions are not in the prize_cards and between 1 and num_cards
-            assert actions[0] not in prize_cards and actions[0] in range(1, num_cards+1)
+            assert actions not in prize_cards and actions in range(1, num_cards+1)
 
             # append actions to prize_cards
             prize_cards = list(prize_cards)
-            prize_cards.append(actions[0])
+            prize_cards.append(actions)
             prize_cards = tuple(prize_cards)
 
             # change state_type to simultaneous
@@ -165,7 +165,7 @@ class GOPSOpponentActionEnumerator(ActionEnumerator):
             state: current state
 
         Returns:
-            actions: list of lists of actions, where each list of actions is the possible actions for each opponent
+            actions: lists or set of actions
         '''
         prize_cards = state.prize_cards
         player_cards = state.player_cards
@@ -174,8 +174,8 @@ class GOPSOpponentActionEnumerator(ActionEnumerator):
         state_type = state.state_type
 
         starting_deck = list(range(1, num_cards+1))
-        actions = list(set(starting_deck) - set(opponent_cards))
-        return [actions]
+        actions = set(starting_deck) - set(opponent_cards)
+        return actions
     
 class GOPSRandomStateEnumerator(RandomStateEnumerator):
 
@@ -216,8 +216,8 @@ class GOPSRandomStatePredictor(RandomStatePredictor):
             probs: dictionary of probabilities over actions
         '''
         probs = dict()
-        for action in action:
-            probs[action] = 1.0/len(next_states)
+        for action in actions:
+            probs[action] = 1.0/len(actions)
         return probs
         
 class GPT35OpponentActionPredictor(OpponentActionPredictor):
@@ -238,18 +238,19 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
 
         Args:
             state: current state
-            actions: list of lists of actions, where each list of actions is the possible actions for each opponent
+            actions: set or list of actions
 
         Returns:
             advantage: list of relative advantages of each opponent action (probs for current implementation)
         '''
         # Prepare input
-        print(actions[0])
-        input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions[0])
-        print(input_prompt)
-        print(type(input_prompt))
-        print(type(OPPONENT_ACTION_PREDICTOR_PROMPT))
+        # print(actions)
+        input_prompt = "Current State: {state}\nActions to take: {actions}\n".format(state=state.notes, actions=actions)
+        # print(input_prompt)
+        # print(type(input_prompt))
+        # print(type(OPPONENT_ACTION_PREDICTOR_PROMPT))
         input_prompt += OPPONENT_ACTION_PREDICTOR_PROMPT
+        # TODO: fix OPPONENT_ACTION_PREDICTOR_PROMPT to be better
 
         # Uncomment the following to use the model
 

@@ -260,7 +260,11 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         # advantages = parse_dict_with_any_key(output)
 
         import random
-        advantages = {action: (1.0 * random.randint(0, len(actions)))/len(actions) for action in actions}
+        advantages = {}
+        print("Actions: ", actions)
+        for action in actions:
+            print("Action: ", action)
+            advantages[action] = (1.0 * random.randint(0, len(actions)))/len(actions)
 
         # print(advantages)
 

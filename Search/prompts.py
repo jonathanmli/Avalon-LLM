@@ -68,3 +68,26 @@ your thoughts here
 
 Actions:
 list of actions here, which should be a python list of card numbers, for example: [1, 2, 3]'''
+
+
+# %%
+VERBALIZED_VALUE_PREDICOTR = """Here is a candidate state of the game, please analyze the chances of you winning th game with this state, then at the last line conclude \"Thus the value of the state for me is {{s}}\", where s is an integer from 1 to 10.
+State:
+The score cards have been played include {played_cards}. Score cards left in the deck include {score_cards}.
+The cards you played include {your_cards}, thus cards left in your hand include {your_hand}.
+The cards your opponent played include {opponent_cards}, thus cards left in your opponent's hand include {opponent_hand}.
+In this state, the score you can get is {your_score}, and the score your opponent can get is {opponent_score}.
+
+Analysis:
+"""
+# %%
+VERBALIZED_OPACTION_PREDICTOR = """Here is a candidate state of the game, please analyze the chances of the opponent taking given actions with this state, then at the last line conclude \"Thus the probabilities of the actions of the opponent is {{s}}\", where s is a dictionary {{action1: prob1, ...}}.
+State:
+The score cards have been played include {played_cards}. Score cards left in the deck include {score_cards}.
+The cards you played include {your_cards}, thus cards left in your hand include {your_hand}.
+The cards your opponent played include {opponent_cards}, thus cards left in your opponent's hand include {opponent_hand}.
+
+Possible Opponent Actions: {opponent_actions}
+
+Analysis:
+"""

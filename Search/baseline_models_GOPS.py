@@ -271,7 +271,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         opponent_hand = list(set(opponent_hand) - set(opponent_cards))
         score_cards = list(set(prize_cards) - set(score_cards))
 
-        print(actions)
+        # print(actions)
 
         verbalized_opaction_prompt = VERBALIZED_OPACTION_PREDICTOR.format(
             played_cards=prize_cards,
@@ -301,7 +301,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
 
         # import random
         # advantages = {action: (1.0 * random.randint(0, len(actions)))/len(actions) for action in actions}
-        print(advantages)
+        # print(advantages)
 
         # print(advantages)
 
@@ -384,7 +384,9 @@ class GPT35ValueHeuristic(ValueHeuristic):
         value = parse_int_value(value_output)
         # import numpy as np
         # value = np.random.randint(0, 10)
+        if not isinstance(value, int):
+            value = 5
 
-        print(f"State: {state} Value: {value}")
+        # print(f"State: {state} Value: {value}")
 
         return value

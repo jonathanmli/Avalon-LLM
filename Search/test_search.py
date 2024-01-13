@@ -11,6 +11,7 @@ from Search.engine import *
 from Search.estimators import *
 import logging
 from datetime import datetime
+from tqdm import tqdm
 
 SYS_PROMPT = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
@@ -47,7 +48,7 @@ if __name__ == "__main__":
             import os
             key = os.environ.get("CLAUDE_API_KEY")
 
-            self.model = ChatAnthropic(model="claude-2", temperature=0.1, anthropic_api_key=key)
+            self.model = ChatAnthropic(model="claude-2", temperature=0.1, anthropic_api_key="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")
         def single_action(self, input_prompt: str):
             input_prompt = [HumanMessage(content=SYS_PROMPT), HumanMessage(content=input_prompt)]
             output = self.model(input_prompt).content
@@ -69,8 +70,6 @@ if __name__ == "__main__":
     # model = GPT35()
     model = Claude()
 
-    opponent = RandomPlayer([1,2,3])
-
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()
     value_heuristic = GPT35ValueHeuristic(model)
@@ -86,11 +85,6 @@ if __name__ == "__main__":
     config = GOPSConfig(num_turns=3)
     env = GOPSEnvironment(config)
 
-    played_prize_cards = [] # prize/score cards that have been shown to the players
-    player_cards = []
-    opponent_cards = []
-
-
     bfs = ValueBFS(
         forward_transistor=forward_transitor,
         value_heuristic=value_heuristic, 
@@ -103,10 +97,14 @@ if __name__ == "__main__":
     )
 
     knowledge_graph = ValueGraph() # what the player knows about the game
-    iter_num = 2
+    iter_num = 20
 
-    for iter in range(iter_num):
+    for iter in tqdm(range(iter_num)):
         logger.info(f"Iter: {iter}")
+        played_prize_cards = [] # prize/score cards that have been shown to the players
+        player_cards = []
+        opponent_cards = []
+        opponent = RandomPlayer([1,2,3])
         (done, score_card, contested_points) = env.reset()
         while not done:
             # Instantiate the search

@@ -48,7 +48,7 @@ if __name__ == "__main__":
             import os
             key = os.environ.get("CLAUDE_API_KEY")
 
-            self.model = ChatAnthropic(model="claude-2", temperature=0.1, anthropic_api_key="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")
+            self.model = ChatAnthropic(model="claude-2", temperature=0.1, anthropic_api_key=key)
         def single_action(self, input_prompt: str):
             input_prompt = [HumanMessage(content=SYS_PROMPT), HumanMessage(content=input_prompt)]
             output = self.model(input_prompt).content
@@ -56,6 +56,13 @@ if __name__ == "__main__":
             logger.info(output)
 
             return output
+        
+    class RandomModel:
+        def __init__(self) -> None:
+            pass
+
+        def single_action(self, input_prompt: str):
+            pass
         
     class RandomPlayer:
         def __init__(self, cards: List[int]):
@@ -68,7 +75,7 @@ if __name__ == "__main__":
             return card
 
     # model = GPT35()
-    model = Claude()
+    model = RandomModel()
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()

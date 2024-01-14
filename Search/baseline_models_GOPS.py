@@ -48,6 +48,7 @@ class GOPSState(State):
     simultaneous is the state type, which can be one of the following:
         stochastic: a random card is revealed
         simultaneous: both players choose a card to play
+        dummy: end states
     '''
 
     def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards):
@@ -106,6 +107,29 @@ class GOPSForwardTransitor(ForwardTransitor):
 
             # change state_type to stochastic
             state_type = 'stochastic'
+
+            # check if the game is done
+            if len(prize_cards) == num_cards:
+                state_type = 'dummy'
+                state.done = True
+                
+                # calculate the score
+                contested_points = 0
+                player_score = 0
+                opponent_score = 0
+                for idx, single_score in enumerate(list(state.prize_cards)):
+                    contested_points += single_score
+                    if player_cards[idx] > opponent_cards[idx]:
+                        player_score += contested_points
+                        contested_points = 0
+                    elif player_cards[idx] < opponent_cards[idx]:
+                        opponent_score += contested_points
+                        contested_points = 0
+                    elif player_cards[idx] == opponent_cards[idx]:
+                        contested_points += single_score
+                
+                state.reward = player_score - opponent_score
+                        
 
         elif state_type == 'stochastic': # random state
             # assert that len of actions is 1

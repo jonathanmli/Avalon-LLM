@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models import ChatAnthropic
 from Search.beliefs import ValueGraph
@@ -66,8 +66,8 @@ if __name__ == "__main__":
             self.hand.remove(card)
             return card
 
-    # model = GPT35()
-    model = Claude()
+    model = GPT35()
+    # model = Claude()
 
     opponent = RandomPlayer([1,2,3])
 

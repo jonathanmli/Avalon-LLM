@@ -74,6 +74,12 @@ class ValueBFS(Search):
             node.parents.add(prev_node)
             prev_node.children.add(node)
 
+        # check if node is terminal
+        if state.is_done():
+            value = state.get_reward()
+            node.values_estimates.append(value)
+            return value
+
         if depth == 0:
             value = self.value_heuristic.evaluate(state)
             node.values_estimates.append(value)

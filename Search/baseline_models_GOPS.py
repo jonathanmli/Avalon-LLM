@@ -219,7 +219,8 @@ class GOPSRandomStatePredictor(RandomStatePredictor):
         for action in actions:
             probs[action] = 1.0/len(actions)
         return probs
-        
+    
+
 class GPT35OpponentActionPredictor(OpponentActionPredictor):
     '''
     Opponent action predictor for GPT-3.5
@@ -266,7 +267,7 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         # print(advantages)
 
         return advantages
-    
+
 class GPT35ValueHeuristic(ValueHeuristic):
     '''
     Value heuristic for GPT-3.5

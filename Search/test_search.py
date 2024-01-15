@@ -12,6 +12,7 @@ from Search.estimators import *
 import logging
 from datetime import datetime
 from tqdm import tqdm
+from Search.classic_models import *
 
 SYS_PROMPT = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
@@ -74,34 +75,42 @@ if __name__ == "__main__":
             self.hand.remove(card)
             return card
 
-    # model = GPT35()
-    model = RandomModel()
+    model = GPT35()
+    # model = RandomModel()
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()
-    value_heuristic = GPT35ValueHeuristic(model)
-    opponent_action_predictor = GPT35OpponentActionPredictor(model)
+    # value_heuristic = GPT35ValueHeuristic(model)
+    
+    # opponent_action_predictor = GPT35OpponentActionPredictor(model)
     opponent_action_enumerator = GOPSOpponentActionEnumerator()
     hidden_state_predictor = GOPSRandomStatePredictor()
     hidden_state_enumerator = GOPSRandomStateEnumerator()
     forward_transitor = GOPSForwardTransitor()
-    utility_estimator = UtilityEstimatorMean()
+    utility_estimator = UtilityEstimatorLast()
+    value_heuristic = RandomRolloutValueHeuristic(action_enumerator, opponent_action_enumerator, 
+                                                  forward_transitor, hidden_state_enumerator)
     
 
     # using the engine defined earlier
     config = GOPSConfig(num_turns=3)
     env = GOPSEnvironment(config)
 
-    bfs = ValueBFS(
-        forward_transistor=forward_transitor,
-        value_heuristic=value_heuristic, 
-        action_enumerator=action_enumerator, 
-        random_state_enumerator=hidden_state_enumerator,
-        random_state_predictor=hidden_state_predictor,
-        opponent_action_enumerator=opponent_action_enumerator,
-        opponent_action_predictor=opponent_action_predictor,
-        utility_estimator=utility_estimator
-    )
+    # bfs = ValueBFS(
+    #     forward_transistor=forward_transitor,
+    #     value_heuristic=value_heuristic, 
+    #     action_enumerator=action_enumerator, 
+    #     random_state_enumerator=hidden_state_enumerator,
+    #     random_state_predictor=hidden_state_predictor,
+    #     opponent_action_enumerator=opponent_action_enumerator,
+    #     opponent_action_predictor=opponent_action_predictor,
+    #     utility_estimator=utility_estimator
+    # )
+
+    bfs = SMMinimax(forward_transitor, value_heuristic, action_enumerator, 
+                    hidden_state_enumerator, hidden_state_predictor,
+                    opponent_action_enumerator,
+                    utility_estimator)
 
     knowledge_graph = ValueGraph() # what the player knows about the game
     iter_num = 20
@@ -124,12 +133,12 @@ if __name__ == "__main__":
                 opponent_cards=tuple(opponent_cards),
                 num_cards=3
             )
-
+            print('Root state', state)
             bfs.expand(
                 graph = knowledge_graph,
                 state = state,
                 depth = 3,
-                render=True
+                render=False
             )
 
             player_card = knowledge_graph.get_best_action(state=state)
@@ -151,5 +160,8 @@ if __name__ == "__main__":
             )
 
         print("Player score: {player_score}, Opponent score: {opponent_score}".format(player_score=env.player1_score, opponent_score=env.player2_score))
+
+    # print winrate of the player across all games
+
 
 # run with python -m Search.test_search

@@ -51,16 +51,23 @@ class GOPSState(State):
         dummy: end states
     '''
 
-    def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards):
+    def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards, done=False, reward=0.0):
         # should call super first, otherwise state_type will be overwritten
         id = tuple([prize_cards, player_cards, opponent_cards, num_cards, state_type])
         # turn = self.STATE_TYPES[state_type]
-        super().__init__(id, state_type)
+        super().__init__(id, state_type, done=done, reward=reward)
 
         self.prize_cards = tuple(prize_cards)
         self.player_cards = tuple(player_cards)
         self.opponent_cards = tuple(opponent_cards)
         self.num_cards = num_cards
+
+    def copy(self):
+        '''
+        Returns a copy of the state
+        '''
+        return GOPSState(self.state_type, self.prize_cards, self.player_cards, 
+                         self.opponent_cards, self.num_cards, self.done, self.reward)
         
 class GOPSForwardTransitor(ForwardTransitor):
 
@@ -85,6 +92,8 @@ class GOPSForwardTransitor(ForwardTransitor):
         opponent_cards = state.opponent_cards
         num_cards = state.num_cards
         state_type = state.state_type
+        done = state.done
+        reward = 0.0
 
         if state_type == 'simultaneous': # simultaneous state
             # assert that len of actions is 2
@@ -109,9 +118,9 @@ class GOPSForwardTransitor(ForwardTransitor):
             state_type = 'stochastic'
 
             # check if the game is done
-            if len(prize_cards) == num_cards:
+            if len(prize_cards) >= num_cards:
                 state_type = 'dummy'
-                state.done = True
+                done = True
                 
                 # calculate the score
                 contested_points = 0
@@ -128,9 +137,8 @@ class GOPSForwardTransitor(ForwardTransitor):
                     elif player_cards[idx] == opponent_cards[idx]:
                         contested_points += single_score
                 
-                state.reward = player_score - opponent_score
+                reward = player_score - opponent_score
                         
-
         elif state_type == 'stochastic': # random state
             # assert that len of actions is 1
             # assert len(actions) == 1
@@ -149,7 +157,9 @@ class GOPSForwardTransitor(ForwardTransitor):
         else:
             raise ValueError('Invalid state type: ' + state_type)
         
-        return GOPSState(state_type, prize_cards, player_cards, opponent_cards, num_cards)
+
+        out_state = GOPSState(state_type, prize_cards, player_cards, opponent_cards, num_cards, done, reward)
+        return out_state
 
 class GOPSActionEnumerator(ActionEnumerator):
 

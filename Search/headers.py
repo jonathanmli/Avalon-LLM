@@ -41,6 +41,12 @@ class State:
         Returns the reward of the state
         '''
         return self.reward
+    
+    def copy(self):
+        '''
+        Returns a copy of the state
+        '''
+        return State(self.id, self.state_type, self.notes, self.done, self.reward)
 
     def __repr__(self):
         return f"State({self.id}, {self.state_type}, {self.notes})"
@@ -67,7 +73,11 @@ class ForwardTransitor():
 
         Args:
             state: current state
-            actions: actions taken by the players
+            actions: actions taken by the players or environment. 
+                actions[0] is the action taken by the player
+                actions[1] is the action taken by the environment
+                actions[2:] are the actions taken by the other players
+            # TODO: change actions to be a dictionary of players to actions
 
         Returns:
             next_state: next state

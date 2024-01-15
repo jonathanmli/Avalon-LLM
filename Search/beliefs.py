@@ -278,7 +278,6 @@ class ValueGraph(Graph):
             if value > best_value:
                 best_action = action
                 best_value = value
-        print('action to value', node.action_to_value)
         return best_action
 
     def to_networkx(self):

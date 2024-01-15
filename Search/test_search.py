@@ -91,9 +91,9 @@ if __name__ == "__main__":
     value_heuristic = RandomRolloutValueHeuristic(action_enumerator, opponent_action_enumerator, 
                                                   forward_transitor, hidden_state_enumerator)
     
-
+    num_cards = 6
     # using the engine defined earlier
-    config = GOPSConfig(num_turns=3)
+    config = GOPSConfig(num_turns=num_cards)
     env = GOPSEnvironment(config)
 
     # bfs = ValueBFS(
@@ -113,14 +113,15 @@ if __name__ == "__main__":
                     utility_estimator)
 
     knowledge_graph = ValueGraph() # what the player knows about the game
-    iter_num = 20
+    iter_num = 100
+    player_wins = 0
 
     for iter in tqdm(range(iter_num)):
         logger.info(f"Iter: {iter}")
         played_prize_cards = [] # prize/score cards that have been shown to the players
         player_cards = []
         opponent_cards = []
-        opponent = RandomPlayer([1,2,3])
+        opponent = RandomPlayer(list(range(1, num_cards+1)))
         (done, score_card, contested_points) = env.reset()
         while not done:
             # Instantiate the search
@@ -131,9 +132,9 @@ if __name__ == "__main__":
                 prize_cards=tuple(played_prize_cards),
                 player_cards=tuple(player_cards),
                 opponent_cards=tuple(opponent_cards),
-                num_cards=3
+                num_cards=num_cards
             )
-            print('Root state', state)
+            # print('Root state', state)
             bfs.expand(
                 graph = knowledge_graph,
                 state = state,
@@ -147,11 +148,11 @@ if __name__ == "__main__":
             player_cards.append(player_card)
             opponent_cards.append(opponent_card)
 
-            print("Played Prize Cards: {played_prize_cards}, Player plays {player_card}, Opponent plays {opponent_card}".format(
-                played_prize_cards=played_prize_cards,
-                player_card=player_card,
-                opponent_card=opponent_card
-            ))
+            # print("Played Prize Cards: {played_prize_cards}, Player plays {player_card}, Opponent plays {opponent_card}".format(
+            #     played_prize_cards=played_prize_cards,
+            #     player_card=player_card,
+            #     opponent_card=opponent_card
+            # ))
 
             # update the game state
             (done, score_card, contested_points) = env.play_cards(
@@ -160,8 +161,11 @@ if __name__ == "__main__":
             )
 
         print("Player score: {player_score}, Opponent score: {opponent_score}".format(player_score=env.player1_score, opponent_score=env.player2_score))
+        if env.player1_score > env.player2_score:
+            player_wins += 1
 
     # print winrate of the player across all games
+    print("Winrate: {}".format(player_wins/iter_num))
 
 
 # run with python -m Search.test_search

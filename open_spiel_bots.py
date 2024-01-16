@@ -3,12 +3,67 @@ Bots that work on OpenSpiel game environments
 """
 
 # import libraries
+import re
 import random
 import pyspiel
 import numpy as np
+from typing import List
 from open_spiel.python.algorithms import mcts, minimax, tabular_qlearner, nash_averaging
-from Search.
 
+
+def get_card_sequence(state: str) -> List[int]:
+    target_string = "Point card sequence:"
+    matches = re.search(f"{re.escape(target_string)}\s*([\d\s]+)", str(state))
+    numbers = [int(num) for num in matches.group(1).split()]
+
+    return numbers
+
+def get_player1_hands(state: str) -> List[int]:
+    target_string = "P0 hand:"
+    matches = re.search(f"{re.escape(target_string)}\s*([\d\s]+)", str(state))
+    numbers = [int(num) for num in matches.group(1).split()]
+
+    return numbers
+
+def get_player2_hands(state: str) -> List[int]:
+    target_string = "P1 hand:"
+    matches = re.search(f"{re.escape(target_string)}\s*([\d\s]+)", str(state))
+    numbers = [int(num) for num in matches.group(1).split()]
+
+    return numbers
+
+def get_score_card(state: str) -> List[int]:
+    target_string = "Point card sequence:"
+    matches = re.search(f"{re.escape(target_string)}\s*([\d\s]+)", str(state))
+    numbers = [int(num) for num in matches.group(1).split()]
+
+    return numbers
+
+def get_points(state: str) -> List[int]:
+    target_string = "Points:"
+    matches = re.search(f"{re.escape(target_string)}\s*([\d\s]+)", str(state))
+    numbers = [int(num) for num in matches.group(1).split()]
+
+    return numbers
+
+def open_spiel_state_to_gops_state(open_spiel_state):
+    """
+    Converts an OpenSpiel state to a GOPS state
+    """
+    cards = get_card_sequence(open_spiel_state)
+    player1_hands = get_player1_hands(open_spiel_state)
+    player2_hands = get_player2_hands(open_spiel_state)
+    score_card = get_score_card(open_spiel_state)
+    points = get_points(open_spiel_state)
+    contested_scores = sum(score_card) - sum(points)
+
+    return {
+        "cards": cards,
+        "player1_hands": player1_hands,
+        "player2_hands": player2_hands,
+        "contest_scores": contested_scores
+    }
+    
 
 class OpenSpielBot:
 

@@ -7,7 +7,13 @@ import random
 import pyspiel
 import numpy as np
 from open_spiel.python.algorithms import mcts, minimax, tabular_qlearner, nash_averaging
-from Search.
+from Search.beliefs import ValueGraph
+from Search.headers import State
+from Search.search import *
+from Search.baseline_models_GOPS import *
+from Search.engine import *
+from Search.estimators import *
+from Search.classic_models import *
 
 
 class OpenSpielBot:
@@ -82,7 +88,50 @@ class MCTSBot(OpenSpielBot):
         """Returns the action to be taken by this bot in the given state."""
         return self.mcts_bot.step(state)
     
+class SMMinimaxBot(OpenSpielBot):
 
-    
+    def __init__(self, env, player_id, rng=None, max_depth=3, num_rollouts=100):
+        """Initializes the SMMinimaxBot.
+        
+        Args:
+            env: OpenSpiel environment
+            player_id: player id
+            rng: random number generator
+            max_depth: maximum depth to search
+            num_rollouts: number of rollouts to perform for value estimation
+        """
+        super().__init__(env, player_id, rng)
+        self.max_depth = max_depth
+        self.value_graph = ValueGraph()
+        self.action_enumerator = GOPSActionEnumerator()
+        self.opponent_action_enumerator = GOPSOpponentActionEnumerator()
+        self.hidden_state_enumerator = GOPSRandomStateEnumerator()
+        self.hidden_state_predictor = GOPSRandomStatePredictor()
+        self.forward_transitor = GOPSForwardTransitor()
+        self.utility_estimator = UtilityEstimatorLast()
+        self.value_heuristic = RandomRolloutValueHeuristic(self.action_enumerator, self.opponent_action_enumerator, 
+                                                      self.forward_transitor, self.hidden_state_enumerator, 
+                                                      num_rollouts=num_rollouts)
+        self.search = SMMinimax(self.forward_transitor, self.value_heuristic, self.action_enumerator,
+                                self.hidden_state_enumerator, self.hidden_state_predictor,
+                                self.opponent_action_enumerator, self.utility_estimator)
+
+    def step(self, state):
+        """Returns the action to be taken by this bot in the given state."""
+        
+        # first convert state from OpenSpiel state to GOPSState
+        gops_state = open_spiel_state_to_gops_state(state)
+
+        # then expand the value graph
+        self.search.expand(self.value_graph, gops_state, depth=self.max_depth)
+
+        # then get the best action from the value graph
+        action = self.value_graph.get_best_action(gops_state)
+
+        return action - 1 # subtract 1 because OpenSpiel actions are 0-indexed
+
+def open_spiel_state_to_gops_state(state):
+    """Converts an OpenSpiel state to a GOPSState."""
+    raise NotImplementedError
 
     

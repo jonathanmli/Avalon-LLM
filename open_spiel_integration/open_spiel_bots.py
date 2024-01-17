@@ -52,20 +52,29 @@ class RandomBot(OpenSpielBot):
 class AlphaBetaBot(OpenSpielBot):
     """AlphaBetaBot implementation."""
 
-    def __init__(self, env, player_id, rng=None, depth=5):
+    def __init__(self, env, player_id, rng=None, evaluator=None, depth=5):
         """Initializes the AlphaBetaBot."""
         super().__init__(env, player_id, rng)
         self.depth = depth
+        # Set up a simple evaluator: A uniform random bot used for rollouts if none is provided.
+        if evaluator is None:
+            evaluator = mcts.RandomRolloutEvaluator(n_rollouts=100, random_state=self.rng)
+        self.evaluator = evaluator
 
     def step(self, state):
         """Returns the action to be taken by this bot in the given state."""
         legal_actions = state.legal_actions(self.player_id)
-        value, action = minimax.expectiminimax(state, self.depth, self.construct_value_returns(self.player_id), self.player_id)
+        value, action = minimax.expectiminimax(state, self.depth, self.construct_value_returns(), self.player_id)
         return action
     
     def construct_value_returns(self, id):
         def value_returns(state):
             return state.player_return(id)
+        return value_returns
+    
+    def construct_value_returns(self):
+        def value_returns(state):
+            return self.evaluator.evaluate(state)[self.player_id]
         return value_returns
 
 class MCTSBot(OpenSpielBot):

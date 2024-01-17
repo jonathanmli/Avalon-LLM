@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()
-    value_heuristic = GPT35ValueHeuristic(model)
+    # value_heuristic = GPT35ValueHeuristic(model)
     
     # opponent_action_predictor = GPT35OpponentActionPredictor(model)
     opponent_action_enumerator = GOPSOpponentActionEnumerator()
@@ -88,8 +88,8 @@ if __name__ == "__main__":
     hidden_state_enumerator = GOPSRandomStateEnumerator()
     forward_transitor = GOPSForwardTransitor()
     utility_estimator = UtilityEstimatorLast()
-    # value_heuristic = RandomRolloutValueHeuristic(action_enumerator, opponent_action_enumerator, 
-                                                #   forward_transitor, hidden_state_enumerator)
+    value_heuristic = RandomRolloutValueHeuristic(action_enumerator, opponent_action_enumerator, 
+                                                  forward_transitor, hidden_state_enumerator)
     
     num_cards = 6
     # using the engine defined earlier

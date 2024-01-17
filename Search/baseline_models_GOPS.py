@@ -52,14 +52,15 @@ class GOPSState(State):
     '''
 
     def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards, done=False, reward=0.0):
-        # should call super first, otherwise state_type will be overwritten
-        id = tuple([prize_cards, player_cards, opponent_cards, num_cards, state_type])
-        # turn = self.STATE_TYPES[state_type]
-        super().__init__(id, state_type, done=done, reward=reward)
-
         self.prize_cards = tuple(prize_cards)
         self.player_cards = tuple(player_cards)
         self.opponent_cards = tuple(opponent_cards)
+
+        # should call super first, otherwise state_type will be overwritten
+        id = tuple([self.prize_cards, self.player_cards, self.opponent_cards, num_cards, state_type])
+        # turn = self.STATE_TYPES[state_type]
+        super().__init__(id, state_type, done=done, reward=reward)
+
         self.num_cards = num_cards
 
     def copy(self):
@@ -68,6 +69,23 @@ class GOPSState(State):
         '''
         return GOPSState(self.state_type, self.prize_cards, self.player_cards, 
                          self.opponent_cards, self.num_cards, self.done, self.reward)
+    
+    def calculate_score(self):
+        '''
+        Calculates the score of the state for both players
+        '''
+        contested_points = 0
+        player_score = 0
+        opponent_score = 0
+        for idx, single_score in enumerate(list(self.prize_cards)):
+            contested_points += single_score
+            if self.player_cards[idx] > self.opponent_cards[idx]:
+                player_score += contested_points
+                contested_points = 0
+            elif self.player_cards[idx] < self.opponent_cards[idx]:
+                opponent_score += contested_points
+                contested_points = 0
+        return (player_score, opponent_score)
         
 class GOPSForwardTransitor(ForwardTransitor):
 
@@ -134,8 +152,6 @@ class GOPSForwardTransitor(ForwardTransitor):
                     elif player_cards[idx] < opponent_cards[idx]:
                         opponent_score += contested_points
                         contested_points = 0
-                    elif player_cards[idx] == opponent_cards[idx]:
-                        contested_points += single_score
                 
                 reward = player_score - opponent_score
                         
@@ -348,63 +364,62 @@ class GPT35ValueHeuristic(ValueHeuristic):
         Returns:
             value: value of the state
         '''
-        # # Prepare input
-        # prob_prompt = "Current State: {state}\n".format(state=state.notes)
-        # prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
-        # value_prompt = "Current State: {state}\n".format(state=state.notes)
-        # value_prompt += VALUE_PREDICTOR_PROMPTS[1]
+        # Prepare input
+        prob_prompt = "Current State: {state}\n".format(state=state.notes)
+        prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
+        value_prompt = "Current State: {state}\n".format(state=state.notes)
+        value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
-        # player_cards = state.player_cards
-        # opponent_cards = state.opponent_cards
-        # prize_cards = state.prize_cards
+        player_cards = state.player_cards
+        opponent_cards = state.opponent_cards
+        prize_cards = state.prize_cards
 
-        # # Calculate the score for the state
-        # contested_score = 0
-        # player_score = 0
-        # opponent_score = 0
-        # for idx, single_score in enumerate(list(state.prize_cards)):
-        #     contested_score += single_score
-        #     if player_cards[idx] > opponent_cards[idx]:
-        #         player_score += contested_score
-        #         contested_score = 0
-        #     elif player_cards[idx] < opponent_cards[idx]:
-        #         opponent_score += contested_score
-        #         contested_score = 0
-        #     elif player_cards[idx] == opponent_cards[idx]:
-        #         contested_score += single_score
+        # Calculate the score for the state
+        contested_score = 0
+        player_score = 0
+        opponent_score = 0
+        for idx, single_score in enumerate(list(state.prize_cards)):
+            contested_score += single_score
+            if player_cards[idx] > opponent_cards[idx]:
+                player_score += contested_score
+                contested_score = 0
+            elif player_cards[idx] < opponent_cards[idx]:
+                opponent_score += contested_score
+                contested_score = 0
+            elif player_cards[idx] == opponent_cards[idx]:
+                contested_score += single_score
 
-        # player_hand = [i for i in range(1, state.num_cards+1)]
-        # opponent_hand = [i for i in range(1, state.num_cards+1)]
-        # score_cards = [i for i in range(1, state.num_cards+1)]
+        player_hand = [i for i in range(1, state.num_cards+1)]
+        opponent_hand = [i for i in range(1, state.num_cards+1)]
+        score_cards = [i for i in range(1, state.num_cards+1)]
 
-        # player_hand = list(set(player_hand) - set(player_cards))
-        # opponent_hand = list(set(opponent_hand) - set(opponent_cards))
-        # score_cards = list(set(prize_cards) - set(score_cards))
+        player_hand = list(set(player_hand) - set(player_cards))
+        opponent_hand = list(set(opponent_hand) - set(opponent_cards))
+        score_cards = list(set(prize_cards) - set(score_cards))
 
-        # verbalized_value_prompt = VERBALIZED_VALUE_PREDICOTR.format(
-        #     played_cards=prize_cards,
-        #     score_cards=player_cards,
-        #     your_cards=opponent_cards,
-        #     your_hand=player_hand,
-        #     opponent_cards=opponent_cards,
-        #     opponent_hand=opponent_hand,
-        #     your_score=player_score,
-        #     opponent_score=opponent_score
-        # )
+        verbalized_value_prompt = VERBALIZED_VALUE_PREDICOTR.format(
+            played_cards=prize_cards,
+            score_cards=player_cards,
+            your_cards=opponent_cards,
+            your_hand=player_hand,
+            opponent_cards=opponent_cards,
+            opponent_hand=opponent_hand,
+            your_score=player_score,
+            opponent_score=opponent_score
+        )
 
         # Uncomment the following to use the model
 
         # Call the model
-        # prob_output = self.model.single_action(prob_prompt)
-        # value_output = self.model.single_action(verbalized_value_prompt)
+        prob_output = self.model.single_action(prob_prompt)
+        value_output = self.model.single_action(verbalized_value_prompt)
 
         # Parse the output
-        # prob_value = parse_prob_value(prob_output)
-        # value = parse_int_value(value_output)
-        import numpy as np
-        value = np.random.randint(0, 10)
-        # if not isinstance(value, int):
-        #     value = 5
+        prob_value = parse_prob_value(prob_output)
+        value = parse_int_value(value_output)
+
+        if not isinstance(value, int):
+            value = 5
 
         # print(f"State: {state} Value: {value}")
 

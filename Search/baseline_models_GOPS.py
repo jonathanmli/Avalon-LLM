@@ -415,8 +415,10 @@ class GPT35ValueHeuristic(ValueHeuristic):
         value_output = self.model.single_action(verbalized_value_prompt)
 
         # Parse the output
-        prob_value = parse_prob_value(prob_output)
-        value = parse_int_value(value_output)
+        # prob_value = parse_prob_value(prob_output)
+        # value = parse_int_value(value_output)
+
+        value = value_output
 
         if not isinstance(value, int):
             value = 5

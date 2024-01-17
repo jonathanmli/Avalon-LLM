@@ -63,7 +63,7 @@ if __name__ == "__main__":
             pass
 
         def single_action(self, input_prompt: str):
-            pass
+            return np.random.randint(0, 10)
         
     class RandomPlayer:
         def __init__(self, cards: List[int]):
@@ -75,8 +75,8 @@ if __name__ == "__main__":
             self.hand.remove(card)
             return card
 
-    model = GPT35()
-    # model = RandomModel()
+    # model = GPT35()
+    model = RandomModel()
 
     # Instantiate the dynamics
     action_enumerator = GOPSActionEnumerator()

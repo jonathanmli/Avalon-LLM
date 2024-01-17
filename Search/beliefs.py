@@ -106,6 +106,7 @@ class AdversarialValueNode(ValueNode):
         self.joint_adversarial_actions = None # list of joint adversarial actions
         self.joint_adversarial_actions_to_probs = dict() # dictionary of joint adversarial actions to probabilities over actions
         self.joint_adversarial_actions_to_next_states = dict() # dictionary of joint adversarial actions to next states
+        self.action_to_value = dict() # maps action to value (ie. Q-value)
 
 class StochasticValueNode(ValueNode):
     '''
@@ -156,7 +157,7 @@ class Graph:
     def __init__(self):
         self.id_to_node = dict() # maps id to node
 
-    def get_node(self, id):
+    def get_node(self, id)-> Node:
         '''
         Returns the node corresponding to the id
 
@@ -218,6 +219,8 @@ class ValueGraph(Graph):
             # elif state.state_type == state.STATE_TYPES[3]:
             elif state.state_type == 'simultaneous':
                 node = SimultaneousValueNode(state, parents, children)
+            elif state.state_type == 'dummy':
+                node = ValueNode(state, parents, children)
             else:
                 raise NotImplementedError
             self.id_to_node[state] = node
@@ -267,7 +270,7 @@ class ValueGraph(Graph):
         Returns:
             best_action: best action to take at the state
         '''
-        node = self.id_to_node[state]
+        node = self.get_node(state)
         # best action should be argmax of qvalues (node.action_to_value)
         best_action = None
         best_value = -np.inf

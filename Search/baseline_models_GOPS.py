@@ -48,18 +48,44 @@ class GOPSState(State):
     simultaneous is the state type, which can be one of the following:
         stochastic: a random card is revealed
         simultaneous: both players choose a card to play
+        dummy: end states
     '''
 
-    def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards):
-        # should call super first, otherwise state_type will be overwritten
-        id = tuple([prize_cards, player_cards, opponent_cards, num_cards, state_type])
-        # turn = self.STATE_TYPES[state_type]
-        super().__init__(id, state_type)
-
+    def __init__(self, state_type, prize_cards, player_cards, opponent_cards, num_cards, done=False, reward=0.0):
         self.prize_cards = tuple(prize_cards)
         self.player_cards = tuple(player_cards)
         self.opponent_cards = tuple(opponent_cards)
+
+        # should call super first, otherwise state_type will be overwritten
+        id = tuple([self.prize_cards, self.player_cards, self.opponent_cards, num_cards, state_type])
+        # turn = self.STATE_TYPES[state_type]
+        super().__init__(id, state_type, done=done, reward=reward)
+
         self.num_cards = num_cards
+
+    def copy(self):
+        '''
+        Returns a copy of the state
+        '''
+        return GOPSState(self.state_type, self.prize_cards, self.player_cards, 
+                         self.opponent_cards, self.num_cards, self.done, self.reward)
+    
+    def calculate_score(self):
+        '''
+        Calculates the score of the state for both players
+        '''
+        contested_points = 0
+        player_score = 0
+        opponent_score = 0
+        for idx, single_score in enumerate(list(self.prize_cards)):
+            contested_points += single_score
+            if self.player_cards[idx] > self.opponent_cards[idx]:
+                player_score += contested_points
+                contested_points = 0
+            elif self.player_cards[idx] < self.opponent_cards[idx]:
+                opponent_score += contested_points
+                contested_points = 0
+        return (player_score, opponent_score)
         
 class GOPSForwardTransitor(ForwardTransitor):
 
@@ -84,6 +110,8 @@ class GOPSForwardTransitor(ForwardTransitor):
         opponent_cards = state.opponent_cards
         num_cards = state.num_cards
         state_type = state.state_type
+        done = state.done
+        reward = 0.0
 
         if state_type == 'simultaneous': # simultaneous state
             # assert that len of actions is 2
@@ -107,6 +135,26 @@ class GOPSForwardTransitor(ForwardTransitor):
             # change state_type to stochastic
             state_type = 'stochastic'
 
+            # check if the game is done
+            if len(prize_cards) >= num_cards:
+                state_type = 'dummy'
+                done = True
+                
+                # calculate the score
+                contested_points = 0
+                player_score = 0
+                opponent_score = 0
+                for idx, single_score in enumerate(list(state.prize_cards)):
+                    contested_points += single_score
+                    if player_cards[idx] > opponent_cards[idx]:
+                        player_score += contested_points
+                        contested_points = 0
+                    elif player_cards[idx] < opponent_cards[idx]:
+                        opponent_score += contested_points
+                        contested_points = 0
+                
+                reward = player_score - opponent_score
+                        
         elif state_type == 'stochastic': # random state
             # assert that len of actions is 1
             # assert len(actions) == 1
@@ -125,7 +173,9 @@ class GOPSForwardTransitor(ForwardTransitor):
         else:
             raise ValueError('Invalid state type: ' + state_type)
         
-        return GOPSState(state_type, prize_cards, player_cards, opponent_cards, num_cards)
+
+        out_state = GOPSState(state_type, prize_cards, player_cards, opponent_cards, num_cards, done, reward)
+        return out_state
 
 class GOPSActionEnumerator(ActionEnumerator):
 
@@ -219,7 +269,8 @@ class GOPSRandomStatePredictor(RandomStatePredictor):
         for action in actions:
             probs[action] = 1.0/len(actions)
         return probs
-        
+    
+
 class GPT35OpponentActionPredictor(OpponentActionPredictor):
     '''
     Opponent action predictor for GPT-3.5
@@ -247,22 +298,6 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         opponent_cards = state.opponent_cards
         prize_cards = state.prize_cards
 
-        # Calculate the score for the state
-        # contested_score = 0
-        # player_score = 0
-        # opponent_score = 0
-        # print(state)
-        # for idx, single_score in enumerate(list(state.prize_cards)):
-        #     contested_score += single_score
-        #     if player_cards[idx] > opponent_cards[idx]:
-        #         player_score += contested_score
-        #         contested_score = 0
-        #     elif player_cards[idx] < opponent_cards[idx]:
-        #         opponent_score += contested_score
-        #         contested_score = 0
-        #     elif player_cards[idx] == opponent_cards[idx]:
-        #         contested_score += single_score
-
         player_hand = [i for i in range(1, state.num_cards+1)]
         opponent_hand = [i for i in range(1, state.num_cards+1)]
         score_cards = [i for i in range(1, state.num_cards+1)]
@@ -271,42 +306,42 @@ class GPT35OpponentActionPredictor(OpponentActionPredictor):
         opponent_hand = list(set(opponent_hand) - set(opponent_cards))
         score_cards = list(set(prize_cards) - set(score_cards))
 
-        print(actions)
+        # print(actions)
 
-        verbalized_opaction_prompt = VERBALIZED_OPACTION_PREDICTOR.format(
-            played_cards=prize_cards,
-            score_cards=player_cards,
-            your_cards=opponent_cards,
-            your_hand=player_hand,
-            opponent_cards=opponent_cards,
-            opponent_hand=opponent_hand,
-            # your_score=player_score,
-            # opponent_score=opponent_score,
-            opponent_actions=actions
-        )
+        # verbalized_opaction_prompt = VERBALIZED_OPACTION_PREDICTOR.format(
+        #     played_cards=prize_cards,
+        #     score_cards=player_cards,
+        #     your_cards=opponent_cards,
+        #     your_hand=player_hand,
+        #     opponent_cards=opponent_cards,
+        #     opponent_hand=opponent_hand,
+        #     # your_score=player_score,
+        #     # opponent_score=opponent_score,
+        #     opponent_actions=actions
+        # )
         # TODO: fix OPPONENT_ACTION_PREDICTOR_PROMPT to be better
 
         # Uncomment the following to use the model
 
         # Call the model
-        output = self.model.single_action(verbalized_opaction_prompt)
+        # output = self.model.single_action(verbalized_opaction_prompt)
 
-        # Parse the output
-        try:
-            advantages = eval(parse_dict_with_any_key(output))
-            advantages = {int(key): value for key, value in advantages.items()}
-            assert len(advantages) == len(actions)
-        except:
-            advantages = {action: 1.0/len(actions) for action in actions}
+        # # Parse the output
+        # try:
+        #     advantages = eval(parse_dict_with_any_key(output))
+        #     advantages = {int(key): value for key, value in advantages.items()}
+        #     assert len(advantages) == len(actions)
+        # except:
+        #     advantages = {action: 1.0/len(actions) for action in actions}
 
-        # import random
-        # advantages = {action: (1.0 * random.randint(0, len(actions)))/len(actions) for action in actions}
+        import random
+        advantages = {action: (1.0 * random.randint(0, len(actions)))/len(actions) for action in actions}
         print(advantages)
 
         # print(advantages)
 
         return advantages
-    
+
 class GPT35ValueHeuristic(ValueHeuristic):
     '''
     Value heuristic for GPT-3.5
@@ -329,11 +364,11 @@ class GPT35ValueHeuristic(ValueHeuristic):
         Returns:
             value: value of the state
         '''
-        # # Prepare input
-        # prob_prompt = "Current State: {state}\n".format(state=state.notes)
-        # prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
-        # value_prompt = "Current State: {state}\n".format(state=state.notes)
-        # value_prompt += VALUE_PREDICTOR_PROMPTS[1]
+        # Prepare input
+        prob_prompt = "Current State: {state}\n".format(state=state.notes)
+        prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
+        value_prompt = "Current State: {state}\n".format(state=state.notes)
+        value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
         player_cards = state.player_cards
         opponent_cards = state.opponent_cards
@@ -376,15 +411,16 @@ class GPT35ValueHeuristic(ValueHeuristic):
         # Uncomment the following to use the model
 
         # Call the model
-        # prob_output = self.model.single_action(prob_prompt)
+        prob_output = self.model.single_action(prob_prompt)
         value_output = self.model.single_action(verbalized_value_prompt)
 
         # Parse the output
-        # prob_value = parse_prob_value(prob_output)
+        prob_value = parse_prob_value(prob_output)
         value = parse_int_value(value_output)
-        # import numpy as np
-        # value = np.random.randint(0, 10)
 
-        print(f"State: {state} Value: {value}")
+        if not isinstance(value, int):
+            value = 5
+
+        # print(f"State: {state} Value: {value}")
 
         return value

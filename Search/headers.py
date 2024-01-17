@@ -9,9 +9,9 @@ class State:
     'simultaneous': simultaneous value node, for players
     '''
     
-    STATE_TYPES = ['control', 'adversarial', 'stochastic', 'simultaneous',]
+    STATE_TYPES = ['control', 'adversarial', 'stochastic', 'simultaneous','dummy',]
     
-    def __init__(self, id, state_type, notes = None):
+    def __init__(self, id, state_type, notes = None, done=False, reward=0.0):
         '''
         Args:
             id: id of the state, should be unique, usually the name of the state
@@ -27,6 +27,26 @@ class State:
             else:
                 raise ValueError(f"state_type must be one of {self.STATE_TYPES}")
         self.notes = notes
+        self.done = done
+        self.reward = reward # TODO: rewards are associated with states and not actions at the moment
+
+    def is_done(self):
+        '''
+        Returns whether the state is done
+        '''
+        return self.done
+    
+    def get_reward(self):
+        '''
+        Returns the reward of the state
+        '''
+        return self.reward
+    
+    def copy(self):
+        '''
+        Returns a copy of the state
+        '''
+        return State(self.id, self.state_type, self.notes, self.done, self.reward)
 
     def __repr__(self):
         return f"State({self.id}, {self.state_type}, {self.notes})"
@@ -53,7 +73,11 @@ class ForwardTransitor():
 
         Args:
             state: current state
-            actions: actions taken by the players
+            actions: actions taken by the players or environment. 
+                actions[0] is the action taken by the player
+                actions[1] is the action taken by the environment
+                actions[2:] are the actions taken by the other players
+            # TODO: change actions to be a dictionary of players to actions
 
         Returns:
             next_state: next state

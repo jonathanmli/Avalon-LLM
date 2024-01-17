@@ -53,7 +53,7 @@ def get_points(state: str) -> List[int]:
 
     return numbers
 
-def open_spiel_state_to_gops_state(open_spiel_state):
+def open_spiel_state_to_gops_state(open_spiel_state: str):
     """
     Converts an OpenSpiel state to a GOPS state
     """
@@ -64,12 +64,19 @@ def open_spiel_state_to_gops_state(open_spiel_state):
     points = get_points(open_spiel_state)
     contested_scores = sum(score_card) - sum(points)
 
-    return {
-        "cards": cards,
-        "player1_hands": player1_hands,
-        "player2_hands": player2_hands,
-        "contest_scores": contested_scores
-    }
+    # return {
+    #     "cards": cards,
+    #     "player1_hands": player1_hands,
+    #     "player2_hands": player2_hands,
+    #     "contest_scores": contested_scores
+    # }
+    return GOPSState(
+        state_type="simultaneous",
+        prize_cards=cards,
+        player_cards=player1_hands,
+        opponent_cards=player2_hands,
+        num_cards=len(cards),
+    )
     
 
 class OpenSpielBot:

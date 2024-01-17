@@ -240,6 +240,7 @@ class ValueBFS(Search):
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f'Search/output/output_graph_{timestamp}.png'
                 plt.savefig(filename)
+                plt.close()
                 # plt.show()
             
             node.values_estimates.append(value)

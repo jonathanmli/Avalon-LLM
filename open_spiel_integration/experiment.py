@@ -1,4 +1,6 @@
 import pyspiel
+from typing import List
+from tqdm import tqdm
 from open_spiel_integration.open_spiel_bots import *
 
 def run_gops_experiment(game, bots, num_episodes=100, rng=None):
@@ -25,7 +27,7 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
         rng = np.random.RandomState()
 
     # Play num_episodes games
-    for i in range(num_episodes):
+    for i in tqdm(range(num_episodes)):
         # Run a game
         state = game.new_initial_state()
         num_cards = len(state.legal_actions())
@@ -45,6 +47,8 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
                 if state.current_player() == 0:
                     # player 1's turn
                     if bot1_is_custom:
+                        # Either is correct
+                        # gops_state = open_spiel_state_to_gops_state(str(state))
                         gops_state = GOPSState('simultaneous', prize_cards, player_cards, opponent_cards, num_cards)
                         action = bot1.step(gops_state)
                     else:
@@ -53,6 +57,8 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
                 else:
                     # player 2's turn
                     if bot2_is_custom:
+                        # Either is correct
+                        # gops_state = open_spiel_state_to_gops_state(str(state))
                         gops_state = GOPSState('simultaneous', prize_cards, player_cards, opponent_cards, num_cards)
                         action = bot2.step(gops_state)
                     else:
@@ -84,7 +90,7 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
     # returning the cumulative returns of player 1 and 2 and their winrates
     return bot1_cumulative_return / num_episodes, bot2_cumulative_return / num_episodes, bot1_wins / num_episodes, bot2_wins / num_episodes
 
-def play_game(game, bots, rng=None):
+def play_game(game, bots: List, rng=None):
     """Plays one game. Prints out states and actions as it goes along for debugging."""
     bot1 = bots[0]
     bot2 = bots[1]
@@ -94,6 +100,7 @@ def play_game(game, bots, rng=None):
         if state.is_chance_node():
             # Sample a chance event outcome.
             outcomes_with_probs = state.chance_outcomes()
+            print(outcomes_with_probs)
             action_list, prob_list = zip(*outcomes_with_probs)
             action = rng.choice(action_list, p=prob_list)
             state.apply_action(action)
@@ -114,4 +121,41 @@ def play_game(game, bots, rng=None):
     print("Player 1: {}".format(returns[0]))
     print("Player 2: {}".format(returns[1]))
     return state
+
+if __name__ == "__main__":
+    game = pyspiel.load_game_as_turn_based("goofspiel", {"num_cards": 6})
+    random_state = np.random.RandomState(42)
+    evaluator = mcts.RandomRolloutEvaluator(random_state=random_state)
+    mcts_bot = MCTSBot(
+        env=game,
+        player_id=1,
+        uct_c=2,  # Exploration constant
+        max_simulations=1000,  # Number of MCTS simulations per move
+        evaluator=evaluator,  # Evaluator (rollout policy)
+        rng=random_state  # Random seed
+    )
+
+    # Set up random bot
+    random_bot = RandomBot(
+        env=game,
+        player_id=0,
+        rng=random_state
+    )
+
+    alphabeta_bot = AlphaBetaBot(
+        env=game,
+        player_id=1,
+        rng=random_state,
+        depth=2
+    )
+    # play_game(
+    #     game=game,
+    #     bots=[random_bot, mcts_bot],
+    #     rng=random_state
+    # )
+    run_gops_experiment(
+        game=game,
+        bots=[random_bot, alphabeta_bot],
+        rng=random_state
+    )
 

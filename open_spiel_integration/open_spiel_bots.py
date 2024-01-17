@@ -64,12 +64,6 @@ def open_spiel_state_to_gops_state(open_spiel_state: str):
     points = get_points(open_spiel_state)
     contested_scores = sum(score_card) - sum(points)
 
-    # return {
-    #     "cards": cards,
-    #     "player1_hands": player1_hands,
-    #     "player2_hands": player2_hands,
-    #     "contest_scores": contested_scores
-    # }
     return GOPSState(
         state_type="simultaneous",
         prize_cards=cards,

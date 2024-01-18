@@ -107,13 +107,13 @@ class RandomBot(OpenSpielBot):
 class AlphaBetaBot(OpenSpielBot):
     """AlphaBetaBot implementation."""
 
-    def __init__(self, env, player_id, rng=None, evaluator=None, depth=5):
+    def __init__(self, env, player_id, rng=None, evaluator=None, depth=5, num_rollouts=100):
         """Initializes the AlphaBetaBot."""
         super().__init__(env, player_id, rng)
         self.depth = depth
         # Set up a simple evaluator: A uniform random bot used for rollouts if none is provided.
         if evaluator is None:
-            evaluator = mcts.RandomRolloutEvaluator(n_rollouts=100, random_state=self.rng)
+            evaluator = mcts.RandomRolloutEvaluator(n_rollouts=num_rollouts, random_state=self.rng)
         self.evaluator = evaluator
 
     def step(self, state):

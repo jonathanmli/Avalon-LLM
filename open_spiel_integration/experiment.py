@@ -2,6 +2,7 @@ import pyspiel
 from typing import List
 from tqdm import tqdm
 from open_spiel_integration.open_spiel_bots import *
+from Search.baseline_models_GOPS import GOPSActionEnumerator
 
 def run_gops_experiment(game, bots, num_episodes=100, rng=None):
     """Run a number of episodes of the game, and print statistics."""
@@ -22,6 +23,9 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
     assert bot1_is_custom or isinstance(bot1, OpenSpielBot)
     assert bot2_is_custom or isinstance(bot2, OpenSpielBot)
 
+    # for debugging
+    action_enumerator = GOPSActionEnumerator()
+
     # add rng 
     if rng is None:
         rng = np.random.RandomState()
@@ -34,6 +38,7 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
         prize_cards = []
         player_cards = []
         opponent_cards = []
+        player0_card = None
 
         while not state.is_terminal():
             if state.is_chance_node():
@@ -53,18 +58,25 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
                         action = bot1.step(gops_state)
                     else:
                         action = bot1.step(state)
-                    player_cards.append(action+1)
+                    player0_card = action+1
                 else:
-                    # player 2's turn
+                    # player 2's turn. assume that player 2 always goes after player 1
                     if bot2_is_custom:
                         # Either is correct
                         # gops_state = open_spiel_state_to_gops_state(str(state))
-                        gops_state = GOPSState('simultaneous', prize_cards, player_cards, opponent_cards, num_cards)
+                        gops_state = GOPSState('simultaneous', prize_cards, opponent_cards, player_cards, num_cards)
+                        # print("Possible actions: ", action_enumerator.enumerate(gops_state))
                         action = bot2.step(gops_state)
                     else:
                         action = bot2.step(state)
                     opponent_cards.append(action+1)
+                    player_cards.append(player0_card)
+                    
 
+                # print("Player {} takes action {} at state {}".format(state.current_player(), action, state))
+                # print("Player 1 cards: {}".format(player_cards))
+                # print("Player 2 cards: {}".format(opponent_cards))
+                
                 state.apply_action(action)
 
         gops_state = GOPSState('dummy', prize_cards, player_cards, opponent_cards, num_cards, True)
@@ -113,7 +125,6 @@ def play_game(game, bots: List, rng=None):
                 action = bot2.step(state)
 
             print("Player {} takes action {} at state {}".format(state.current_player(), action, state))
-
             state.apply_action(action)
 
     # Episode is over, update return

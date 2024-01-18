@@ -48,6 +48,8 @@ class ValueNode(Node):
         self.state = state # state of the game that this node represents
         self.values_estimates = [] # values from the rollout policy, in temporal order
         self.action_to_next_state = dict() # maps action to next state
+        self.proaction_to_value = dict() # maps action to value (ie. Q-value) for player 0 (protagonist)
+        self.probs_over_actions = dict() # maps action to probability of taking that action
 
     def get_mean_value(self):
         '''
@@ -72,59 +74,14 @@ class ValueNode(Node):
         Returns the number of visits to the node
         '''
         return len(self.values_estimates)
-        
-    # def backward(self, value):
-    #     '''
-    #     Updates the node
-    #     '''
-    #     self.visits += 1
-    #     # self.value += value
-    #     self.simulated_values.append(value)
-
-class ControlValueNode(ValueNode):
-    '''
-    State where the protagonist is trying to maximize the value by taking actions
-    '''
-
-    def __init__(self, state, parents=None, children=None, actions=None, next_states = None, virtual=False):
-        super().__init__(state, parents, children, virtual)
-        self.actions = actions # list of actions
-        self.next_states = next_states # set of next states (child nodes)
-        self.action_to_next_state = dict() # maps action to next state
-        self.action_to_value = dict() # maps action to value (ie. Q-value)
-
-class AdversarialValueNode(ValueNode):
-    '''
-    State where the opponents are trying to minimize the value by taking actions
-    '''
-
-    def __init__(self, state, parents=None, children=None, actions=None, next_states = None, virtual=False):
-        super().__init__(state, parents, children, virtual)
-        self.actions = actions # actions that the opponent can take
-        self.best_action = None # best action to take
-        self.next_states = next_states # set of next states (child nodes)
-        self.joint_adversarial_actions = None # list of joint adversarial actions
-        self.joint_adversarial_actions_to_probs = dict() # dictionary of joint adversarial actions to probabilities over actions
-        self.joint_adversarial_actions_to_next_states = dict() # dictionary of joint adversarial actions to next states
-        self.action_to_value = dict() # maps action to value (ie. Q-value)
-
-class StochasticValueNode(ValueNode):
-    '''
-    State where the environment progresses to random states
-    '''
-
-    def __init__(self, state, parents=None, children=None, next_states = None, virtual=False):
-        super().__init__(state, parents, children, virtual)
-        self.next_states = next_states # set of next states
-        self.actions = None # actions that the environment can take
-        self.probs_over_actions = dict() # maps action to probability
 
 class SimultaneousValueNode(ValueNode):
     '''
-    State where the protagonist and opponents are trying to maximize the value by taking actions simultaneously
+    State where the (possible multiple) actors are trying to maximize the value by taking actions simultaneously
     '''
 
-    def __init__(self, state, parents=None, children=None, proactions=None, adactions = None, next_states = None, opponents = None, virtual=False):
+    def __init__(self, state, parents=None, children=None, actors = None, next_states = None, virtual=False, 
+                 actions = None):
         '''
         Args:
             state: state of the game that this node represents
@@ -135,20 +92,17 @@ class SimultaneousValueNode(ValueNode):
             next_states: set of next states
         '''
         super().__init__(state, parents, children, virtual)
-        self.proactions = proactions # actions that the protagonist can take
-        self.adactions = adactions # dictionary of actions that the opponents can take
-        if self.adactions is None:
-            self.adactions = dict()
+        self.actors = actors
+        if self.actors is None:
+            self.actors = frozenset()
         self.next_states = next_states # set of next states (child nodes)
         if self.next_states is None:
-            self.next_states = set()
-        self.opponent_to_probs_over_actions = dict() # dictionary of dictionaries of probabilities over actions for each opponent
-        self.opponents = opponents # list of opponents who take actions at this state
-        self.joint_adversarial_actions = None # list of joint adversarial actions
-        self.joint_adversarial_actions_to_probs = dict() # dictionary of joint adversarial actions to probabilities over actions
+            self.next_states = frozenset()
         self.action_to_value = dict() # maps action to value (ie. Q-value)
-        self.joint_actions = None # list of joint actions
-        self.joint_actions_to_next_states = dict() # dictionary of joint actions to next states
+        self.actions = actions # set of joint actions
+        if self.actions is None:
+            self.actions = frozenset()
+        self.actor_to_actions = dict() # maps actor to actions
 
 class Graph:
     '''
@@ -206,26 +160,9 @@ class ValueGraph(Graph):
         parents = set([self.id_to_node[parent_state] for parent_state in parent_states])
         children = set([self.id_to_node[child_state] for child_state in child_states])
         if state not in self.id_to_node:
-            # TODO: should be generalized
-            # if state.state_type == state.STATE_TYPES[0]:
-            if state.state_type == 'control':
-                node = ControlValueNode(state, parents, children)
-            # elif state.state_type == state.STATE_TYPES[1]:
-            elif state.state_type == 'adversarial':
-                node = AdversarialValueNode(state, parents, children)
-            # elif state.state_type == state.STATE_TYPES[2]:
-            elif state.state_type == 'stochastic':
-                node = StochasticValueNode(state, parents, children)
-            # elif state.state_type == state.STATE_TYPES[3]:
-            elif state.state_type == 'simultaneous':
-                node = SimultaneousValueNode(state, parents, children)
-            elif state.state_type == 'dummy':
-                node = ValueNode(state, parents, children)
-            else:
-                raise NotImplementedError
+            # TODO: should be generalized, test if works
+            node = SimultaneousValueNode(state, parents, children)
             self.id_to_node[state] = node
-            
-            
             return node
         else:
             raise ValueError(f"state {state} already exists in the graph")
@@ -274,7 +211,7 @@ class ValueGraph(Graph):
         # best action should be argmax of qvalues (node.action_to_value)
         best_action = None
         best_value = -np.inf
-        for action, value in node.action_to_value.items():
+        for action, value in node.proaction_to_value.items():
             if value > best_value:
                 best_action = action
                 best_value = value

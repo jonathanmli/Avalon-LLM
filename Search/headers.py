@@ -1,34 +1,31 @@
 class State:
     '''
     Abstract class for a state
-
-    state_type: 'control', 'adversarial', 'stochastic', 'simultaneous'
-    'control': control value node, for the player
-    'adversarial': adversarial value node, for the opponent trying to minimize the value
-    'stochastic': stochastic value node, for the environment
-    'simultaneous': simultaneous value node, for players
     '''
     
-    STATE_TYPES = ['control', 'adversarial', 'stochastic', 'simultaneous','dummy',]
-    
-    def __init__(self, id, state_type, notes = None, done=False, reward=0.0):
+    def __init__(self, id, actors = None, done=False, reward=0.0, notes = None):
         '''
         Args:
             id: id of the state, should be unique, usually the name of the state
             state_type: type of the state
             notes: any notes about the state
+            done: whether the state is done
+            reward: reward of the state
+            actors: actors that may take actions at the state
+
+        Some conventions on actor names:
+            -1: environment
+            0: player 1, the main player who is trying to maximize reward
+            1: player 2, usually the opponent player who is trying to minimize reward
+            2+: other adaptive actors
         '''
         self.id = id
-        self.state_type = state_type 
-        if state_type not in self.STATE_TYPES:
-            # if state_type is a int, convert to string
-            if isinstance(state_type, int):
-                self.state_type = self.STATE_TYPES[state_type]
-            else:
-                raise ValueError(f"state_type must be one of {self.STATE_TYPES}")
         self.notes = notes
         self.done = done
         self.reward = reward # TODO: rewards are associated with states and not actions at the moment
+        if actors is None:
+            actors = frozenset()
+        self.actors = frozenset(actors)
 
     def is_done(self):
         '''
@@ -67,65 +64,37 @@ class ForwardTransitor():
     def __init__(self):
         pass
 
-    def transition(self, state: State, actions)->State:
+    def transition(self, state: State, actions: dict)->State:
         '''
         Transits to the next state given the current state and action
 
         Args:
             state: current state
-            actions: actions taken by the players or environment. 
-                actions[0] is the action taken by the player
-                actions[1] is the action taken by the environment
-                actions[2:] are the actions taken by the other players
-            # TODO: change actions to be a dictionary of players to actions
+            actions: actions taken by the actors
 
         Returns:
             next_state: next state
         '''
         raise NotImplementedError
-
-class ForwardPredictor():
-    '''
-    Abstract class for a forward dynamics predictor
-    '''
-
-    def __init__(self):
-        pass
     
-    def predict(self, state: State, action, next_states) -> dict:
-        '''
-        Predicts the probabilities over next states given the current state and action
-
-        Args:
-            state: current state
-            action: action to take
-            next_states: list of next states
-
-        Returns:
-            probs: dictionary of probabilities over next states
-        '''
-        raise NotImplementedError
-    
-class ForwardEnumerator():
+class ActorEnumerator():
     '''
-    Abstract class for a forward dynamics enumerator
+    Abstract class for an actor enumerator
     '''
-
     def __init__(self):
         pass
 
-    def enumerate(self, state: State, action):
+    def enumerate(self, state: State)->set:
         '''
-        Enumerates the possible next states given the current state and action
+        Enumerates the actors that may take actions at the state
 
         Args:
             state: current state
-            action: action to take
 
         Returns:
-            next_states: list of next states
+            actors: set of actors that may take actions at the state
         '''
-        raise NotImplementedError
+        return set()
     
 class ActionPredictor():
     '''
@@ -135,16 +104,17 @@ class ActionPredictor():
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions) -> dict:
+    def predict(self, state: State, actions, actor) -> dict:
         '''
-        Predicts the advantage or policy probabilities of each action given the current state
+        Predicts the policy probabilities across actions given the current state and actor
 
         Args:
             state: current state
             actions: list of actions
+            actor: actor to predict policy for
 
         Returns:
-            advantage: dictionary of relative advantages of each action
+            probs: dictionary of actions to probabilities
         '''
         raise NotImplementedError
     
@@ -156,118 +126,16 @@ class ActionEnumerator():
     def __init__(self):
         pass
 
-    def enumerate(self, state: State):
+    def enumerate(self, state: State, actor) -> set:
         '''
-        Enumerates the possible actions given the current state 
+        Enumerates the possible actions given the current state and actor
 
         Args:
             state: current state
+            actor: actor to enumerate actions for
 
         Returns:
             actions: list of actions
-        '''
-        raise NotImplementedError
-
-class RandomStatePredictor():
-    '''
-    Abstract class for a random dynamics predictor
-    '''
-
-    def __init__(self):
-        pass
-    
-    def predict(self, state: State, actions) -> dict:
-        '''
-        Predicts the probabilities over actions given the current state and action
-
-        Args:
-            state: current state
-            actions: list of actions
-
-        Returns:
-            probs: dictionary of probabilities over actions
-        '''
-        raise NotImplementedError
-    
-class RandomStateEnumerator():
-    '''
-    Abstract class for a random dynamics enumerator
-    '''
-
-    def __init__(self):
-        pass
-
-    def enumerate(self, state: State, action):
-        '''
-        Enumerates the possible actions given the current state and action
-
-        Args:
-            state: current state
-
-        Returns:
-            actions: list of actions
-        '''
-        raise NotImplementedError
-
-class OpponentActionPredictor():
-    '''
-    Abstract class for an opponent action predictor
-    '''
-
-    def __init__(self):
-        pass
-    
-    def predict(self, state: State, actions, player = 0)-> dict:
-        '''
-        Predicts the advantage of each action given the current state
-
-        Args:
-            state: current state
-            actions: list of actions
-            player: player to predict advantage for
-
-        Returns:
-            advantage: dictionary of relative advantages of each action
-        '''
-        raise NotImplementedError
-    
-class OpponentEnumerator():
-    '''
-    Abstract class for an opponent enumerator
-    '''
-    def __init__(self):
-        pass
-
-    def enumerate(self, state: State):
-        '''
-        Enumerates the opponents that may take actions at the current state
-
-        Args:
-            state: current state
-
-        Returns:
-            opponents: list of opponents
-        '''
-        return set([0])
-    
-class OpponentActionEnumerator():
-    '''
-    Abstract class for an opponent action enumerator
-    '''
-
-    def __init__(self):
-        pass
-
-    def enumerate(self, state: State, player = 0):
-        '''
-        Enumerates the possible actions given the current state 
-
-        Args:
-            state: current state
-            player: player to enumerate actions for
-
-        Returns:
-            actions: list or set of actions
         '''
         raise NotImplementedError
     
@@ -289,26 +157,6 @@ class PolicyPredictor():
 
         Returns:
             probs: dictionary of probabilities over actions
-        '''
-        raise NotImplementedError
-    
-class PolicyEnumerator():
-    '''
-    Abstract class for a policy enumerator
-    '''
-
-    def __init__(self):
-        pass
-
-    def enumerate(self, state: State):
-        '''
-        Enumerates the possible actions given the current state 
-
-        Args:
-            state: current state
-
-        Returns:
-            actions: list of actions
         '''
         raise NotImplementedError
     

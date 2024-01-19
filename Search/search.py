@@ -337,7 +337,7 @@ class SMMinimax(Search):
 
                 # print('Random state', state, 'value', value)
 
-            elif 0 in node.actors and 1 in node.actors: # simultaneous
+            elif (0 in node.actors) and (1 in node.actors): # simultaneous
                 assert len(node.actors) == 2
 
                 # enumerate actions for each actor
@@ -396,6 +396,9 @@ class SMMinimax(Search):
                 # print('Simultaneous state', state, 'value', value)
             
             else:
+                print('node actors', node.actors)
+                print('state', state)
+                print('state actors', state.actors)
                 raise NotImplementedError
                 
             if render and not node.virtual:

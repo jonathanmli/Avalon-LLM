@@ -54,10 +54,12 @@ class GOPSState(State):
         self.opponent_cards = tuple(opponent_cards)
         self.num_cards = int(num_cards)
 
+        # should call super first, otherwise state_type will be overwritten
+        id = tuple([self.prize_cards, self.player_cards, self.opponent_cards, self.num_cards])
+
         super().__init__(id, actors=actors, done=done, reward=reward)
 
-        # should call super first, otherwise state_type will be overwritten
-        id = tuple([self.prize_cards, self.player_cards, self.opponent_cards, self.num_cards, self.actors])
+        
 
     def copy(self):
         '''

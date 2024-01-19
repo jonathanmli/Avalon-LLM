@@ -92,9 +92,7 @@ class SimultaneousValueNode(ValueNode):
             next_states: set of next states
         '''
         super().__init__(state, parents, children, virtual)
-        self.actors = actors
-        if self.actors is None:
-            self.actors = frozenset()
+        self.actors = actors # set of actors
         self.next_states = next_states # set of next states (child nodes)
         if self.next_states is None:
             self.next_states = frozenset()

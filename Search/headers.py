@@ -43,13 +43,13 @@ class State:
         '''
         Returns a copy of the state
         '''
-        return State(self.id, self.state_type, self.notes, self.done, self.reward)
+        return State(self.id, self.actors, self.done, self.reward, self.notes)
 
     def __repr__(self):
-        return f"State({self.id}, {self.state_type}, {self.notes})"
+        return f"State({self.id}, {self.actors}, {self.done}, {self.reward}, {self.notes})"
     
     def __str__(self):
-        return f"State({self.id}, {self.state_type}, {self.notes})"
+        return f"State({self.id}, {self.actors}, {self.done}, {self.reward}, {self.notes})"
     
     def __hash__(self):
         return hash(self.id)

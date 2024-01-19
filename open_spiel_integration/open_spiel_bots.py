@@ -161,41 +161,40 @@ class MCTSBot(OpenSpielBot):
     
 class CustomBot:
 
-    def __init__(self, player_id, rng=None) -> None:
+    def __init__(self, player_id, random_state=None) -> None:
         self.player_id = player_id
-        if rng is None:
-            rng = np.random.RandomState()
-        self.rng = rng
+        if random_state is None:
+            random_state = np.random.RandomState()
+        self.random_state = random_state
 
     def step(self, state):
         raise NotImplementedError
 
 class SMMinimaxCustomBot(CustomBot):
 
-    def __init__(self, player_id, rng=None, max_depth=3, num_rollouts=100):
+    def __init__(self, player_id, max_depth=3, num_rollouts=100, random_state: np.random.RandomState=None):
         """Initializes the SMMinimaxBot.
         
         Args:
             player_id: player id
-            rng: random number generator
+            random_state: random state
             max_depth: maximum depth to search
             num_rollouts: number of rollouts to perform for value estimation
         """
-        super().__init__(player_id, rng)
+        super().__init__(player_id, random_state)
         self.max_depth = max_depth
         self.value_graph = ValueGraph()
         self.action_enumerator = GOPSActionEnumerator()
-        self.opponent_action_enumerator = GOPSOpponentActionEnumerator()
-        self.hidden_state_enumerator = GOPSRandomStateEnumerator()
-        self.hidden_state_predictor = GOPSRandomStatePredictor()
+        self.action_predictor = GOPSRandomActionPredictor()
         self.forward_transitor = GOPSForwardTransitor()
         self.utility_estimator = UtilityEstimatorLast()
-        self.value_heuristic = RandomRolloutValueHeuristic(self.action_enumerator, self.opponent_action_enumerator, 
-                                                      self.forward_transitor, self.hidden_state_enumerator, 
-                                                      num_rollouts=num_rollouts)
-        self.search = SMMinimax(self.forward_transitor, self.value_heuristic, self.action_enumerator,
-                                self.hidden_state_enumerator, self.hidden_state_predictor,
-                                self.opponent_action_enumerator, self.utility_estimator)
+        self.actor_enumerator = GOPSActorEnumerator()
+        self.value_heuristic = RandomRolloutValueHeuristic(self.actor_enumerator, self.action_enumerator, 
+                                                      self.forward_transitor, num_rollouts=num_rollouts,
+                                                      random_state=self.random_state)
+        self.search = SMMinimax(self.forward_transitor, self.value_heuristic, self.actor_enumerator,
+                                self.action_enumerator, self.action_predictor, 
+                                self.utility_estimator)
 
     def step(self, state: GOPSState):
         """Returns the action to be taken by this bot in the given state."""

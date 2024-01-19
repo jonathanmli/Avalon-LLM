@@ -265,6 +265,8 @@ class SMMinimax(Search):
         
         super().__init__(forward_transistor, value_heuristic, actor_enumerator,
                          action_enumerator, action_predictor, utility_estimator)
+        
+        self.total_nodes_expanded = 0
 
     def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False, revise = False, oracle = True):
         '''
@@ -280,6 +282,8 @@ class SMMinimax(Search):
         Returns:
             value: updated value of the node
         '''
+
+        self.total_nodes_expanded += 1
 
         if not oracle:
             raise NotImplementedError
@@ -316,18 +320,28 @@ class SMMinimax(Search):
             if node.actors is None or revise:
                 node.actors = self.actor_enumerator.enumerate(state)
 
+            # print('node actors', node.actors)
+
             if -1 in node.actors: # random
                 assert len(node.actors) == 1
 
                 if node.actions is None or revise:
                     node.actions = self.action_enumerator.enumerate(state, -1)
+
+                # print('node actions', node.actions)
+
                 if not node.action_to_next_state or revise: # Dictionary is empty
                     for action in node.actions:
+                        # print('action', action)
                         node.action_to_next_state[action] = self.forward_transistor.transition(state, {-1: action})
                 if not node.probs_over_actions or revise: # Dictionary is empty
                     node.probs_over_actions = self.action_predictor.predict(state, node.actions, -1)
+                # print('probs over actions', node.probs_over_actions)
                 for next_state in set(node.action_to_next_state.values()):
+                    # print('next state', next_state)
                     next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+                
+                # print('next state to values', next_state_to_values)
 
                 # add expected value over actions 
                 for action in node.actions:
@@ -335,7 +349,7 @@ class SMMinimax(Search):
                     prob = node.probs_over_actions[action]
                     value += prob*next_state_to_values[next_state]
 
-                # print('Random state', state, 'value', value)
+                # print('Random state', state, 'expected value', value)
 
             elif (0 in node.actors) and (1 in node.actors): # simultaneous
                 assert len(node.actors) == 2
@@ -344,18 +358,24 @@ class SMMinimax(Search):
                 if not node.actor_to_actions or revise:
                     for actor in node.actors:
                         node.actor_to_actions[actor] = self.action_enumerator.enumerate(state, actor)
+
+                # print('actor to actions', node.actor_to_actions)
+
+                # print([x for x in itertools.product(*node.actor_to_actions.values())])
             
-                # enumerate all possible joint actions as dictionaries from actor to action
+                # enumerate all possible joint actions as tuples of tuples (actor,action) pairs
                 if node.actions is None or revise:
                     actors = node.actor_to_actions.keys()
-                    node.actions = frozenset([dict(zip(actors, x)) for x in itertools.product(*node.actor_to_actions.values())])
+                    node.actions = [tuple(zip(actors, x)) for x in itertools.product(*node.actor_to_actions.values())]
                 
+                # print('actions', node.actions)
+
                 # find next states
-                if not node.next_states or revise:
+                if node.next_states is None or revise:
                     node.next_states = set()
                     # print('next states not found')
                     for joint_action in node.actions:
-                        next_state = self.forward_transistor.transition(state, joint_action)
+                        next_state = self.forward_transistor.transition(state, dict(joint_action))
                         node.next_states.add(next_state)
                         node.action_to_next_state[joint_action] = next_state
                         # print('joint action', joint_action, 'next state', next_state)
@@ -365,6 +385,8 @@ class SMMinimax(Search):
 
                 # expand next states
                 for next_state in node.next_states:
+                    # print('next state', next_state)
+                    # print('next state hash', hash(next_state))
                     next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
 
                 # print('next state to values', next_state_to_values)
@@ -378,7 +400,7 @@ class SMMinimax(Search):
 
                 # find best response for each protagonist action
                 for joint_action in node.actions:
-                    proaction = joint_action[0]
+                    proaction = dict(joint_action)[0]
                     value = next_state_to_values[node.action_to_next_state[joint_action]]
                     # print('joint action', joint_action, 'value', value)
                     if value < opponent_best_responses[proaction][1]:
@@ -393,7 +415,7 @@ class SMMinimax(Search):
                 # value should be max of actions
                 value = max(node.proaction_to_value.values())
 
-                # print('Simultaneous state', state, 'value', value)
+                # print('Simultaneous state', state, 'minimax value', value)
             
             else:
                 print('node actors', node.actors)

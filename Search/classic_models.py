@@ -61,15 +61,20 @@ class RandomRolloutValueHeuristic(ValueHeuristic):
             state = state.copy()
             # rollout
             while not state.is_done():
+
+                # print('rollout state', state)
                 # enumerate actors
                 actors = self.actor_enumerator.enumerate(state)
+                # print('rollout actors', actors)
 
                 joint_action = dict()
 
                 # for each actor get random action, add to joint action
                 for actor in actors:
+                    # print('rollout actor', actor)
                     # enumerate actions
-                    actions = self.action_enumerator.enumerate(state)
+                    actions = self.action_enumerator.enumerate(state, actor)
+                    # print('rollout actions', actions)
                     # predict action probabilities
                     probs = self.action_predictor.predict(state, actions, actor)
                     # choose random action according to probs

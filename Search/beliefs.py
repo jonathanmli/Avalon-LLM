@@ -94,12 +94,12 @@ class SimultaneousValueNode(ValueNode):
         super().__init__(state, parents, children, virtual)
         self.actors = actors # set of actors
         self.next_states = next_states # set of next states (child nodes)
-        if self.next_states is None:
-            self.next_states = frozenset()
+        # if self.next_states is None:
+        #     self.next_states = frozenset()
         self.action_to_value = dict() # maps action to value (ie. Q-value)
         self.actions = actions # set of joint actions
-        if self.actions is None:
-            self.actions = frozenset()
+        # if self.actions is None:
+        #     self.actions = frozenset()
         self.actor_to_actions = dict() # maps actor to actions
 
 class Graph:

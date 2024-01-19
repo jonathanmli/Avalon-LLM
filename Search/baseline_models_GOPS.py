@@ -160,12 +160,15 @@ class GOPSForwardTransitor(ForwardTransitor):
             # assert that len of actions is 1
             assert len(actions) == 1
 
+            # print('actions', actions)
+            # print('prize_cards', prize_cards)
+
             # assert that actions are not in the prize_cards and between 1 and num_cards
-            assert actions not in prize_cards and actions in range(1, num_cards+1)
+            assert actions[-1] not in prize_cards and actions[-1] in range(1, num_cards+1)
 
             # append actions to prize_cards
             prize_cards = list(prize_cards)
-            prize_cards.append(actions)
+            prize_cards.append(actions[-1])
             prize_cards = tuple(prize_cards)
 
             # change actors to {0, 1}
@@ -183,7 +186,7 @@ class GOPSActionEnumerator(ActionEnumerator):
     def __init__(self):
         super().__init__()
 
-    def enumerate(self, state: GOPSState, actor = 0) -> set:
+    def enumerate(self, state: GOPSState, actor) -> set:
         '''
         Enumerates the possible actions that the player can take given the current state
 

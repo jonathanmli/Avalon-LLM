@@ -136,6 +136,7 @@ def play_game(game, bots: List, rng=None):
 if __name__ == "__main__":
     game = pyspiel.load_game_as_turn_based("goofspiel", {"num_cards": 6})
     random_state = np.random.RandomState(42)
+    random_state2 = np.random.RandomState(43)
     evaluator = mcts.RandomRolloutEvaluator(random_state=random_state)
     mcts_bot = MCTSBot(
         env=game,
@@ -149,11 +150,17 @@ if __name__ == "__main__":
     # Set up random bot
     random_bot = RandomBot(
         env=game,
-        player_id=0,
+        player_id=1,
         rng=random_state
     )
 
-    alphabeta_bot = AlphaBetaBot(
+    alphabeta_bot1 = AlphaBetaBot(
+        env=game,
+        player_id=0,
+        rng=random_state,
+        depth=2
+    )
+    alphabeta_bot2 = AlphaBetaBot(
         env=game,
         player_id=1,
         rng=random_state,
@@ -164,9 +171,21 @@ if __name__ == "__main__":
     #     bots=[random_bot, mcts_bot],
     #     rng=random_state
     # )
+    custom_bot = SMMinimaxCustomBot(
+        player_id=0,
+        rng=random_state,
+        max_depth=3,
+        num_rollouts=100
+    )
+    custom_bot2 = SMMinimaxCustomBot(
+        player_id=1,
+        rng=random_state2,
+        max_depth=3,
+        num_rollouts=100
+    )
     run_gops_experiment(
         game=game,
-        bots=[random_bot, alphabeta_bot],
+        bots=[alphabeta_bot1, alphabeta_bot2],
         rng=random_state
     )
 

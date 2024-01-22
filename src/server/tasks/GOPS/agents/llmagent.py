@@ -1,11 +1,11 @@
 import numpy as np
 from typing import List
 from .agent import GOPSAgent
-from ..wrapper import SessionWrapper
+from ..wrapper import GOPSSessionWrapper
 from ..prompts import INITIALIZATION_MESSAGE
 from ..gops_exception import GOPSAgentActionException
 class LLMGOPSAgent(GOPSAgent):
-    def __init__(self, id: int, hand: List[int], session: SessionWrapper, **kargs) -> None:
+    def __init__(self, id: int, hand: List[int], session: GOPSSessionWrapper, **kargs) -> None:
         super().__init__(
             id       =    id,
             hand     =    hand,
@@ -112,17 +112,23 @@ The card you choose
             "content": game_prompt,
             "mode": "play_card"
         })
+        cards = eval(cards)
+        print("Cards: ", cards)
         for possible_card in cards:
-            possible_card = int(possible_card)
-            if possible_card in self.hand:
-                card = possible_card
-                break
+            try:
+                possible_card = int(possible_card)
+                if possible_card in self.hand:
+                    card = possible_card
+                    break
+            except:
+                print(possible_card)
         if card not in self.hand:
             cards = await self.session.action({
                 "role": "user",
                 "content": f"You do not have that card in your hand. Please play a card from your hand {self.hand}.",
                 "mode": "play_card"
             })
+        cards = eval(cards)
         for possible_card in cards:
             possible_card = int(possible_card)
             if possible_card in self.hand:

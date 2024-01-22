@@ -11,7 +11,7 @@ from .engine import *
 from .agents.naive import NaiveGOPSAgent
 from .agents.llmagent import LLMGOPSAgent
 
-from .wrapper import SessionWrapper
+from .wrapper import GOPSSessionWrapper
 from multi_agent.typings import FakeSession
 
 from src.typings import AgentContextLimitException
@@ -73,7 +73,7 @@ class GOPSBench(Task):
     async def start_sample(self, index: SampleIndex, session: Session) -> TaskSampleExecutionResult:
         assert isinstance(index, int), "Index must be an integer"
         proxy = MultiAgentProxy(session, num_agents=2)
-        sessions = [SessionWrapper(FakeSession(), proxy), SessionWrapper(FakeSession(), proxy)]
+        sessions = [GOPSSessionWrapper(session, proxy), GOPSSessionWrapper(session, proxy)]
         proxy.initialize_sessions(sessions)
         print(proxy.session_list)
 

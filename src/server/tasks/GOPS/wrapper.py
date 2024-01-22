@@ -6,23 +6,14 @@ from src.typings import AgentContextLimitException
 import re
 
 from multi_agent.typings import FakeSession, Proxy
+from multi_agent.session_wrapper import SessionWrapper
 
-class SessionWrapper:
+class GOPSSessionWrapper(SessionWrapper):
     def __init__(self, session: Union[Session, FakeSession], proxy: Proxy):
         self.session = session
         self.proxy = proxy
         self.decorate_method('action')
         self.decorate_method('inject')
-
-    def balance_history(self):
-        '''
-            TODO: Make this function look better
-        '''
-        if len(self.session.history) % 2 != 0:
-            self.inject({
-                'role': 'user',
-                'content': ''
-            })
 
     def decorate_method(self, method_name):
         # Get the method
@@ -34,7 +25,6 @@ class SessionWrapper:
     async def action(self, input: Dict):
         if isinstance(self.session, Session):
             print("SESSION")
-            self.balance_history()
             self.inject({
                 "role": input['role'],
                 "content": input['content']

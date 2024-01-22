@@ -9,6 +9,7 @@ from .avalon_exception import AvalonAgentActionException
 from src.utils import ColorMessage
 
 from multi_agent.typings import FakeSession, Proxy
+from multi_agent.session_wrapper import SessionWrapper
 
 class FakeSession:
     history: list=[]    # Fake history
@@ -23,23 +24,14 @@ class FakeSession:
     def inject(self, input: Dict):
         pass
 
-class SessionWrapper:
+class AvalonSessionWrapper(SessionWrapper):
     def __init__(self, session: Union[Session, FakeSession], proxy: Proxy):
+        # super().__init__(session, proxy)
         self.session = session
         self.proxy = proxy
         self.decorate_method('action')
         self.decorate_method('inject')
         self.decorate_method('parse_result')
-
-    def balance_history(self):
-        '''
-            TODO: Make this function look better
-        '''
-        if len(self.session.history) % 2 != 0:
-            self.inject({
-                'role': 'user',
-                'content': ''
-            })
 
     def decorate_method(self, method_name):
         # Get the method
@@ -54,8 +46,9 @@ class SessionWrapper:
     def overwrite_history(self, history: list):
         self.session.history = deepcopy(history)
 
-    def inject(self, input: Dict):
+    def inject(self, input: Dict, **kwargs):
         if isinstance(self.session, Session):
+            print("SESSION")
             self.session.inject({
                 'role': input['role'],
                 'content': input['content']
@@ -63,13 +56,14 @@ class SessionWrapper:
         elif isinstance(self.session, FakeSession):
             pass
 
-    async def action(self, input: Dict):
+    async def action(self, input: Dict=None, **kwargs):
         if isinstance(self.session, Session):
-            self.balance_history()
-            self.session.inject({
-                'role': input['role'],
-                'content': input['content']
-            })
+            if input is not None:
+                self.session.inject({
+                    'role': input['role'],
+                    'content': input['content']
+                })
+            self.proxy.balance_history()
             response = await self.session.action()
 
             if response.status == SampleStatus.AGENT_CONTEXT_LIMIT:
@@ -119,6 +113,31 @@ class SessionWrapper:
                     assert isinstance(answer, list)
                 except:
                     raise AvalonAgentActionException("Invalid team size with retry.")
+            elif max(answer) >= self.proxy.num_agents or min(answer) < 0:
+                # Run another action to get the correct team size
+                self.session.history = deepcopy(past_history)
+                self.session.inject({
+                    "role": "user",
+                    "content": f"You should choose a team of size {team_size} from Player 0 to {self.proxy.num_agents-1}, instead of team {answer} as you did. Please output a list of player ids with the correct team size and Player ids."
+                })
+                answer = await self.session.action()
+                answer = answer.content
+                past_history = deepcopy(self.session.history) # Update the history
+                self.session.history = [] # Clear the history
+
+                self.session.inject({
+                    "role": "user",
+                    "content": answer + '\n\n' + CHECK_CHOOSE_TEAM_PROMPT
+                })
+                answer = await self.session.action()
+                answer = answer.content
+                try:
+                    answer = get_team_result(answer)
+                    assert len(answer) == team_size
+                    assert isinstance(answer, list)
+                    assert max(answer) < self.proxy.num_agents and min(answer) >= 0
+                except:
+                    raise AvalonAgentActionException("Invalid Player ids with retry.")
 
         elif mode == "vote_on_team":
             self.session.inject({

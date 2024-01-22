@@ -1,1 +1,1 @@
-from .ops_task import GOPSBench
+from .task import GOPSBench

@@ -1,22 +1,49 @@
 from Search.headers import *
 import numpy as np
 
+class RandomActionPredictor(ActionPredictor):
+
+    def predict(self, state: State, actions, actor) -> dict:
+        '''
+        Predicts the policy probabilities across actions given the current state and actor
+
+        Args:
+            state: current state
+            actions: list of actions
+            actor: actor to predict policy for
+
+        Returns:
+            probs: dictionary of actions to probabilities
+        '''
+        probs = dict()
+        for action in actions:
+            probs[action] = 1/len(actions)
+        return probs
+
 class RandomRolloutValueHeuristic(ValueHeuristic):
 
-    def __init__(self, action_enumerator: ActionEnumerator, opponent_action_enumerator: OpponentActionEnumerator,
-                 forward_transitor: ForwardTransitor, rs_enumerator:RandomStateEnumerator, num_rollouts=100):
+    def __init__(self, actor_enumerator: ActorEnumerator, action_enumerator: ActionEnumerator,
+                  forward_transitor: ForwardTransitor, action_predictor: ActionPredictor = None,
+                  num_rollouts=100, random_state: np.random.RandomState=None):
         '''
         Args:
+            actor_enumerator: actor enumerator
             action_enumerator: action enumerator
-            opponent_action_enumerator: opponent action enumerator
+            action_predictor: action predictor
+            forward_transitor: forward transitor
             num_rollouts: number of rollouts to perform
         '''
         super().__init__()
+        self.actor_enumerator = actor_enumerator
         self.action_enumerator = action_enumerator
-        self.opponent_action_enumerator = opponent_action_enumerator
+        if action_predictor is None:
+            action_predictor = RandomActionPredictor()
+        self.action_predictor = action_predictor
         self.forward_transitor = forward_transitor
-        self.rs_enumerator = rs_enumerator
         self.num_rollouts = num_rollouts
+        if random_state is None:
+            random_state = np.random.RandomState()
+        self.random_state = random_state
 
     def evaluate(self, state: State):
         '''
@@ -34,28 +61,30 @@ class RandomRolloutValueHeuristic(ValueHeuristic):
             state = state.copy()
             # rollout
             while not state.is_done():
-                if state.state_type == 'simultaneous': # only works or 1 oppoenent atm
-                    # get actions
-                    actions = self.action_enumerator.enumerate(state)
-                    opponent_actions = self.opponent_action_enumerator.enumerate(state)
-                    # choose random action
-                    action = np.random.choice(list(actions))
-                    opponent_action = np.random.choice(list(opponent_actions))
-                    joint_action = (action, opponent_action)
-                    # step
-                    state = self.forward_transitor.transition(state, joint_action)
-                elif state.state_type == 'stochastic':
-                    # get actions
-                    actions = self.rs_enumerator.enumerate(state)
-                    # print('state', state)
-                    # print('actions', actions)
-                    # print('state type', state_copy.state_type)
-                    # choose random action
-                    action = np.random.choice(actions)
-                    # step
-                    state = self.forward_transitor.transition(state, action)
-                else:
-                    raise NotImplementedError
+
+                # print('rollout state', state)
+                # enumerate actors
+                actors = self.actor_enumerator.enumerate(state)
+                # print('rollout actors', actors)
+
+                joint_action = dict()
+
+                # for each actor get random action, add to joint action
+                for actor in actors:
+                    # print('rollout actor', actor)
+                    # enumerate actions
+                    actions = self.action_enumerator.enumerate(state, actor)
+                    # print('rollout actions', actions)
+                    # predict action probabilities
+                    probs = self.action_predictor.predict(state, actions, actor)
+                    # choose random action according to probs
+                    action = self.random_state.choice(list(probs.keys()), p=list(probs.values()))
+                    # add to joint action
+                    joint_action[actor] = action
+
+                # step
+                state = self.forward_transitor.transition(state, joint_action)
+
             # get reward. TODO: only implemented for end states
             values_estimates[i] = state.get_reward()
 

@@ -54,7 +54,7 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
                     if bot1_is_custom:
                         # Either is correct
                         # gops_state = open_spiel_state_to_gops_state(str(state))
-                        gops_state = GOPSState('simultaneous', prize_cards, player_cards, opponent_cards, num_cards)
+                        gops_state = GOPSState({0,1}, prize_cards, player_cards, opponent_cards, num_cards)
                         action = bot1.step(gops_state)
                     else:
                         action = bot1.step(state)
@@ -64,7 +64,7 @@ def run_gops_experiment(game, bots, num_episodes=100, rng=None):
                     if bot2_is_custom:
                         # Either is correct
                         # gops_state = open_spiel_state_to_gops_state(str(state))
-                        gops_state = GOPSState('simultaneous', prize_cards, opponent_cards, player_cards, num_cards)
+                        gops_state = GOPSState({0,1}, prize_cards, opponent_cards, player_cards, num_cards)
                         # print("Possible actions: ", action_enumerator.enumerate(gops_state))
                         action = bot2.step(gops_state)
                     else:

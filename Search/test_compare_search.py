@@ -44,21 +44,27 @@ class ABMinimaxGOPSCompare(unittest.TestCase):
     config = GOPSConfig(num_turns=num_cards, random_state=random_state)
     env = GOPSEnvironment(config)
 
-    num_games = 100
+    num_games = 10
 
     def test_compare(self):
         player_1_win_count = 0
         player_2_win_count = 0
         for i in tqdm(range(self.num_games)):
-            (score_1, score_2) = self.play_game()
+            (score_1, score_2, nodes_1, nodes_2) = self.play_game()
             if score_1 > score_2:
                 player_1_win_count += 1
             elif score_2 > score_1:
                 player_2_win_count += 1
         print('player 1 rate', player_1_win_count/self.num_games)
         print('player 2 rate', player_2_win_count/self.num_games)
+        print('player 1 average nodes expanded', nodes_1/self.num_games)
+        print('player 2 average nodes expanded', nodes_2/self.num_games)
 
     def play_game(self):
+        # reset search
+        self.search_1.reset_total_nodes_expanded()
+        self.search_2.reset_total_nodes_expanded()
+
         # play game
         player_1_played_cards = []
         player_2_played_cards = []
@@ -109,8 +115,8 @@ class ABMinimaxGOPSCompare(unittest.TestCase):
         # print('player 1 score', self.env.get_player1_score())
         # print('player 2 score', self.env.get_player2_score())
             
-        # return player scores
-        return (self.env.get_player1_score(), self.env.get_player2_score())
+        # return player scores and total nodes expanded
+        return (self.env.get_player1_score(), self.env.get_player2_score(), self.search_1.get_total_nodes_expanded(), self.search_2.get_total_nodes_expanded())
             
 
 

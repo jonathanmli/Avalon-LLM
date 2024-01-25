@@ -29,6 +29,9 @@ class Search:
         self.utility_estimator = utility_estimator
         self.actor_enumerator = actor_enumerator
         self.action_predictor = action_predictor
+
+        # for recording stats
+        self.total_nodes_expanded = 0
         
 
     def expand(self, node_id):
@@ -36,6 +39,12 @@ class Search:
         Expand starting from a node
         '''
         raise NotImplementedError
+    
+    def get_total_nodes_expanded(self):
+        return self.total_nodes_expanded
+    
+    def reset_total_nodes_expanded(self):
+        self.total_nodes_expanded = 0
 
 # TODO: refactor this to use the new model headers
 # class ValueBFS(Search):
@@ -266,7 +275,7 @@ class SMMinimax(Search):
         super().__init__(forward_transistor, value_heuristic, actor_enumerator,
                          action_enumerator, action_predictor, utility_estimator)
         
-        self.total_nodes_expanded = 0
+        
 
     def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False, revise = False, oracle = True):
         '''

@@ -4,7 +4,7 @@ class GOPSConfig():
     '''
     GOPS Configuration
     '''
-    def __init__(self, num_turns: int, custom_score_cards=None):
+    def __init__(self, num_turns: int, custom_score_cards=None, random_state=None):
         '''
         num_turns: number of turns in a game
         custom_score_cards: custom score cards (should be of shape (num_turns,))
@@ -19,6 +19,10 @@ class GOPSConfig():
         else:
             # default score cards are same as playing cards
             self.score_cards = self.playing_cards
+        # set random state
+        if random_state is None:
+            random_state = np.random.RandomState()
+        self.random_state = random_state
 
 class GOPSEnvironment():
     '''
@@ -55,7 +59,7 @@ class GOPSEnvironment():
         if len(self.score_card_deck) == 0:
             return None
         else:
-            score_card = np.random.choice(self.score_card_deck)
+            score_card = self.config.random_state.choice(self.score_card_deck)
             self.score_card_deck = np.delete(self.score_card_deck, np.where(self.score_card_deck == score_card))
             self.contested_points += score_card
             return score_card

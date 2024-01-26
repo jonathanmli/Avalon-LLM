@@ -32,9 +32,15 @@ class Search:
 
         # for recording stats
         self.total_nodes_expanded = 0
-        
+        self.nodes_expanded = 0
 
     def expand(self, node_id):
+        '''
+        Expand starting from a node
+        '''
+        return self._expand(node_id)
+        
+    def _expand(self, node_id):
         '''
         Expand starting from a node
         '''
@@ -45,6 +51,9 @@ class Search:
     
     def reset_total_nodes_expanded(self):
         self.total_nodes_expanded = 0
+
+    def get_nodes_expanded(self):
+        return self.nodes_expanded
 
 # TODO: refactor this to use the new model headers
 # class ValueBFS(Search):
@@ -275,9 +284,30 @@ class SMMinimax(Search):
         super().__init__(forward_transistor, value_heuristic, actor_enumerator,
                          action_enumerator, action_predictor, utility_estimator)
         
+    def expand(self, graph: ValueGraph, state: State, 
+               prev_node = None, depth=3, render = False, 
+               revise = False, oracle = True, 
+               node_budget=None):
+        '''
+        Expand starting from a node
         
+        Args:
+            state: state to expand from
+            depth: depth to expand to
+            render: whether to render the graph or not
+            revise: whether to revise the graph or not
+            oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy
 
-    def expand(self, graph: ValueGraph, state: State, prev_node = None, depth=3, render = False, revise = False, oracle = True):
+        Returns:
+            value: updated value of the node
+        '''
+        self.nodes_expanded = 0
+        return self._expand(graph, state, prev_node, depth, render, revise, oracle, node_budget)
+
+    def _expand(self, graph: ValueGraph, state: State, 
+                prev_node = None, depth=3, render = False, 
+                revise = False, oracle = True, 
+                node_budget=None):
         '''
         Expand starting from a node
         
@@ -293,6 +323,7 @@ class SMMinimax(Search):
         '''
 
         self.total_nodes_expanded += 1
+        self.nodes_expanded += 1
 
         if not oracle:
             raise NotImplementedError
@@ -319,6 +350,13 @@ class SMMinimax(Search):
             node.values_estimates.append(value)
             utility = self.utility_estimator.estimate(node)
             # print('Depth 0 state', state, 'value', utility)
+            return utility
+        elif node_budget is not None and self.nodes_expanded > node_budget:
+            # use heuristic to estimate value if node budget is exceeded
+            value = self.value_heuristic.evaluate(state)
+            node.values_estimates.append(value)
+            utility = self.utility_estimator.estimate(node)
+            # print('Node budget state', state, 'value', utility)
             return utility
         else:
             value = 0.0
@@ -348,7 +386,8 @@ class SMMinimax(Search):
                 # print('probs over actions', node.probs_over_actions)
                 for next_state in set(node.action_to_next_state.values()):
                     # print('next state', next_state)
-                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+                    next_state_to_values[next_state] = self._expand(graph, next_state, node, next_depth,
+                                                                    revise=revise, oracle=oracle, node_budget=node_budget)
                 
                 # print('next state to values', next_state_to_values)
 
@@ -396,7 +435,8 @@ class SMMinimax(Search):
                 for next_state in node.next_states:
                     # print('next state', next_state)
                     # print('next state hash', hash(next_state))
-                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+                    next_state_to_values[next_state] = self._expand(graph, next_state, node, next_depth,
+                                                                    revise=revise, oracle=oracle, node_budget=node_budget)
 
                 # print('next state to values', next_state_to_values)
 
@@ -440,9 +480,9 @@ class SMMinimax(Search):
                 plt.close()
                 # plt.show()
             
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
-            return utility
+        node.values_estimates.append(value)
+        utility = self.utility_estimator.estimate(node)
+        return utility
         
 class SMAlphaBetaMinimax(Search):
     '''
@@ -458,12 +498,35 @@ class SMAlphaBetaMinimax(Search):
         super().__init__(forward_transistor, value_heuristic, actor_enumerator,
                          action_enumerator, action_predictor, utility_estimator)
         
-        self.total_nodes_expanded = 0
+    def expand(self, graph: ValueGraph, state: State,
+                prev_node = None, depth=3, render = False, 
+                revise = False, oracle = True, 
+                alpha = -float('inf'), beta = float('inf'), threshold = 0.0,
+                node_budget=None):
+          '''
+          Expand starting from a node
+          
+          Args:
+                state: state to expand from
+                depth: depth to expand to
+                render: whether to render the graph or not
+                revise: whether to revise the graph or not
+                oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy
+                alpha: alpha value for alpha-beta pruning
+                beta: beta value for alpha-beta pruning
+                threshold: threshold for alpha-beta pruning
+    
+          Returns:
+                value: updated value of the node
+          '''
+          self.nodes_expanded = 0
+          return self._expand(graph, state, prev_node, depth, render, revise, oracle, alpha, beta, threshold, node_budget)
 
-    def expand(self, graph: ValueGraph, state: State, 
+    def _expand(self, graph: ValueGraph, state: State, 
                prev_node = None, depth=3, render = False, 
                revise = False, oracle = True, 
-               alpha = -float('inf'), beta = float('inf'), threshold = 0.0):
+               alpha = -float('inf'), beta = float('inf'), threshold = 0.0,
+               node_budget=None):
         '''
         Expand starting from a node
         
@@ -482,6 +545,7 @@ class SMAlphaBetaMinimax(Search):
         '''
 
         self.total_nodes_expanded += 1
+        self.nodes_expanded += 1
 
         if not oracle:
             raise NotImplementedError
@@ -508,6 +572,13 @@ class SMAlphaBetaMinimax(Search):
             node.values_estimates.append(value)
             utility = self.utility_estimator.estimate(node)
             # print('Depth 0 state', state, 'value', utility)
+            return utility
+        elif node_budget is not None and self.nodes_expanded > node_budget:
+            # use heuristic to estimate value if node budget is exceeded
+            value = self.value_heuristic.evaluate(state)
+            node.values_estimates.append(value)
+            utility = self.utility_estimator.estimate(node)
+            # print('Node budget state', state, 'value', utility)
             return utility
         else:
             value = 0.0
@@ -537,7 +608,11 @@ class SMAlphaBetaMinimax(Search):
                 # print('probs over actions', node.probs_over_actions)
                 for next_state in set(node.action_to_next_state.values()):
                     # print('next state', next_state)
-                    next_state_to_values[next_state] = self.expand(graph, next_state, node, next_depth)
+                    next_state_to_values[next_state] = self._expand(graph, next_state, node, next_depth,
+                                                                    revise=revise, oracle=oracle,
+                                                                    alpha = alpha, beta = beta,
+                                                                    threshold = threshold,
+                                                                    node_budget=node_budget)
                 
                 # print('next state to values', next_state_to_values)
 
@@ -578,10 +653,12 @@ class SMAlphaBetaMinimax(Search):
                         next_state = self.forward_transistor.transition(state, dict(joint_action))
                         node.next_states.add(next_state)
                         if next_state not in next_state_to_values:
-                            next_state_to_values[next_state] = self.expand(graph, next_state, 
+                            next_state_to_values[next_state] = self._expand(graph, next_state, 
                                                                            node, next_depth,
                                                                            alpha = alpha, beta = beta,
-                                                                           threshold = threshold)
+                                                                           threshold = threshold,
+                                                                           revise=revise, oracle=oracle,
+                                                                           node_budget=node_budget)
                         minvalue = min(minvalue, next_state_to_values[next_state])
                         if minvalue < alpha + threshold:
                             break

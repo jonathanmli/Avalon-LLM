@@ -22,6 +22,7 @@ class Node:
         self.parents = parents # parent nodes
         self.children = children # child nodes
         self.virtual = virtual # whether the node is virtual or not
+        self.attributes = dict() # other attributes of the node
 
     def __repr__(self):
         return f"Node({self.id})"

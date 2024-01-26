@@ -322,8 +322,8 @@ class SMMinimax(Search):
             value: updated value of the node
         '''
 
-        self.total_nodes_expanded += 1
-        self.nodes_expanded += 1
+        # self.total_nodes_expanded += 1
+        # self.nodes_expanded += 1
 
         if not oracle:
             raise NotImplementedError
@@ -344,10 +344,13 @@ class SMMinimax(Search):
         elif depth == 0:
             value = self.value_heuristic.evaluate(state)
             # print('Depth 0 state', state, 'value', utility)
-        elif node_budget is not None and self.nodes_expanded > node_budget:
+        elif node_budget is not None and self.nodes_expanded >= node_budget:
             # use heuristic to estimate value if node budget is exceeded
             value = self.value_heuristic.evaluate(state)
         else:
+            self.total_nodes_expanded += 1
+            self.nodes_expanded += 1
+
             value = 0.0
             next_state_to_values = dict()
             next_depth = depth if node.virtual else depth -1 # skip virtual nodes
@@ -367,11 +370,26 @@ class SMMinimax(Search):
                 # print('node actions', node.actions)
 
                 if not node.action_to_next_state or revise: # Dictionary is empty
+                    node.next_states = set()
                     for action in node.actions:
                         # print('action', action)
-                        node.action_to_next_state[action] = self.forward_transistor.transition(state, {-1: action})
+                        next_state = self.forward_transistor.transition(state, {-1: action})
+                        node.action_to_next_state[action] = next_state
+                        node.next_states.add(next_state)
                 if not node.probs_over_actions or revise: # Dictionary is empty
                     node.probs_over_actions = self.action_predictor.predict(state, node.actions, -1)
+
+                # print('node expanded random', self.nodes_expanded)
+
+                # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
+                
                 # print('probs over actions', node.probs_over_actions)
                 for next_state in set(node.action_to_next_state.values()):
                     # print('next state', next_state)
@@ -419,6 +437,17 @@ class SMMinimax(Search):
                     node.next_states = frozenset(node.next_states)
 
                 # print('next states', node.next_states)
+                
+                # print('nodes expanded simult', self.nodes_expanded)
+
+                # # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
 
                 # expand next states
                 for next_state in node.next_states:
@@ -533,8 +562,8 @@ class SMAlphaBetaMinimax(Search):
             value: updated value of the node
         '''
 
-        self.total_nodes_expanded += 1
-        self.nodes_expanded += 1
+        # self.total_nodes_expanded += 1
+        # self.nodes_expanded += 1
 
         if not oracle:
             raise NotImplementedError
@@ -551,26 +580,17 @@ class SMAlphaBetaMinimax(Search):
         # check if node is terminal
         if state.is_done():
             value = state.get_reward()
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
             # print('Terminal state', state, 'value', utility)
-            return utility
-
-        if depth == 0:
+        elif depth == 0:
             value = self.value_heuristic.evaluate(state)
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
             # print('Depth 0 state', state, 'value', utility)
-            return utility
-        elif node_budget is not None and self.nodes_expanded > node_budget:
+        elif node_budget is not None and self.nodes_expanded >= node_budget:
             # use heuristic to estimate value if node budget is exceeded
             value = self.value_heuristic.evaluate(state)
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
-            # print('Node budget state', state, 'value', utility)
-            return utility
         else:
             value = 0.0
+            self.total_nodes_expanded += 1
+            self.nodes_expanded += 1
             next_state_to_values = dict()
             next_depth = depth if node.virtual else depth -1 # skip virtual nodes
 
@@ -589,11 +609,25 @@ class SMAlphaBetaMinimax(Search):
                 # print('node actions', node.actions)
 
                 if not node.action_to_next_state or revise: # Dictionary is empty
+                    node.next_states = set()
                     for action in node.actions:
                         # print('action', action)
-                        node.action_to_next_state[action] = self.forward_transistor.transition(state, {-1: action})
+                        next_state = self.forward_transistor.transition(state, {-1: action})
+                        node.action_to_next_state[action] = next_state
+                        node.next_states.add(next_state)
                 if not node.probs_over_actions or revise: # Dictionary is empty
                     node.probs_over_actions = self.action_predictor.predict(state, node.actions, -1)
+
+                
+
+                # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
                 # print('probs over actions', node.probs_over_actions)
                 for next_state in set(node.action_to_next_state.values()):
                     # print('next state', next_state)
@@ -625,13 +659,34 @@ class SMAlphaBetaMinimax(Search):
 
                 # print([x for x in itertools.product(*node.actor_to_actions.values())])
                         
-                # create next states
-                if node.next_states is None or revise:
-                    node.next_states = set()
+                # # create next states
+                # if node.next_states is None or revise:
+                #     node.next_states = set()
 
                 # set proaction to value to be -inf
                 for proaction in node.actor_to_actions[0]:
                     node.proaction_to_value[proaction] = -float('inf')
+
+                # find next states
+                if node.next_states is None or revise:
+                    node.next_states = set()
+                    # print('next states not found')
+                    for proaction in node.actor_to_actions[0]:
+                        for adaction in node.actor_to_actions[1]:
+                            joint_action = ((0, proaction), (1, adaction))
+                            next_state = self.forward_transistor.transition(state, dict(joint_action))
+                            node.next_states.add(next_state)
+                            node.action_to_next_state[joint_action] = next_state
+                            # print('joint action', joint_action, 'next state', next_state)
+
+                # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
                 
                 # print('actions', node.actions) 
                 maxvalue = -float('inf')
@@ -639,8 +694,7 @@ class SMAlphaBetaMinimax(Search):
                     minvalue = float('inf')
                     for adaction in node.actor_to_actions[1]:
                         joint_action = ((0, proaction), (1, adaction))
-                        next_state = self.forward_transistor.transition(state, dict(joint_action))
-                        node.next_states.add(next_state)
+                        next_state = node.action_to_next_state[joint_action]
                         if next_state not in next_state_to_values:
                             next_state_to_values[next_state] = self._expand(graph, next_state, 
                                                                            node, next_depth,
@@ -683,6 +737,6 @@ class SMAlphaBetaMinimax(Search):
                 plt.close()
                 # plt.show()
             
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
-            return utility
+        node.values_estimates.append(value)
+        utility = self.utility_estimator.estimate(node)
+        return utility

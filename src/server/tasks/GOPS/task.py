@@ -10,6 +10,7 @@ from src.utils import ColorMessage
 from .engine import *
 from .agents.naive import NaiveGOPSAgent
 from .agents.llmagent import LLMGOPSAgent
+from .agents.smminimax import SMMinimaxCustomBot
 
 from .wrapper import GOPSSessionWrapper
 from multi_agent.typings import FakeSession
@@ -20,7 +21,8 @@ from multi_agent.proxy import MultiAgentProxy
 
 AGENT_FINDER = {
     'naive': NaiveGOPSAgent,
-    'llm': LLMGOPSAgent
+    'llm': LLMGOPSAgent,
+    'smminimax': SMMinimaxCustomBot
 }
 
 class GOPSBench(Task):
@@ -72,6 +74,7 @@ class GOPSBench(Task):
 
     async def start_sample(self, index: SampleIndex, session: Session) -> TaskSampleExecutionResult:
         assert isinstance(index, int), "Index must be an integer"
+        print("test-1")
         proxy = MultiAgentProxy(session, num_agents=2)
         sessions = [GOPSSessionWrapper(session, proxy), GOPSSessionWrapper(session, proxy)]
         proxy.initialize_sessions(sessions)
@@ -89,11 +92,13 @@ class GOPSBench(Task):
             hand    =   deepcopy(env.player1_hand),
             session =   sessions[0]
         )
+        print("test0")
         player2 = AGENT_FINDER[self.agent_list[1]](
             id      =   1,
             hand    =   deepcopy(env.player2_hand),
             session =   sessions[1]
         )
+        print("0.0")
 
         for player in [player1, player2]:
             await player.initialize()
@@ -101,6 +106,9 @@ class GOPSBench(Task):
 
         print(f"Welcome {player1} and {player2} to GOPS!")
         state = ''
+        prize_cards = []
+        player_cards = []
+        opponent_cards = []
         while not done:
             print(f"Current score: {player1}: {env.player1_score}, {player2}: {env.player2_score}")
             print(f"Current contested points: {contested_points}, current contested score card: {score_card}")
@@ -113,38 +121,61 @@ class GOPSBench(Task):
             reserved_p1_hand = list(player1.hand)
             reserved_p2_hand = list(player2.hand)
 
-            move1 = await player1.step(
-                state               =    state,
-                opponent_hand       =    reserved_p2_hand,
-                contested_scores    =    contested_points,
-                score_card_left     =    score_card_left
-            )
-            pid = proxy.get_next_agent()
-            print(f"{player2}, play a card out of {env.player2_hand}")
-            move2 = await player2.step(
-                state               =    state,
-                opponent_hand       =    reserved_p1_hand,
-                contested_scores    =    contested_points,
-                score_card_left     =    score_card_left
-            )
-            pid = proxy.get_next_agent()
+            prize_cards.append(score_card)
 
-            await player1.observe_round(
-                contested_points    =   contested_points,
-                your_card           =   move1,
-                opponent_card       =   move2,
-                round_id            =   round_id
+            print("test1")
+
+            move1 = await player1.step(
+                prize_cards = prize_cards,
+                player_cards = player_cards,
+                opponent_cards = opponent_cards,
             )
-            pid = proxy.get_next_agent()
-            print("Next player: ", pid)
-            await player2.observe_round(
-                contested_points    =   contested_points,
-                your_card           =   move2,
-                opponent_card       =   move1,
-                round_id            =   round_id
+            print("move1: ", move1)
+
+            move2 = await player2.step(
+                prize_cards = prize_cards,
+                player_cards = opponent_cards,
+                opponent_cards = player_cards,
             )
-            pid = proxy.get_next_agent()
-            print("Next player: ", pid)
+            print("move2: ", move2)
+
+            print("test2")
+
+            # move1 = await player1.step(
+            #     state               =    state,
+            #     opponent_hand       =    reserved_p2_hand,
+            #     contested_scores    =    contested_points,
+            #     score_card_left     =    score_card_left
+            # )
+            # pid = proxy.get_next_agent()
+            # print(f"{player2}, play a card out of {env.player2_hand}")
+            # move2 = await player2.step(
+            #     state               =    state,
+            #     opponent_hand       =    reserved_p1_hand,
+            #     contested_scores    =    contested_points,
+            #     score_card_left     =    score_card_left
+            # )
+            # pid = proxy.get_next_agent()
+
+            # await player1.observe_round(
+            #     contested_points    =   contested_points,
+            #     your_card           =   move1,
+            #     opponent_card       =   move2,
+            #     round_id            =   round_id
+            # )
+            # pid = proxy.get_next_agent()
+            # print("Next player: ", pid)
+            # await player2.observe_round(
+            #     contested_points    =   contested_points,
+            #     your_card           =   move2,
+            #     opponent_card       =   move1,
+            #     round_id            =   round_id
+            # )
+            # pid = proxy.get_next_agent()
+            # print("Next player: ", pid)
+
+            player_cards.append(move1)
+            opponent_cards.append(move2)
 
             (done, score_card, contested_points) = env.play_cards(int(move1), int(move2))
             print(f"{player1} played {move1}, {player2} played {move2}")

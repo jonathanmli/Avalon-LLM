@@ -340,24 +340,13 @@ class SMMinimax(Search):
         # check if node is terminal
         if state.is_done():
             value = state.get_reward()
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
             # print('Terminal state', state, 'value', utility)
-            return utility
-
-        if depth == 0:
+        elif depth == 0:
             value = self.value_heuristic.evaluate(state)
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
             # print('Depth 0 state', state, 'value', utility)
-            return utility
         elif node_budget is not None and self.nodes_expanded > node_budget:
             # use heuristic to estimate value if node budget is exceeded
             value = self.value_heuristic.evaluate(state)
-            node.values_estimates.append(value)
-            utility = self.utility_estimator.estimate(node)
-            # print('Node budget state', state, 'value', utility)
-            return utility
         else:
             value = 0.0
             next_state_to_values = dict()

@@ -270,7 +270,11 @@ class AvalonGameEnvironment():
         '''
         returns team size
         '''
-        return self.num_players_for_quest[self.turn]
+        try:
+            return self.num_players_for_quest[self.turn]
+        except:
+            self.turn -= 1
+            return self.num_players_for_quest[self.turn]
     
     def choose_quest_team(self, team: frozenset, leader):
         '''

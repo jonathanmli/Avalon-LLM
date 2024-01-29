@@ -87,6 +87,7 @@ class LLMAgentWithDiscussion(Agent):
             "content": identity_prompt + '\n' + reveal_info,
             "mode": "system",
         })
+        self.system_info = content_prompt + '\n' + identity_prompt + '\n' + reveal_info
 
     async def summarize(self) -> None:
         # print("Summary")
@@ -96,9 +97,13 @@ class LLMAgentWithDiscussion(Agent):
             "content": "Please summarize the history. Try to keep all useful information, including your identity, other player's identities, and your observations in the game.",
             "mode": "summarize"
         })
-        # print("Summary: ", summary)
+        print("Summary: ", summary)
         past_history = deepcopy(self.session.get_history())
-        self.session.overwrite_history(past_history[:2])
+        self.session.overwrite_history([])
+        self.session.inject({
+            'role': "user",
+            'content': self.system_info
+        })
         self.session.inject({
             'role': "user",
             'content': summary
@@ -128,6 +133,8 @@ class LLMAgentWithDiscussion(Agent):
             input   =   input,
             result  =   believed_player_sides
         )
+        if isinstance(believed_player_sides, str):
+            believed_player_sides = eval(believed_player_sides)
         print("Sides: ", believed_player_sides)
         return believed_player_sides
 
@@ -198,9 +205,9 @@ class LLMAgentWithDiscussion(Agent):
     async def vote_on_team(self, team, mission_id):
         """Vote to approve or reject a team.
 
-        If there's no discussion phase, we will summarize the history before the vote phase.
+        If there's discussion phase, we will summarize the history before the vote phase.
         """
-        if not self.discussion:
+        if self.discussion:
             await self.summarize()
 
         content_prompt = VOTE_TEAM_ACTION.format(list(team))
@@ -279,6 +286,7 @@ class LLMAgentWithDiscussion(Agent):
         }
         # self.session.inject(input)
         assassinate_result = await self.session.action(input)
+        # assassinate_result = int(assassinate_result)
 
         print()
         print(ColorMessage.cyan(f"##### LLM Agent (Player {self.id}, Role: {self.role_name}) #####"))
@@ -287,6 +295,7 @@ class LLMAgentWithDiscussion(Agent):
 
         if isinstance(self.session.session, Session):
             assassinate_result = await self.session.parse_result(input, assassinate_result)
+            assassinate_result = int(assassinate_result)
 
         if isinstance(assassinate_result, int):
             return assassinate_result

@@ -49,6 +49,3 @@ class ChatAgent:
             reply_agent=self.id,
             receiver=receiver
         )
-
-    def receive(self):
-        pass

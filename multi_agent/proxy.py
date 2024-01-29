@@ -120,18 +120,12 @@ class MultiAgentProxy(Proxy):
             require_reply = kwargs.pop("require_reply", False)
             print("Action...")
             self.set_current_agent(sender)
-            # reply all the previously buffered messages
-            # print(self.current_agent)
-            # while not self.message_buffer[self.current_agent].empty():
-            #     message, max_rounds, sender = self.message_buffer[self.current_agent].get()
-            #     await self.generate_reply(message, max_rounds, sender)
 
             self.balance_history()
-            # call action
-            # print(input)
-            print("Calling action...")
+
+            # take action
             result = await method(*args, **kwargs)
-            # print(self.session.history)
+
             self.update_history(self.current_agent, self.session.history)
 
             if not isinstance(result, str):
@@ -139,8 +133,6 @@ class MultiAgentProxy(Proxy):
 
             if max_rounds > 0:
                 require_reply = True
-            else:
-                require_reply = False
 
             if require_reply:
                 max_rounds = max(1, max_rounds)
@@ -246,26 +238,24 @@ class MultiAgentProxy(Proxy):
                 "content": reply,
             }, max_rounds-1, sender))
         self.history[self.current_agent] = deepcopy(self.session.history)
-        
 
 
     def clean_buffer(self,):
         self.message_buffer = [MessageBuffer() for _ in range(self.num_agents)]
 
+
     def clean_history(self):
         self.history = [[] for _ in range(self.num_agents)]
         self.session.history = []
-
+        
     
     def get_next_agent(self) -> int:
-        print("Next agent...")
         next_agent_id = (self.current_agent + 1) % self.num_agents
         self.set_current_agent(next_agent_id)
         return self.current_agent
     
     
     def set_current_agent(self, agent_id: int) -> int:
-        print(f"Setting current agent to {agent_id}...")
         self.history[self.current_agent] = deepcopy(self.session.history)
         self.current_agent = agent_id
         self.session.history = deepcopy(self.history[self.current_agent])

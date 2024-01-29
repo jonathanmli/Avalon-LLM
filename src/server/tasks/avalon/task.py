@@ -128,208 +128,211 @@ class AvalonBench(Task):
             
             proxy.get_next_agent()
         
-        # try:
-        while not env.done:
-            phase = env.get_phase()[0]
-            print()
-            print(ColorMessage.orange(f"##### Mission {env.turn}, Round {env.round} #####"))
-            
-            # if phase is team selection phase, ask for team
-            if phase == 0:
-                leader = env.get_quest_leader()
-                game_env_log.append(f"Selection Phase, the leader is Player {leader}")
+        try:
+            while not env.done:
+                phase = env.get_phase()[0]
                 print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print(f"Selection Phase, the leader is Player {leader}")
-                """
-                Leader speaks & Discussion
-                """
-                if self.discussion:
-                    # Leader speaks
+                print(ColorMessage.orange(f"##### Mission {env.turn}, Round {env.round} #####"))
+                
+                # if phase is team selection phase, ask for team
+                if phase == 0:
+                    leader = env.get_quest_leader()
+                    game_env_log.append(f"Selection Phase, the leader is Player {leader}")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print(f"Selection Phase, the leader is Player {leader}")
+                    """
+                    Leader speaks & Discussion
+                    """
+                    if self.discussion:
+                        # Leader speaks
+                        proxy.set_current_agent(leader)
+                        for idx, player in enumerate(player_list):
+                            proxy.set_current_agent(idx)
+                            await player.summarize()
+                        # print("Test: ", player_list[leader].team_discussion)
+                        # team, statement = await player_list[leader].test()
+                        # print(leader)
+                        # print(player_list[leader].team_discussion)
+                        await player_list[leader].team_discussion(
+                                team_size           =   env.get_team_size(),
+                                team_leader_id      =   leader,
+                                mission_id          =   env.turn
+                            )
+
+                        # Discussion (sequential, once, in order for now) and Summarize
+                        for idx, player in enumerate(player_list):
+                            proxy.set_current_agent(idx)
+                            if idx == leader:
+                                continue
+                            await player.team_discussion(
+                                team_size           =   env.get_team_size(),
+                                team_leader_id      =   leader,
+                                mission_id          =   env.turn
+                            )
+
+                        # for idx, player in enumerate(player):
+                        #     proxy.set_current_agent(idx)
+                        #     player.discussion_end(
+                        #         leader              =   leader,
+                        #         leader_statement    =   statement,
+                        #     )
+
+                    # Choose a team
+                    print(player_list[leader].propose_team)
                     proxy.set_current_agent(leader)
-                    for idx, player in enumerate(player_list):
-                        proxy.set_current_agent(idx)
-                        await player.summarize()
-                    # print("Test: ", player_list[leader].team_discussion)
-                    # team, statement = await player_list[leader].test()
-                    # print(leader)
-                    # print(player_list[leader].team_discussion)
-                    await player_list[leader].team_discussion(
-                            team_size           =   env.get_team_size(),
-                            team_leader_id      =   leader,
-                            mission_id          =   env.turn
-                        )
-
-                    # Discussion (sequential, once, in order for now) and Summarize
-                    for idx, player in enumerate(player_list):
-                        proxy.set_current_agent(idx)
-                        if idx == leader:
-                            continue
-                        await player.team_discussion(
-                            team_size           =   env.get_team_size(),
-                            team_leader_id      =   leader,
-                            mission_id          =   env.turn
-                        )
-
-                    # for idx, player in enumerate(player):
-                    #     proxy.set_current_agent(idx)
-                    #     player.discussion_end(
-                    #         leader              =   leader,
-                    #         leader_statement    =   statement,
-                    #     )
-
-                # Choose a team
-                print(player_list[leader].propose_team)
-                proxy.set_current_agent(leader)
-                team = await player_list[leader].propose_team(
-                    team_size           =   env.get_team_size(),
-                    mission_id          =   env.turn,
-                )
-                env.choose_quest_team(
-                    team   =  frozenset(team),
-                    leader =  leader
-                )
-                game_env_log.append(f"Leader Player {leader} chooses team {list(team)}")
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print(f"Leader Player {leader} chooses team {list(team)}")
-
-            # if phase is team voting phase, ask for votes
-            elif phase == 1:
-                game_env_log.append("Team Voting Phase")
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print("Team voting Phase")
-                discussion_history = []
-                votes = []
-                proxy.set_current_agent(0)
-                for i in range(num_players):
-                    proxy.set_current_agent(i)
-                    vote = await player_list[i].vote_on_team(
-                        team                =   env.get_current_quest_team(),
+                    team = await player_list[leader].propose_team(
+                        team_size           =   env.get_team_size(),
                         mission_id          =   env.turn,
-                        )
-                    votes.append(vote)
-                votes = [
-                    await player_list[i].vote_on_team(
-                        team                =   env.get_current_quest_team(),
-                        mission_id          =   env.turn
-                        ) for i in range(num_players)
-                        ]
-                outcome = env.gather_team_votes(votes)
-                game_env_log.append(f"Team votes at this round: {str(votes)}")
-
-                # Observe results of Team Selection
-                for idx, player in enumerate(player_list):
-                    proxy.set_current_agent(idx)
-                    # await player.observe_team_result(
-                    #     mission_id  =   env.turn,
-                    #     team        =   env.get_current_quest_team(),
-                    #     votes       =   votes,
-                    #     outcome     =   outcome[2],
-                    # )
-
-                game_env_log.append("Team result: " + verbalize_team_result(team=env.get_current_quest_team(), votes=votes, outcome=outcome[2]))
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print("Team result: " + verbalize_team_result(team=env.get_current_quest_team(), votes=votes, outcome=outcome[2]))
-
-
-            # if phase is quest voting phase, ask for votes
-            elif phase == 2:
-                game_env_log.append("Quest Voting Phase")
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print("Quest Voting Phase")
-                '''
-                TODO: Can have a discussion before voting on quest
-                '''
-                votes = []
-                for i in env.get_current_quest_team():
-                    proxy.set_current_agent(i)
-                    vote = await player_list[i].vote_on_mission(
-                        team                =   env.get_current_quest_team(),
-                        mission_id          =   env.turn,
-                        )
-                    votes.append(vote)
-                votes = [
-                    await player_list[i].vote_on_mission(
-                        team=env.get_current_quest_team(),
-                        mission_id=env.turn,
-                        ) for i in env.get_current_quest_team()
-                        ]
-                outcome = env.gather_quest_votes(votes)
-                game_env_log.append(f"Quest votes at this round: {str(votes)}")
-
-                # Observe mission/quest result
-                proxy.set_current_agent(0)
-                for idx, player in enumerate(player_list):
-                    proxy.set_current_agent(idx)
-                    await player.observe_mission(
-                        team        =   env.get_current_quest_team(),
-                        mission_id  =   env.turn-1,
-                        num_fails   =   outcome[3],
-                        votes       =   votes,
-                        outcome     =   outcome[2],
                     )
+                    env.choose_quest_team(
+                        team   =  frozenset(team),
+                        leader =  leader
+                    )
+                    game_env_log.append(f"Leader Player {leader} chooses team {list(team)}")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print(f"Leader Player {leader} chooses team {list(team)}")
 
-                game_env_log.append("Quest result: " + verbalize_mission_result(team=env.get_current_quest_team(), outcome=outcome[2]))
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print("Quest result: " + verbalize_mission_result(team=env.get_current_quest_team(), outcome=outcome[2]))
+                # if phase is team voting phase, ask for votes
+                elif phase == 1:
+                    game_env_log.append("Team Voting Phase")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print("Team voting Phase")
+                    discussion_history = []
+                    votes = []
+                    proxy.set_current_agent(0)
+                    for i in range(num_players):
+                        proxy.set_current_agent(i)
+                        vote = await player_list[i].vote_on_team(
+                            team                =   env.get_current_quest_team(),
+                            mission_id          =   env.turn,
+                            )
+                        votes.append(vote)
+                    votes = [
+                        await player_list[i].vote_on_team(
+                            team                =   env.get_current_quest_team(),
+                            mission_id          =   env.turn
+                            ) for i in range(num_players)
+                            ]
+                    outcome = env.gather_team_votes(votes)
+                    game_env_log.append(f"Team votes at this round: {str(votes)}")
+
+                    # Observe results of Team Selection
+                    for idx, player in enumerate(player_list):
+                        proxy.set_current_agent(idx)
+                        # await player.observe_team_result(
+                        #     mission_id  =   env.turn,
+                        #     team        =   env.get_current_quest_team(),
+                        #     votes       =   votes,
+                        #     outcome     =   outcome[2],
+                        # )
+
+                    game_env_log.append("Team result: " + verbalize_team_result(team=env.get_current_quest_team(), votes=votes, outcome=outcome[2]))
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print("Team result: " + verbalize_team_result(team=env.get_current_quest_team(), votes=votes, outcome=outcome[2]))
+
+
+                # if phase is quest voting phase, ask for votes
+                elif phase == 2:
+                    game_env_log.append("Quest Voting Phase")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print("Quest Voting Phase")
+                    '''
+                    TODO: Can have a discussion before voting on quest
+                    '''
+                    votes = []
+                    for i in env.get_current_quest_team():
+                        proxy.set_current_agent(i)
+                        vote = await player_list[i].vote_on_mission(
+                            team                =   env.get_current_quest_team(),
+                            mission_id          =   env.turn,
+                            )
+                        votes.append(vote)
+                    votes = [
+                        await player_list[i].vote_on_mission(
+                            team=env.get_current_quest_team(),
+                            mission_id=env.turn,
+                            ) for i in env.get_current_quest_team()
+                            ]
+                    outcome = env.gather_quest_votes(votes)
+                    game_env_log.append(f"Quest votes at this round: {str(votes)}")
+
+                    # Observe mission/quest result
+                    proxy.set_current_agent(0)
+                    for idx, player in enumerate(player_list):
+                        proxy.set_current_agent(idx)
+                        await player.observe_mission(
+                            team        =   env.get_current_quest_team(),
+                            mission_id  =   env.turn-1,
+                            num_fails   =   outcome[3],
+                            votes       =   votes,
+                            outcome     =   outcome[2],
+                        )
+
+                    game_env_log.append("Quest result: " + verbalize_mission_result(team=env.get_current_quest_team(), outcome=outcome[2]))
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print("Quest result: " + verbalize_mission_result(team=env.get_current_quest_team(), outcome=outcome[2]))
+                
+                # if phase is assassination phase, ask for assassination
+                elif phase == 3:
+                    game_env_log.append("Assassination phase")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print("Assassination phase")
+                    '''
+                        TODO: Discussion before Assassination Phase
+                    '''
+                    # assassin = env.get_assassin()
+                    for idx, player in enumerate(player_list):
+                        if player.role == 7:
+                            assassin = idx
+                    proxy.set_current_agent(assassin)
+                    target = int(await player_list[assassin].assassinate())
+
+                    _, _, assassinated = env.choose_assassination_target(assassin, target)
+                    game_env_log.append(f"Assassin Player {assassin} chooses to assassinate Player {target}")
+                    print()
+                    print(ColorMessage.cyan(f"##### System #####"))
+                    print()
+                    print(f"Assassin Player {assassin} chooses to assassinate Player {target}")
             
-            # if phase is assassination phase, ask for assassination
-            elif phase == 3:
-                game_env_log.append("Assassination phase")
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print("Assassination phase")
-                '''
-                    TODO: Discussion before Assassination Phase
-                '''
-                assassin = env.get_assassin()
-                proxy.set_current_agent(assassin)
-                target = int(await player_list[assassin].assassinate())
+            # reflect sides of each player at the end of the game
+            for idx, player in enumerate(player_list):
+                proxy.set_current_agent(idx)
+                if idx == llm_idx:
+                    llm_believed_player_sides = await player.get_believed_sides(num_players=self.num_players)
 
-                _, _, assassinated = env.choose_assassination_target(assassin, target)
-                game_env_log.append(f"Assassin Player {assassin} chooses to assassinate Player {target}")
-                print()
-                print(ColorMessage.cyan(f"##### System #####"))
-                print()
-                print(f"Assassin Player {assassin} chooses to assassinate Player {target}")
-        
-        # reflect sides of each player at the end of the game
-        for idx, player in enumerate(player_list):
-            proxy.set_current_agent(idx)
-            if idx == llm_idx:
-                llm_believed_player_sides = await player.get_believed_sides(num_players=self.num_players)
+                    true_player_sides.append(list(map(int, env.is_good)))
+                    believed_player_sides.append(llm_believed_player_sides)
 
-                true_player_sides.append(list(map(int, env.is_good)))
-                believed_player_sides.append(llm_believed_player_sides)
-
-        if env.good_victory:
-            answer = 1
-        else:
-            if sum(env.quest_results) >= 3:
-                answer = 0
+            if env.good_victory:
+                answer = 1
             else:
-                answer = -1
-        finish_reason = SampleStatus.COMPLETED
+                if sum(env.quest_results) >= 3:
+                    answer = 0
+                else:
+                    answer = -1
+            finish_reason = SampleStatus.COMPLETED
 
-        # except AgentContextLimitException as e1:
-        #     return TaskSampleExecutionResult(status=SampleStatus.AGENT_CONTEXT_LIMIT)
-        # except AvalonAgentActionException as e2:
-        #     return TaskSampleExecutionResult(status=SampleStatus.AGENT_INVALID_ACTION, result={"result": False, "error": e2})
-        # except Exception as e:
-        #     finish_reason = SampleStatus.AGENT_VALIDATION_FAILED
-        #     return TaskSampleExecutionResult(status=finish_reason, result={"result": False, "error": e})
+        except AgentContextLimitException as e1:
+            return TaskSampleExecutionResult(status=SampleStatus.AGENT_CONTEXT_LIMIT)
+        except AvalonAgentActionException as e2:
+            return TaskSampleExecutionResult(status=SampleStatus.AGENT_INVALID_ACTION, result={"result": False, "error": e2})
+        except Exception as e:
+            finish_reason = SampleStatus.AGENT_VALIDATION_FAILED
+            return TaskSampleExecutionResult(status=finish_reason, result={"result": False, "error": e})
         
         verbal_game_result = {
             -1: "Evil wins by mission!",

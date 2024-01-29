@@ -44,6 +44,7 @@ class AvalonSessionWrapper(SessionWrapper):
         return self.session.history
 
     def overwrite_history(self, history: list):
+        self.proxy.history[self.proxy.current_agent] = deepcopy(history)
         self.session.history = deepcopy(history)
 
     def inject(self, input: Dict, **kwargs):

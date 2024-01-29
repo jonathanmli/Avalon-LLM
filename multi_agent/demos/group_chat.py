@@ -26,7 +26,7 @@ async def main():
     agent3 = ChatAgent(2, wrapper2, "You are Player 3. When generating responses, please directly output what you want to say. You don't need to output `Player x says:`")
 
     # Initialize the group chat with send()
-    await agent1.send("all", "You will be talking to two other agents. Say hi!", max_rounds=0)
+    await agent1.send("all", "You will be talking to two other agents on the topic of jazz music. Say hi!", max_rounds=0)
 
     # Replying the message by calling reply()
     await agent2.reply()
@@ -35,7 +35,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-

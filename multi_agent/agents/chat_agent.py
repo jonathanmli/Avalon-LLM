@@ -29,8 +29,7 @@ class ChatAgent:
         await self.session.action(
             sender=self.id,
             receiver=receiver,
-            max_rounds=max_rounds,
-            require_reply=True
+            max_rounds=max_rounds
         )
 
     async def reply_all(self):

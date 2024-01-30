@@ -108,12 +108,6 @@ class MultiAgentProxy(Proxy):
         
         @functools.wraps(method)
         async def async_wrapper(*args, **kwargs):
-            # input = args[0]
-            # input = {
-            #     "role": input['role'],
-            #     "content": input['content']
-            # }
-            # prepare keyword arguments
             sender = kwargs.pop("sender", self.current_agent)
             receiver = kwargs.pop("receiver", None)
             max_rounds = kwargs.pop("max_rounds", 0)
@@ -247,7 +241,7 @@ class MultiAgentProxy(Proxy):
     def clean_history(self):
         self.history = [[] for _ in range(self.num_agents)]
         self.session.history = []
-        
+
     
     def get_next_agent(self) -> int:
         next_agent_id = (self.current_agent + 1) % self.num_agents

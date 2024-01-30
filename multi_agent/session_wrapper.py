@@ -41,7 +41,7 @@ class SessionWrapper:
     def inject(self, input: Dict, **kwargs):
         agent_id = kwargs.pop("agent_id", None)
         if agent_id is not None:
-            print("Injecting: ", agent_id)
+            # print("Injecting: ", agent_id)
             self.proxy.set_current_agent(agent_id)
         self.session.inject(input)
 
@@ -73,7 +73,6 @@ class SessionWrapper:
         self.proxy.set_current_agent(reply_agent)
         if self.proxy.message_buffer[reply_agent].has_agent_id(receiver):
             message, max_rounds, sender = self.proxy.message_buffer[reply_agent].get_by_agent_id(receiver)
-            print(max_rounds)
             await self.proxy.generate_reply(
                 message     =   message,
                 max_rounds  =   max_rounds,

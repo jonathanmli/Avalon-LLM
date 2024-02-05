@@ -36,13 +36,40 @@ Thought:
 your thoughts here
 
 Probability:
-the probability here''', '''Given the current situation, what is the value of the game? Write down your thoughts and rate on a scale from 0 (no value) to 10 (extremely valuable).
+the probability here''', 
+'''Given the current situation, what is the value of the game? Write down your thoughts and rate on a scale from 0 (no value) to 10 (extremely valuable).
 
 Thoughts:
 your thoughts here
 
 Value:
-the value here''']
+the value here''',
+'''Given the current situation, how many more points do you expect to get than your opponent at the end? Write down your thoughts and output the number of points.
+
+Thought:
+your thoughts here
+
+Points:
+the number of points here''', 
+'''Given the current situation, how many more points do you expect to win in the future? Write down your thoughts and output the number of points.
+
+Thought:
+your thoughts here
+
+Points:
+the number of points here''',
+'''Given the current situation, how many points have you won so far? Write down your thoughts and output the number of points.
+
+Thought:
+your thoughts here
+
+Points:
+the number of points here''',
+]
+
+REPRESENTATION_PROMPTS = ['''
+What does this game state tell us about the current situation? Write down your thoughts and output the representation.
+                          ''']
 
 OPPONENT_ACTION_ENUMERATOR_PROMPT = '''Recall the rules of the game and enumerate the possible actions that the opponent could take currently. Write down your thoughts and output the list of actions.
 

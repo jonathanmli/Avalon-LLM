@@ -44,8 +44,8 @@ class ABMinimaxGOPSCompare(unittest.TestCase):
     config = GOPSConfig(num_turns=num_cards, random_state=random_state)
     env = GOPSEnvironment(config)
 
-    num_games = 10
-    node_budget = 100
+    num_games = 50
+    node_budget = 8
 
     def test_compare(self):
         player_1_win_count = 0

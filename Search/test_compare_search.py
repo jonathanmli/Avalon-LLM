@@ -94,10 +94,10 @@ class ABMinimaxGOPSCompare(unittest.TestCase):
                 opponent_cards=tuple(player_2_played_cards),
                 num_cards=self.num_cards
             )
-            self.search_1.expand(self.graph_1, state, depth=3, node_budget=self.node_budget)
+            self.search_1.expand(self.graph_1, state, depth=4, node_budget=self.node_budget)
             action_1 = self.graph_1.get_best_action(state)
 
-            # print('nodes expanded alpha beta', self.search_1.get_nodes_expanded())
+            print('nodes expanded alpha beta', self.search_1.get_nodes_expanded())
             
 
             # player 2

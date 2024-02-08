@@ -168,12 +168,13 @@ class ValueHeuristic():
     def __init__(self):
         pass
     
-    def evaluate(self, state: State):
+    def evaluate(self, state: State, actor=0):
         '''
         Evaluates the state
 
         Args:
             state: current state
+            actor: actor to evaluate the state for, default is 0 (main player)
 
         Returns:
             value: value of the state

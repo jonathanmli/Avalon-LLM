@@ -44,7 +44,7 @@ your thoughts here
 
 Value:
 the value here''',
-'''Given the current situation, how many more points do you expect to get than your opponent at the end? Write down your thoughts and output the number of points.
+'''Given the current situation, how many more points do you expect to get than your opponent at the end of the game? Write down your thoughts and output the number of points.
 
 Thought:
 your thoughts here
@@ -66,6 +66,33 @@ your thoughts here
 Points:
 the number of points here''',
 ]
+
+HEURISTICS_FUNCTION_PROMPTS = ['''Given the rules of the game, come up with a function that can be used to evaluate the value of a state (ie. how many points you expected you will get and how many points you expect your opponent will get). Write down your thoughts and output the function.
+
+Thoughts:
+your thoughts here
+
+Function:
+the function here''']
+
+GOPS_VALUE_FUNCTION_PROMPT = '''Convert the function you just described into python code.
+
+The function should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
+Specifically, the input tuple will be of length 6, with each element representing the following:
+state[0]: the score cards that have been played, in the order they were played
+state[1]: the cards you have played, in the order they were played
+state[2]: the cards your opponent has played, in the order they were played
+state[3]: true if it is you and your opponent's turn to play, false if it is time to draw a new score card
+state[4]: your score so far
+state[5]: your opponent's score so far
+
+It should return a tuple of 2 elements, with the first element being the score you expect to get at the end of the game, and the second element being the score you expect your opponent to get at the end of the game.
+
+Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. 
+Do not include any other code, comments, or explanation in your output.
+'''
+
+HEURISTICS_FUNCTION_USAGE_PROMPTS = ['''Given the current situation, using the function defined, what is the value of the state?''']
 
 REPRESENTATION_PROMPTS = ['''
 What does this game state tell us about the current situation? Write down your thoughts and output the representation.
@@ -117,4 +144,10 @@ The cards your opponent played include {opponent_cards}, thus cards left in your
 Possible Opponent Actions: {opponent_actions}
 
 Analysis:
+"""
+
+GOPS_RULES = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
+The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
+The player who wins the most scores wins the game.\
+Basically, you need to win the rounds with high scores. And you should also consider what cards left for you and your opponent to decide your strategy.\
 """

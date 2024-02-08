@@ -68,6 +68,14 @@ class GOPSState(State):
         return GOPSState(self.actors, self.prize_cards, self.player_cards, 
                          self.opponent_cards, self.num_cards, self.done, self.reward)
     
+    def switch_copy(self):
+        '''
+        Returns a new state with the two players switched
+        '''
+        return GOPSState(self.actors, self.prize_cards, self.opponent_cards,
+                         self.player_cards, self.num_cards, self.done, self.reward)
+
+    
     def calculate_score(self):
         '''
         Calculates the score of the state for both players
@@ -414,4 +422,52 @@ class GPT35ValueHeuristic(ValueHeuristic):
 
         # print(f"State: {state} Value: {value}")
 
+        return value
+    
+
+class LLMFunctionalValueHeuristic(ValueHeuristic):
+    '''
+    Functional value heuristic for LLMs
+    '''
+
+    def __init__(self, model):
+        '''
+        Args:
+            model: GPT-3.5 model
+        '''
+        self.model = model
+
+        # feed the model both the rules of game and the heuristics function prompt
+        prompt1 = GOPS_RULES + '\n' + HEURISTICS_FUNCTION_PROMPTS[0]
+        abstract_function = self.model.single_action(prompt1)
+
+        # now feed the both previous prompt and response and the GOPS_VALUE_FUNCTION_PROMPT
+        prompt2 = prompt1 + '\n' + abstract_function + '\n' + GOPS_VALUE_FUNCTION_PROMPT
+        function = self.model.single_action(prompt2)
+
+        # exec the function
+        exec(function)
+
+        self._evaluate = evaluate_state
+
+
+    def evaluate(self, state: GOPSState) -> Dict:
+        '''
+        Predicts the value of the state
+
+        Args:
+            state: current state
+
+        Returns:
+            value: value of the state
+        '''
+        # Prepare input
+        player_cards = state.player_cards
+        opponent_cards = state.opponent_cards
+        prize_cards = state.prize_cards
+        (player_score, opponent_score) = state.calculate_score()
+        is_player_turn = 0 in state.actors
+
+        # use the function to calculate the value
+        value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
         return value

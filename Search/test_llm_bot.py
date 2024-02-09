@@ -33,8 +33,8 @@ class ABLLMGOPSCompare(unittest.TestCase):
             
             key = os.environ.get("OPENAI_API_KEY")
 
-            if key is not None:
-                print('key is: ' + key)
+            # if key is not None:
+            #     print('key is: ' + key)
             
             self.model = ChatOpenAI(temperature=0.1, openai_api_key=key)
         def single_action(self, input_prompt: str):
@@ -60,7 +60,8 @@ class ABLLMGOPSCompare(unittest.TestCase):
     value_heuristic_1 = RandomRolloutValueHeuristic(actor_enumerator, action_enumerator,
                                                     forward_transitor, num_rollouts=100, 
                                                     random_state=random_state)
-    value_heuristic_2 = GPT35ValueHeuristic(GPT35())
+    # value_heuristic_2 = GPT35ValueHeuristic(GPT35())
+    value_heuristic_2 = LLMFunctionalValueHeuristic(GPT35())
 
     # create search
     search_1 = SMAlphaBetaMinimax(forward_transitor, value_heuristic_1, 

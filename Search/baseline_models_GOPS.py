@@ -445,6 +445,14 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         prompt2 = prompt1 + '\n' + abstract_function + '\n' + GOPS_VALUE_FUNCTION_PROMPT
         function = self.model.single_action(prompt2)
 
+        # parse out ```python ... ``` from the response
+        pattern = r'```python(.*?)```'
+        matches = re.findall(pattern, function, re.DOTALL)
+        function = matches[-1].strip()
+
+        # print the function for debugging
+        print(function)
+
         # exec the function
         exec(function)
 
@@ -469,5 +477,5 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         is_player_turn = 0 in state.actors
 
         # use the function to calculate the value
-        value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
-        return value
+        player_expected, opponent_expected = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
+        return player_expected - opponent_expected

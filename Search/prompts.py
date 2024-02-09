@@ -86,7 +86,8 @@ state[3]: true if it is you and your opponent's turn to play, false if it is tim
 state[4]: your score so far
 state[5]: your opponent's score so far
 
-It should return a tuple of 2 elements, with the first element being the score you expect to get at the end of the game, and the second element being the score you expect your opponent to get at the end of the game.
+It should return a tuple of 2 elements, with the first element being the score you expect you will get at the end of the game, and the second element being the score you expect your opponent will get at the end of the game.
+For example, if you think you will win 12 total points by the end of the game and your opponent will win 8 total points, the function should return (12, 8).
 
 Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. 
 Do not include any other code, comments, or explanation in your output.

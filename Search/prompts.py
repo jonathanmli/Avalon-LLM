@@ -146,6 +146,13 @@ Possible Opponent Actions: {opponent_actions}
 Analysis:
 """
 
+STATE_PROMPT = """Here is a candidate state of the game.
+State:
+The score cards have been played include {played_cards}. Score cards left in the deck include {score_cards}.
+The cards you played include {your_cards}, thus cards left in your hand include {your_hand}.
+The cards your opponent played include {opponent_cards}, thus cards left in your opponent's hand include {opponent_hand}.
+"""
+
 GOPS_RULES = """You are a player in a GOPS (Game of pure strategy) game. The game has two players, and is played with a deck of cards. Each player is dealt a hand of cards. \
 The goal of the game is to get the highest total scores. In each round, a player is asked to play a card from the hand to win the current score. The player who plays the highest card wins the round. \
 The player who wins the most scores wins the game.\

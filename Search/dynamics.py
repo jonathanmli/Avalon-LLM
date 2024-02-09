@@ -268,6 +268,7 @@ class GPT35ValueHeuristic(ValueHeuristic):
             model: GPT-3.5 model
         '''
         self.model = model
+        print("Initializing GPT35ValueHeuristic")
 
     def evaluate(self, state: State) -> Dict:
         '''
@@ -279,18 +280,39 @@ class GPT35ValueHeuristic(ValueHeuristic):
         Returns:
             value: value of the state
         '''
-        # Prepare input
-        prob_prompt = "Current State: {state}\n".format(state=state.notes)
-        prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
-        value_prompt = "Current State: {state}\n".format(state=state.notes)
-        value_prompt += VALUE_PREDICTOR_PROMPTS[1]
+        # # Prepare input
+        # prob_prompt = "Current State: {state}\n".format(state=state.notes)
+        # prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
+        # value_prompt = "Current State: {state}\n".format(state=state.notes)
+        # value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
-        # Call the model
-        prob_output = self.model.single_action(prob_prompt)
-        value_output = self.model.single_action(value_prompt)
+        # # Call the model
+        # prob_output = self.model.single_action(prob_prompt)
+        # value_output = self.model.single_action(value_prompt)
+
+        # 1. Representation Prompt
+        print("Calling LLM")
+        current_situation = self.model.single_action(REPRESENTATION_PROMPTS)
+        print(current_situation)
+
+        # 2.a. Points earned so far Prompt
+        POINTS_EARNED_SO_FAR_PROMPT = """Given the current situation, how many points have you won so far? Write down your thoughts and output the number of points."""
+        points_earned_so_far = self.model.single_action(f"Current Situation: {current_situation}\n\n{POINTS_EARNED_SO_FAR_PROMPT}")
+
+        # 2.b. Expected points to win in future Prompt
+        EXPECTED_POINTS_TO_WIN_PROMPT = """Given the current situation, how many more points do you expect to win in the future? Write down your thoughts and output the number of points."""
+        expected_points_to_win = self.model.single_action(f"Current Situation: {current_situation}\n\n{EXPECTED_POINTS_TO_WIN_PROMPT}")
+
+        # 3. Sum total points to win Prompt
+        SUM_TOTAL_POINTS_TO_WIN_PROMPT = """Given the current situation, how many points do you expect to get at the end of the game? Write down your thoughts and output the number of points."""
+        sum_prompt = f"Points Earned So Far: {points_earned_so_far}\n\nExpected Points to Win: {expected_points_to_win}\n\n{SUM_TOTAL_POINTS_TO_WIN_PROMPT}"
+        sum_output = self.model.single_action(sum_prompt)
+
+        # 4. Parser (str -> int)
+        value_output = self.model.single_action(sum_output)
 
         # Parse the output
-        prob_value = parse_prob_value(prob_output)
+        # prob_value = parse_prob_value(prob_output)
         value = parse_int_value(value_output)
 
         return value

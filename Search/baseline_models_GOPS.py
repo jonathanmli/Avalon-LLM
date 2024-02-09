@@ -361,11 +361,11 @@ class GPT35ValueHeuristic(ValueHeuristic):
         Returns:
             value: value of the state
         '''
-        # Prepare input
-        prob_prompt = "Current State: {state}\n".format(state=state.notes)
-        prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
-        value_prompt = "Current State: {state}\n".format(state=state.notes)
-        value_prompt += VALUE_PREDICTOR_PROMPTS[1]
+        # # Prepare input
+        # prob_prompt = "Current State: {state}\n".format(state=state.notes)
+        # prob_prompt += VALUE_PREDICTOR_PROMPTS[0]
+        # value_prompt = "Current State: {state}\n".format(state=state.notes)
+        # value_prompt += VALUE_PREDICTOR_PROMPTS[1]
 
         player_cards = state.player_cards
         opponent_cards = state.opponent_cards
@@ -394,7 +394,33 @@ class GPT35ValueHeuristic(ValueHeuristic):
         opponent_hand = list(set(opponent_hand) - set(opponent_cards))
         score_cards = list(set(prize_cards) - set(score_cards))
 
-        verbalized_value_prompt = VERBALIZED_VALUE_PREDICOTR.format(
+        # verbalized_value_prompt = VERBALIZED_VALUE_PREDICOTR.format(
+        #     played_cards=prize_cards,
+        #     score_cards=player_cards,
+        #     your_cards=opponent_cards,
+        #     your_hand=player_hand,
+        #     opponent_cards=opponent_cards,
+        #     opponent_hand=opponent_hand,
+        #     your_score=player_score,
+        #     opponent_score=opponent_score
+        # )
+
+        # # Uncomment the following to use the model
+
+        # # Call the model
+        # prob_output = self.model.single_action(prob_prompt)
+        # value_output = self.model.single_action(verbalized_value_prompt)
+
+        # # Parse the output
+        # # prob_value = parse_prob_value(prob_output)
+        # # value = parse_int_value(value_output)
+
+        # value = value_output
+
+
+        # New Prompt Framework
+        # 1. Representation Prompt
+        current_state = STATE_PROMPT.format(
             played_cards=prize_cards,
             score_cards=player_cards,
             your_cards=opponent_cards,
@@ -405,18 +431,30 @@ class GPT35ValueHeuristic(ValueHeuristic):
             opponent_score=opponent_score
         )
 
-        # Uncomment the following to use the model
+        current_situation = self.model.single_action(f"{current_state}\n\n{REPRESENTATION_PROMPTS[0]}")
+        # print(current_situation)
 
-        # Call the model
-        prob_output = self.model.single_action(prob_prompt)
-        value_output = self.model.single_action(verbalized_value_prompt)
+        # 2.a. Points earned so far Prompt
+        POINTS_EARNED_SO_FAR_PROMPT = """Given the current situation, how many points have you won so far? Write down your thoughts and output the number of points."""
+        points_earned_so_far = self.model.single_action(f"Current Situation: {current_situation}\n\n{POINTS_EARNED_SO_FAR_PROMPT}")
+
+        # 2.b. Expected points to win in future Prompt
+        EXPECTED_POINTS_TO_WIN_PROMPT = """Given the current situation, how many more points do you expect to win in the future? Write down your thoughts and output the number of points."""
+        expected_points_to_win = self.model.single_action(f"Current Situation: {current_situation}\n\n{EXPECTED_POINTS_TO_WIN_PROMPT}")
+
+        # 3. Sum total points to win Prompt
+        SUM_TOTAL_POINTS_TO_WIN_PROMPT = """Given the current situation, how many points do you expect to get at the end of the game? Write down your thoughts and output the number of points."""
+        sum_prompt = f"Points Earned So Far: {points_earned_so_far}\n\nExpected Points to Win: {expected_points_to_win}\n\n{SUM_TOTAL_POINTS_TO_WIN_PROMPT}"
+        sum_output = self.model.single_action(sum_prompt)
+
+        # 4. Parser (str -> int)
+        value_output = self.model.single_action(sum_output)
 
         # Parse the output
         # prob_value = parse_prob_value(prob_output)
-        # value = parse_int_value(value_output)
+        value = parse_int_value(value_output)
 
-        value = value_output
-
+        # TODO: optimize this maybe
         if not isinstance(value, int):
             value = 5
 

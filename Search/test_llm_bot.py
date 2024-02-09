@@ -14,6 +14,7 @@ from GOPS.engine import *
 import unittest
 import numpy as np
 from tqdm import tqdm
+import os
 
 # Prepare logger
 logger = logging.getLogger()
@@ -29,13 +30,16 @@ class ABLLMGOPSCompare(unittest.TestCase):
     # create LLMs 
     class GPT35:
         def __init__(self):
-            import os
+            
             key = os.environ.get("OPENAI_API_KEY")
+
+            if key is not None:
+                print('key is: ' + key)
             
             self.model = ChatOpenAI(temperature=0.1, openai_api_key=key)
         def single_action(self, input_prompt: str):
             input_prompt = [HumanMessage(content=GOPS_RULES), HumanMessage(content=input_prompt)]
-            output = self.model(input_prompt).content
+            output = self.model.invoke(input_prompt).content
             # print(input_prompt)
             # print(output)
             return output
@@ -71,8 +75,8 @@ class ABLLMGOPSCompare(unittest.TestCase):
     config = GOPSConfig(num_turns=num_cards, random_state=random_state)
     env = GOPSEnvironment(config)
 
-    num_games = 10
-    node_budget = 100
+    num_games = 1
+    node_budget = 10
 
     def test_compare(self):
         player_1_win_count = 0

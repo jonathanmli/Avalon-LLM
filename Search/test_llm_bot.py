@@ -60,7 +60,8 @@ class ABLLMGOPSCompare(unittest.TestCase):
     value_heuristic_1 = RandomRolloutValueHeuristic(actor_enumerator, action_enumerator,
                                                     forward_transitor, num_rollouts=100, 
                                                     random_state=random_state)
-    value_heuristic_2 = GPT35ValueHeuristic(GPT35())
+    # value_heuristic_2 = GPT35ValueHeuristic(GPT35())
+    value_heuristic_2 = LLMFunctionalValueHeuristic(GPT35())
 
     # create search
     search_1 = SMAlphaBetaMinimax(forward_transitor, value_heuristic_1, 

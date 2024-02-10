@@ -483,10 +483,13 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         prompt2 = prompt1 + '\n' + abstract_function + '\n' + GOPS_VALUE_FUNCTION_PROMPT
         function = self.model.single_action(prompt2)
 
-        # exec the function
-        exec(function)
+        print(function)
 
-        self._evaluate = evaluate_state
+        # Execute the function definition within the local scope of __init__
+        exec(function, globals(), locals())
+        
+        # Attach the dynamically defined function to the instance
+        self._evaluate = locals()['evaluate_state']
 
 
     def evaluate(self, state: GOPSState) -> Dict:

@@ -510,5 +510,8 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         is_player_turn = 0 in state.actors
 
         # use the function to calculate the value
-        value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
+        try:
+            value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
+        except Exception as e:
+            raise RuntimeError(e)
         return value

@@ -491,10 +491,21 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         # print the function for debugging
         print(function)
 
-        # exec the function
-        exec(function)
+        # parse out ```python ... ``` from the response
+        pattern = r'```python(.*?)```'
+        matches = re.findall(pattern, function, re.DOTALL)
+        function = matches[-1].strip()
 
-        self._evaluate = evaluate_state
+        # print the function for debugging
+        print(function)
+
+        print(function)
+
+        # Execute the function definition within the local scope of __init__
+        exec(function, globals(), locals())
+        
+        # Attach the dynamically defined function to the instance
+        self._evaluate = locals()['evaluate_state']
 
 
     def evaluate(self, state: GOPSState) -> Dict:
@@ -515,5 +526,8 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         is_player_turn = 0 in state.actors
 
         # use the function to calculate the value
-        player_expected, opponent_expected = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
-        return player_expected - opponent_expected
+        try:
+            value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
+        except Exception as e:
+            raise RuntimeError(e)
+        return value

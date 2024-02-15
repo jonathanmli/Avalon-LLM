@@ -85,6 +85,9 @@ class GOPSState(State):
         opponent_score = 0
         for idx, single_score in enumerate(list(self.prize_cards)):
             contested_points += single_score
+            # if idx >= len(self.player_cards) or idx >= len(self.opponent_cards), break
+            if idx >= len(self.player_cards) or idx >= len(self.opponent_cards):
+                break
             if self.player_cards[idx] > self.opponent_cards[idx]:
                 player_score += contested_points
                 contested_points = 0
@@ -468,6 +471,21 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
     Functional value heuristic for LLMs
     '''
 
+    EVAL_TEST_STATES = [
+        ((1, 3, 2, 6, 5), (2, 3, 4, 1, 6), (1, 3, 4, 6, 5), False, 6, 11, 6, [4]),
+        ((1, 3, 2), (2, 3, 4), (1, 3, 2), False, 6, 0, 6, [4, 5, 6]),
+        ((1, 3, 2, 4), (2, 3, 1, 4), (1, 3, 2, 6), False, 1, 9, 6, [5, 6]),
+        ((1, 3), (2, 3), (1, 2), False, 4, 0, 6, [2, 4, 5, 6]),
+        ((1, 3, 6), (2, 1, 4), (1, 3, 5), False, 1, 9, 6, [2, 4, 5]),
+        ((1,), (1,), (6,), False, 0, 1, 6, [2, 3, 4, 5, 6]),
+        ((1, 4), (1, 3), (2, 5), False, 0, 5, 6, [2, 3, 5, 6]),
+        ((4, 3, 1, 2, 6), (2, 3, 4, 1, 6), (2, 3, 4, 5, 1), False, 6, 10, 6, [5]),
+        ((4, 3), (2, 1), (2, 4), False, 0, 7, 6, [1, 2, 5, 6]),
+        ((4,), (2,), (5,), False, 0, 4, 6, [1, 2, 3, 5, 6]),
+        ((4, 3, 1, 2, 5), (2, 3, 4, 1, 6), (2, 3, 4, 6, 5), False, 5, 10, 6, [6]),
+    ]
+
+
     def __init__(self, model):
         '''
         Args:
@@ -475,27 +493,61 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         '''
         self.model = model
 
-        # feed the model both the rules of game and the heuristics function prompt
-        prompt1 = GOPS_RULES + '\n' + HEURISTICS_FUNCTION_PROMPTS[0]
-        abstract_function = self.model.single_action(prompt1)
+        # keep generating functions until we pass the test
+        passed = False
+        while not passed:
+            # feed the model both the rules of game and the heuristics function prompt
+            prompt1 = GOPS_RULES + '\n' + HEURISTICS_FUNCTION_PROMPTS[0]
+            abstract_function = self.model.single_action(prompt1)
 
-        # now feed the both previous prompt and response and the GOPS_VALUE_FUNCTION_PROMPT
-        prompt2 = prompt1 + '\n' + abstract_function + '\n' + GOPS_VALUE_FUNCTION_PROMPT
-        function = self.model.single_action(prompt2)
+            # print the abstract function for debugging
+            print('abstract function: \n', abstract_function)
 
-        # parse out ```python ... ``` from the response
-        pattern = r'```python(.*?)```'
-        matches = re.findall(pattern, function, re.DOTALL)
-        function = matches[-1].strip()
+            # now feed the both previous prompt and response and the GOPS_VALUE_FUNCTION_PROMPT
+            prompt2 = prompt1 + '\n' + abstract_function + '\n' + GOPS_VALUE_FUNCTION_PROMPT
+            function_str = self.model.single_action(prompt2)
 
-        # print the function for debugging
-        print(function)
+            # print the function for debugging
+            print('function: \n', function_str)
 
-        # Execute the function definition within the local scope of __init__
-        exec(function, globals(), locals())
-        
-        # Attach the dynamically defined function to the instance
-        self._evaluate = locals()['evaluate_state']
+            passed = self.test_evaluate(function_str)
+
+                
+
+        # # parse out ```python ... ``` from the response
+        # pattern = r'```python(.*?)```'
+        # matches = re.findall(pattern, function, re.DOTALL)
+        # print('matches', matches)
+        # function = matches[-1].strip()
+
+
+    
+    def test_evaluate(self, function_str) -> bool:
+        '''
+        Test the evaluate function
+        '''
+        # Test the evaluate function
+        try:
+            # Execute the function definition within the local scope of __init__
+            exec(function_str, globals(), locals())
+            
+            # Attach the dynamically defined function to the instance
+            self._evaluate = locals()['evaluate_state']
+
+            # print('successfully defined function')
+
+            for state in self.EVAL_TEST_STATES:
+                (player_value, opponent_value) = self._evaluate(state)
+                # assert that both values are numbers
+                assert isinstance(player_value, (int, float))
+                assert isinstance(opponent_value, (int, float))
+
+            # print('successfully passed test')
+        except Exception as e:  # Capture the exception as 'e'
+            print(f"An exception occurred: {e}")  # Print the exception for debugging
+            return False
+        return True
+
 
 
     def evaluate(self, state: GOPSState) -> Dict:
@@ -514,10 +566,16 @@ class LLMFunctionalValueHeuristic(ValueHeuristic):
         prize_cards = state.prize_cards
         (player_score, opponent_score) = state.calculate_score()
         is_player_turn = 0 in state.actors
+        num_cards = state.num_cards
+        remain_prize_cards = list(set(range(1, num_cards+1)) - set(prize_cards))
 
         # use the function to calculate the value
         try:
-            player_value, opponent_value = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score))
-        except Exception as e:
-            raise RuntimeError(e)
+            # print input for debugging
+            # print('input')
+            # print(tuple([prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score, num_cards, remain_prize_cards]))
+            (player_value, opponent_value) = self._evaluate((prize_cards, player_cards, opponent_cards, is_player_turn, player_score, opponent_score, remain_prize_cards))
+        # raise an error if the function is not defined properly
+        except NameError:
+            raise ValueError('The function is not defined properly')
         return player_value - opponent_value

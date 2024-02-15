@@ -45,7 +45,7 @@ class ABLLMGOPSCompare(unittest.TestCase):
             return output
 
     # create random state
-    random_state = np.random.RandomState(12)
+    random_state = np.random.RandomState(11)
 
     # create graph, one for each player
     graph_1 = ValueGraph()

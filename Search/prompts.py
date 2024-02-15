@@ -72,26 +72,48 @@ HEURISTICS_FUNCTION_PROMPTS = ['''Given the rules of the game, come up with a fu
 Thoughts:
 your thoughts here
 
-Function:
-the function here''']
+Pseudocode: 
+the pseudocode for your function here. you can be as abstract as you want.
+                               
+Below is an example for the game of tic-tac-toe, where I calculate the probability of winning for each player.
+                               
+"
+Thoughts:
+- If I have 3 in a row, I win
+- If my opponent has 3 in a row, I lose
+- Otherwise, the game is a draw
+- The center position is the most important position
+                                                     
+Pseudocode:            
+Use an if-else function to check the following,
+- If it is my turn check if I can win, if so return (1.0,0.0)
+- If it is my opponent's turn check if they can win, if so return (0.0,1.0)
+- If I control the center or it is my turn and the center is empty, return (0.8,0.2)
+- If the opponent controls the center or it is my opponent's turn and the center is empty, return (0.2,0.8)                                 
+"
+                 
+Remember that the function should output the score that you expect to get at the end of the game and the score that you expect your opponent will get at the end of the game. For example, if you think you will win 12 total points by the end of the game and your opponent will win 8 total points, the function should return (12, 8).''']
 
 GOPS_VALUE_FUNCTION_PROMPT = '''Convert the function you just described into python code.
 
 The function should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
-Specifically, the input tuple will be of length 6, with each element representing the following:
-state[0]: the score cards that have been played, in the order they were played
-state[1]: the cards you have played, in the order they were played
-state[2]: the cards your opponent has played, in the order they were played
-state[3]: true if it is you and your opponent's turn to play, false if it is time to draw a new score card
-state[4]: your score so far
-state[5]: your opponent's score so far
+Specifically, the input tuple will be of length 7, with each element representing the following:
+state[0]: a list of the score cards (integers) that have been played, in the order they were played
+state[1]: a list of the cards (integers) you have played, in the order they were played
+state[2]: a list of the cards (integers) your opponent has played, in the order they were played
+state[3]: boolean, true if it is you and your opponent's turn to play, false if it is time to draw a new score card
+state[4]: integer, your score so far
+state[5]: integer, your opponent's score so far
+state[6]: a list of the score cards (integers) left in the deck
 
 It should return a tuple of 2 elements, with the first element being the score you expect you will get at the end of the game, and the second element being the score you expect your opponent will get at the end of the game.
 For example, if you think you will win 12 total points by the end of the game and your opponent will win 8 total points, the function should return (12, 8).
 
-Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. 
-Do not include any other code, comments, or explanation in your output. Please start with "def".
+Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. Any helper functions should be defined within the scope of the function 'evaluate_state'.
+Include comments in your code so that it is readable, but everything should be implemented. Please start with "def evaluate_state(state):".
 '''
+
+# Do not include any other code, comments, or explanation in your output
 
 HEURISTICS_FUNCTION_USAGE_PROMPTS = ['''Given the current situation, using the function defined, what is the value of the state?''']
 

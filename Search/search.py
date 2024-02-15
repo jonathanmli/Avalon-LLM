@@ -6,6 +6,7 @@ import warnings
 import itertools
 from datetime import datetime
 import numpy as np
+from queue import PriorityQueue
 
 # TODO: implement MinMaxStats
 # TODO: implement UCT search
@@ -504,7 +505,7 @@ class SMMinimax(Search):
         
 class SMAlphaBetaMinimax(Search):
     '''
-    Used to perform alpha-beta pruning search
+    Used to perform simultaneous expected minimax search with alpha-beta pruning
 
     This only works if the opponent is a single agent and the game is a zero-sum game
     '''
@@ -551,6 +552,261 @@ class SMAlphaBetaMinimax(Search):
         Args:
             state: state to expand from
             depth: depth to expand to
+            render: whether to render the graph or not
+            revise: whether to revise the graph or not
+            oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy
+            alpha: alpha value for alpha-beta pruning
+            beta: beta value for alpha-beta pruning
+            threshold: threshold for alpha-beta pruning
+
+        Returns:
+            value: updated value of the node
+        '''
+
+        # self.total_nodes_expanded += 1
+        # self.nodes_expanded += 1
+
+        if not oracle:
+            raise NotImplementedError
+        
+        # print('Now exploring state', state)
+
+        node = graph.get_node(state)
+        if node is None: # node does not exist, create it
+            node = graph.add_state(state)   
+        if prev_node is not None:
+            node.parents.add(prev_node)
+            prev_node.children.add(node)
+
+        # check if node is terminal
+        if state.is_done():
+            value = state.get_reward()
+            # print('Terminal state', state, 'value', utility)
+        elif depth == 0:
+            value = self.value_heuristic.evaluate(state)
+            # print('Depth 0 state', state, 'value', utility)
+        elif node_budget is not None and self.nodes_expanded >= node_budget:
+            # use heuristic to estimate value if node budget is exceeded
+            value = self.value_heuristic.evaluate(state)
+        else:
+            value = 0.0
+            self.total_nodes_expanded += 1
+            self.nodes_expanded += 1
+            next_state_to_values = dict()
+            next_depth = depth if node.virtual else depth -1 # skip virtual nodes
+
+            # enumerate actors
+            if node.actors is None or revise:
+                node.actors = self.actor_enumerator.enumerate(state)
+
+            # print('node actors', node.actors)
+
+            if -1 in node.actors: # random
+                assert len(node.actors) == 1
+
+                if node.actions is None or revise:
+                    node.actions = self.action_enumerator.enumerate(state, -1)
+
+                # print('node actions', node.actions)
+
+                if not node.action_to_next_state or revise: # Dictionary is empty
+                    node.next_states = set()
+                    for action in node.actions:
+                        # print('action', action)
+                        next_state = self.forward_transistor.transition(state, {-1: action})
+                        node.action_to_next_state[action] = next_state
+                        node.next_states.add(next_state)
+                if not node.probs_over_actions or revise: # Dictionary is empty
+                    node.probs_over_actions = self.action_predictor.predict(state, node.actions, -1)
+
+                
+
+                # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
+                # print('probs over actions', node.probs_over_actions)
+                for next_state in set(node.action_to_next_state.values()):
+                    # print('next state', next_state)
+                    next_state_to_values[next_state] = self._expand(graph, next_state, node, next_depth,
+                                                                    revise=revise, oracle=oracle,
+                                                                    alpha = alpha, beta = beta,
+                                                                    threshold = threshold,
+                                                                    node_budget=node_budget)
+                
+                # print('next state to values', next_state_to_values)
+
+                # add expected value over actions 
+                for action in node.actions:
+                    next_state = node.action_to_next_state[action]
+                    prob = node.probs_over_actions[action]
+                    value += prob*next_state_to_values[next_state]
+
+                # print('Random state', state, 'expected value', value)
+
+            elif (0 in node.actors) and (1 in node.actors): # simultaneous
+                assert len(node.actors) == 2
+
+                # enumerate actions for each actor
+                if not node.actor_to_actions or revise:
+                    for actor in node.actors:
+                        node.actor_to_actions[actor] = self.action_enumerator.enumerate(state, actor)
+
+                # print('actor to actions', node.actor_to_actions)
+
+                # print([x for x in itertools.product(*node.actor_to_actions.values())])
+                        
+                # # create next states
+                # if node.next_states is None or revise:
+                #     node.next_states = set()
+
+                # set proaction to value to be -inf
+                for proaction in node.actor_to_actions[0]:
+                    node.proaction_to_value[proaction] = -float('inf')
+
+                # find next states
+                if node.next_states is None or revise:
+                    node.next_states = set()
+                    # print('next states not found')
+                    for proaction in node.actor_to_actions[0]:
+                        for adaction in node.actor_to_actions[1]:
+                            joint_action = ((0, proaction), (1, adaction))
+                            next_state = self.forward_transistor.transition(state, dict(joint_action))
+                            node.next_states.add(next_state)
+                            node.action_to_next_state[joint_action] = next_state
+                            # print('joint action', joint_action, 'next state', next_state)
+
+                # if len(node.next_states) > node_budget-self.nodes_expanded and node_budget is not None, then use heuristic
+                # if node_budget is not None and len(node.next_states) > node_budget-self.nodes_expanded:
+                #     # use heuristic to estimate value if node budget is exceeded
+                #     value = self.value_heuristic.evaluate(state)
+                #     # print('Simultaneous state', state, 'heuristic value', value)
+                #     node.values_estimates.append(value)
+                #     utility = self.utility_estimator.estimate(node)
+                #     return utility
+                
+                # print('actions', node.actions) 
+                maxvalue = -float('inf')
+                for proaction in node.actor_to_actions[0]:
+                    minvalue = float('inf')
+                    for adaction in node.actor_to_actions[1]:
+                        joint_action = ((0, proaction), (1, adaction))
+                        next_state = node.action_to_next_state[joint_action]
+                        if next_state not in next_state_to_values:
+                            next_state_to_values[next_state] = self._expand(graph, next_state, 
+                                                                           node, next_depth,
+                                                                           alpha = alpha, beta = beta,
+                                                                           threshold = threshold,
+                                                                           revise=revise, oracle=oracle,
+                                                                           node_budget=node_budget)
+                        minvalue = min(minvalue, next_state_to_values[next_state])
+                        if minvalue < alpha + threshold:
+                            break
+                        beta = min(beta, minvalue)
+                    maxvalue = max(maxvalue, minvalue)
+                    node.proaction_to_value[proaction] = minvalue
+                    if maxvalue > beta - threshold:
+                        break
+                    alpha = max(alpha, maxvalue)
+
+                # print('next states', node.next_states)
+
+                # print('next state to values', next_state_to_values)
+
+                # print('proaction to value', node.proaction_to_value)
+
+                # value should be max of actions
+                value = maxvalue
+
+                # print('Simultaneous state', state, 'minimax value', value)
+            
+            else:
+                print('node actors', node.actors)
+                print('state', state)
+                print('state actors', state.actors)
+                raise NotImplementedError
+                
+            if render and not node.virtual:
+                plt = graph.to_mathplotlib()
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f'Search/output/output_graph_{timestamp}.png'
+                plt.savefig(filename)
+                plt.close()
+                # plt.show()
+            
+        node.values_estimates.append(value)
+        utility = self.utility_estimator.estimate(node)
+        return utility
+    
+class SmartSMAlphaBetaEMinimax(Search):
+    '''
+    Used to perform simultaneous expected minimax search with alpha-beta pruning with model guided priority
+
+    This only works if the opponent is a single agent and the game is a zero-sum game
+    '''
+    def __init__(self, forward_transistor: ForwardTransitor,
+                 value_heuristic: ValueHeuristic, actor_enumerator: ActorEnumerator,
+                 action_enumerator: ActionEnumerator, action_predictor: ActionPredictor,
+                 utility_estimator: UtilityEstimator):
+        
+        super().__init__(forward_transistor, value_heuristic, actor_enumerator,
+                         action_enumerator, action_predictor, utility_estimator)
+        
+    def expand(self, graph: ValueGraph, state: State,
+                prev_node = None, depth=None, render = False, 
+                revise = False, oracle = True, 
+                alpha = -float('inf'), beta = float('inf'), threshold = 0.0,
+                node_budget=100):
+        '''
+        Expand starting from a node
+        
+        Args:
+            state: state to expand from
+            depth: depth to expand to
+            render: whether to render the graph or not
+            revise: whether to revise the graph or not
+            oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy
+            alpha: alpha value for alpha-beta pruning
+            beta: beta value for alpha-beta pruning
+            threshold: threshold for alpha-beta pruning
+
+        Returns:
+            value: updated value of the node
+        '''
+
+        nodes_expanded = 0
+        expand_queue = PriorityQueue()
+
+        # put in the first state
+        expand_queue.put((0, state))
+
+        # first expand belief tree by node_budget nodes
+        while nodes_expanded < node_budget and not expand_queue.empty():
+            # pop the state with the highest priority
+            priority, state = expand_queue.get()
+
+            # get the corresponding node
+            node = graph.get_node(state)
+
+            # 
+
+        return self._expand(graph, state, prev_node, depth, render, revise, oracle, alpha, beta, threshold, node_budget)
+
+    def _expand(self, graph: ValueGraph, state: State, 
+               prev_node = None, depth=None, render = False, 
+               revise = False, oracle = True, 
+               alpha = -float('inf'), beta = float('inf'), threshold = 0.0,
+               node_budget=10):
+        '''
+        Expand starting from a node
+        
+        Args:
+            state: state to expand from
+            depth: maximum depth to expand to
             render: whether to render the graph or not
             revise: whether to revise the graph or not
             oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy

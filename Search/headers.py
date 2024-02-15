@@ -1,13 +1,12 @@
 class State:
     '''
-    Abstract class for a state
+    Abstract class for a state. states are unique and immutable
     '''
     
     def __init__(self, id, actors = None, done=False, reward=0.0, notes = None):
         '''
         Args:
             id: id of the state, should be unique, usually the name of the state
-            state_type: type of the state
             notes: any notes about the state
             done: whether the state is done
             reward: reward of the state
@@ -99,12 +98,14 @@ class ActorEnumerator():
 class ActionPredictor():
     '''
     Abstract class for an action predictor (policy predictor)
+
+    Mostly equivalent to the prediction function in MuZero
     '''
 
     def __init__(self):
         pass
     
-    def predict(self, state: State, actions, actor) -> dict:
+    def predict(self, state: State, actions, actor=None ) -> tuple[dict[int, float], dict[int, float], dict[int, float]]:
         '''
         Predicts the policy probabilities across actions given the current state and actor
 
@@ -115,6 +116,8 @@ class ActionPredictor():
 
         Returns:
             probs: dictionary of actions to probabilities
+            qvalues: dictionary of actions to qvalues
+            int_rewards: dictionary of actions to intermediate rewards
         '''
         raise NotImplementedError
     
@@ -142,6 +145,8 @@ class ActionEnumerator():
 class PolicyPredictor():
     '''
     Abstract class for a policy predictor
+
+    NOTE: this is deprecated, use ActionPredictor instead
     '''
 
     def __init__(self):
@@ -181,26 +186,8 @@ class ValueHeuristic():
         '''
         raise NotImplementedError
     
-class QHeuristic():
-    '''
-    Abstract class for a heuristic
-    '''
-
-    def __init__(self):
-        pass
     
-    def evaluate(self, state: State, action):
-        '''
-        Evaluates the state
 
-        Args:
-            state: current state
-            action: action to take
-
-        Returns:
-            value: value of the state
-        '''
-        raise NotImplementedError
 
 
     

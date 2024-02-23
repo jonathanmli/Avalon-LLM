@@ -1,4 +1,4 @@
-from Search.beliefs import ValueGraph
+from Search.beliefs import ValueGraph, ValueGraph2, ValueNode2
 from Search.headers import *
 from Search.estimators import *
 from collections import deque
@@ -18,19 +18,11 @@ from queue import PriorityQueue
 class Search:
     '''
     Abstract class for search algorithms
-    '''
-    def __init__(self, forward_transistor: ForwardTransitor,
-                 value_heuristic: ValueHeuristic, actor_enumerator: ActorEnumerator,
-                 action_enumerator: ActionEnumerator, action_predictor: ActionPredictor,
-                 utility_estimator: UtilityEstimator):
-        # self.graph = graph
-        self.forward_transistor = forward_transistor
-        self.value_heuristic = value_heuristic
-        self.action_enumerator = action_enumerator
-        self.utility_estimator = utility_estimator
-        self.actor_enumerator = actor_enumerator
-        self.action_predictor = action_predictor
 
+    The design philosophy is that search algorithms themselves do not contain any data 
+    Instead, all data is stored in the graph (see beliefs.py)
+    '''
+    def __init__(self):
         # for recording stats
         self.total_nodes_expanded = 0
         self.nodes_expanded = 0
@@ -55,6 +47,40 @@ class Search:
 
     def get_nodes_expanded(self):
         return self.nodes_expanded
+    
+class FullSearch(Search):
+    '''
+    Abstract class for full search algorithms
+    '''
+    def __init__(self, forward_transistor: ForwardTransitor,
+                 value_heuristic: ValueHeuristic, actor_enumerator: ActorEnumerator,
+                 action_enumerator: ActionEnumerator, action_predictor: ActionPredictor,
+                 utility_estimator: UtilityEstimator):
+        # self.graph = graph
+        self.forward_transistor = forward_transistor
+        self.value_heuristic = value_heuristic
+        self.action_enumerator = action_enumerator
+        self.utility_estimator = utility_estimator
+        self.actor_enumerator = actor_enumerator
+        self.action_predictor = action_predictor
+
+        super().__init__()
+
+class MCSearch(Search):
+    '''
+    Abstract class for Monte Carlo search algorithms
+    '''
+    def __init__(self, forward_transistor: ForwardTransitor,
+                 initial_inferencer: InitialInferencer,
+                 utility_estimator: UtilityEstimator):
+        
+        self.forward_transistor = forward_transistor
+        self.initial_inferencer = initial_inferencer
+        self.utility_estimator = utility_estimator
+        
+        super().__init__()
+
+        
 
 # TODO: refactor this to use the new model headers
 # class ValueBFS(Search):
@@ -271,7 +297,7 @@ class Search:
 #             utility = self.utility_estimator.estimate(node)
 #             return utility
 
-class SMMinimax(Search):
+class SMMinimax(FullSearch):
     '''
     Used to perform breadth-first search
 
@@ -503,7 +529,7 @@ class SMMinimax(Search):
         utility = self.utility_estimator.estimate(node)
         return utility
         
-class SMAlphaBetaMinimax(Search):
+class SMAlphaBetaMinimax(FullSearch):
     '''
     Used to perform simultaneous expected minimax search with alpha-beta pruning
 
@@ -996,3 +1022,270 @@ class SmartSMAlphaBetaEMinimax(Search):
         node.values_estimates.append(value)
         utility = self.utility_estimator.estimate(node)
         return utility
+    
+class QValueAdjuster:
+    '''
+    Abstract class. Used to adjust qvalues for a given node
+    '''
+    def __init__(self) -> None:
+        pass
+
+    def adjust(self, qvalue, prior, state_visits, state_action_visits) -> float:
+        '''
+        Adjusts the qvalue for a given state-action pair
+
+        Args:
+            qvalue: qvalue to adjust
+            prior: prior probability of the action
+            state_visits: number of visits to the state
+            state_action_visits: number of visits to the state-action pair
+
+        Returns:
+            adjusted qvalue
+        '''
+        raise NotImplementedError
+    
+class PUCTAdjuster(QValueAdjuster):
+
+    def __init__(self, c1=1.0, c2=19652) -> None:
+        self.c1 = c1
+        self.c2 = c2
+
+    def adjust(self, qvalue, prior, state_visits, state_action_visits) -> float:
+        '''
+        Adjusts the qvalue for a given state-action pair
+
+        Args:
+            qvalue: qvalue to adjust
+            prior: prior probability of the action
+            state_visits: number of visits to the state
+            state_action_visits: number of visits to the state-action pair
+
+        Returns:
+            adjusted qvalue
+        '''
+        return qvalue + prior*np.sqrt(state_visits)/(1 + state_action_visits) *(self.c1* + np.log((state_visits + self.c2 + 1)/self.c2))
+    
+class SMMonteCarlo(MCSearch):
+    '''
+    Used to perform simultaneous expected monte carlo tree search 
+    TODO: add alpha-beta pruning
+
+    This only works if the opponent is a single agent and the game is a zero-sum game
+    '''
+    def __init__(self, forward_transistor: ForwardTransitor,
+                 initial_inferencer: InitialInferencer,
+                 utility_estimator: UtilityEstimator,
+                 adjuster: QValueAdjuster,
+                 rng: np.random.Generator = np.random.default_rng()):
+        
+        super().__init__(forward_transistor, initial_inferencer, utility_estimator)
+        self.rng = rng
+        self.adjuster = adjuster
+        
+    def expand(self, graph: ValueGraph, state: State,
+                render = False, player = 0,
+                revise = False, oracle = True, 
+                node_budget=100, num_rollout = 100):
+        '''
+        Expand starting from a node
+        
+        Args:
+            state: state to expand from
+            render: whether to render the graph or not
+            revise: whether to revise the graph or not
+            oracle: whether the opponent always plays the best response or not as if they knew the protagonist's policy
+            alpha: alpha value for alpha-beta pruning
+            beta: beta value for alpha-beta pruning
+            threshold: threshold for alpha-beta pruning
+
+        Returns:
+            value: updated value of the node
+        '''
+
+        nodes_expanded = 0
+
+        # first expand belief tree by node_budget nodes
+        while nodes_expanded < node_budget and num_rollout > 0:
+
+            # run one simulation
+            self.mc_simulate(graph, state)
+            num_rollout -= 1
+
+        # get the value of the node and return it
+        node = graph.get_node(state)
+        return self.utility_estimator.estimate(node, player)
+    
+    def initial_inference(self, state: State):
+        '''
+        Conducts initial inference on a state
+        '''
+        return self.initial_inferencer.predict(state)
+
+    def mc_simulate(self, graph: ValueGraph2, state: State, prev_node = None):
+        '''
+        Runs one simulation (rollout) from the given state
+
+        The convention for joint actions is a tuple of tuples (actor, action), which can be converted to a dictionary
+        using dict(joint_action)
+        '''
+        node = graph.get_node(state)
+        if node is None: # node does not exist, create it. this should never happen unless root node
+            node = graph.add_state(state)   
+
+        if not node.is_expanded:
+            # conduct initial inference on the node
+            (actors, policies, actions, next_values, intermediate_rewards, transitions) = self.initial_inference(state)
+            node.actors = actors
+            node.actor_to_action_to_prob = policies
+            node.actions = actions # joint actions, a set of tuples of tuples (actor, action)
+            node.action_to_actor_to_reward = intermediate_rewards
+            node.action_to_next_state = transitions
+            node.is_expanded = True
+
+            # if prev_node is not None:
+            #     node.parents.add(prev_node)
+            #     prev_node.children.add(node)
+
+            # for each possible next state, create a node and add it to the graph if it does not exist
+            for next_state in next_values.keys():
+                if not graph.get_node(next_state):
+                    new_node = graph.add_state(next_state)
+                    node.children.add(new_node)
+                    new_node.parents.add(node)
+                    new_node.is_expanded = False
+                    new_node.actor_to_value_estimates = dict()
+
+                    # for each actor and value in next_values, add it to new_node.actor_to_value_estimates
+                    for actor, value in next_values[next_state].items():
+                        new_node.actor_to_value_estimates[actor] = [value]
+            return True
+
+        # check if node is terminal
+        if node.actions is None:
+            return False
+        
+        # if not then select an action to simulate
+        action = self.select_action(node, graph)
+
+        # get the next state
+        next_state = node.action_to_next_state[action]
+
+        # simulate the next state
+        is_expanded = self.mc_simulate(graph, next_state, node)
+
+        # backpropagate the value from the next state
+        self.backpropagate(node, action, next_state, graph)
+
+    def select_action(self, node: ValueNode2, graph: ValueGraph2):
+        '''
+        Selects a joint action to simulate
+        '''
+        # calculate the probability of each joint action
+        action_to_prob = dict()
+        for joint_action in node.actions:
+            prob = 1.0
+            for actor, action in joint_action:
+                prob *= node.actor_to_action_to_prob[actor][action]
+            action_to_prob[joint_action] = prob
+
+        # get action of each actor using _select_action_by_actor. put in tuple of tuples (actor, action)
+        joint_action = tuple((actor, self._select_action_by_actor(node, actor, action_to_prob, graph)) for actor in node.actors)
+        
+        return joint_action
+        
+
+    def _select_action_by_actor(self, node: ValueNode2, actor, action_to_prob: dict, graph: ValueGraph2):
+        '''
+        Selects an action to simulate for a given actor
+
+        Args:
+            node: node to select action from
+            actor: actor to select action for
+            action_to_prob: dictionary of estimated joint actions to probability
+        '''
+        
+        # if actor == -1 (environment), then select an action according to the policy
+        # i.e. probability weights should be node.actor_to_action_to_prob[actor].values()
+        if actor == -1:
+            return self.rng.choice(list(node.actor_to_action_to_prob[actor].keys()), 
+                                   p = list(node.actor_to_action_to_prob[actor].values()))
+        # otherwise choose the action with the highest adjusted qvalue
+        else:
+            adj_qvalues = self.get_adjusted_qvalues(node, actor, action_to_prob, graph) # this is a dictionary of action to qvalue
+            return max(adj_qvalues, key=adj_qvalues.get)
+            
+    def get_adjusted_qvalues(self, node: ValueNode2, actor, action_to_prob: dict, graph: ValueGraph2) -> dict:
+        '''
+        Gets the adjusted qvalues for a given actor.
+        Usually the PUCT value is used
+
+        Args:
+            node: node to get the adjusted qvalues for
+            actor: actor to get the adjusted qvalues for
+            action_to_prob: dictionary of estimated joint actions to probability
+
+        Returns:
+            action_to_value: dictionary of adjusted qvalues
+        '''
+
+        # find the expected qvalue for each action
+        action_to_expected_qvalue = dict()
+        # action_to_expected_qvalue to 0 for each action
+        for action in node.actor_to_action_to_prob[actor].keys():
+            action_to_expected_qvalue[action] = 0.0
+        # find expected qvalue by summing over all joint actions that contain the action
+        for joint_action, prob in action_to_prob.items():
+            # get the action in the joint action that corresponds to the actor
+            action = dict(joint_action)[actor]
+            # get next state
+            next_state = node.action_to_next_state[joint_action]
+            # get the value of the next state using utility estimator
+            next_value = self.utility_estimator.estimate(graph.get_node(next_state), actor)
+            # add the value to the expected qvalue
+            action_to_expected_qvalue[action] += prob*next_value
+            # get the intermediate reward
+            reward = node.action_to_actor_to_reward[joint_action][actor]
+            # add the reward to the expected qvalue
+            action_to_expected_qvalue[action] += prob*reward
+
+        # for each action, use the adjuster to get the adjusted qvalue
+        action_to_value = dict()
+        for action in node.actor_to_action_to_prob[actor].keys():
+            action_to_value[action] = self.adjuster.adjust(action_to_expected_qvalue[action],
+                                                        node.actor_to_action_to_prob[actor][action],
+                                                        node.visits, node.actor_to_action_visits[actor][action])
+        return action_to_value
+
+    def backpropagate(self, node: ValueNode2, action, next_state: State, graph: ValueGraph2):
+        '''
+        Backpropagates the value from the next state to the current node for each actor
+
+        Args:
+            node: node to backpropagate to
+            action: action taken to get to the next state
+            next_state: next state to backpropagate from
+            graph: graph to backpropagate to
+
+        Returns:
+            None
+        '''
+        # we need to backpropagate for each actor
+        for actor in node.actors:
+            # can skip if actor is -1 (environment)
+            if actor == -1:
+                continue
+            # get the value of the next state
+            next_value = self.utility_estimator.estimate(graph.get_node(next_state), actor)
+            # get the intermediate reward
+            reward = node.action_to_actor_to_reward[action][actor]
+            # update the value of the current node
+            node.actor_to_value_estimates[actor].append(next_value + reward)
+            # update the number of visits to the state
+            node.visits += 1
+            # get the action that this actor took
+            actor_action = dict(action)[actor]
+            # update the number of visits to the state-action pair
+            node.actor_to_action_visits[actor][actor_action] += 1
+
+    

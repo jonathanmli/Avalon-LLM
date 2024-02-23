@@ -186,7 +186,30 @@ class ValueHeuristic():
         '''
         raise NotImplementedError
     
+class InitialInferencer():
+    '''
+    Abstract class for an initial inferencer
+    '''
+
+    def __init__(self):
+        pass
     
+    def predict(self, state: State) -> tuple[set, dict, set, dict, dict, dict]:
+        '''
+        Conducts initial inference for algorithms like MCTS
+
+        Args:
+            state: current state
+
+        Returns:
+            actors: set of actors that may take actions at the state
+            policies: dict from actors to dict of action to probability
+            actions: set of (joint) actions
+            next_state_values: dict from next_state to actors to expected value for the actor of the next state
+            intermediate_rewards: dict from (joint) actions to intermediate rewards
+            transitions: dict from (joint) actions to next states
+        '''
+        raise NotImplementedError
 
 
 

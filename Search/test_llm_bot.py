@@ -77,7 +77,7 @@ class ABLLMGOPSCompare(unittest.TestCase):
     env = GOPSEnvironment(config)
 
     num_games = 1
-    node_budget = 10
+    node_budget = 20
 
     def test_compare(self):
         player_1_win_count = 0
@@ -126,7 +126,7 @@ class ABLLMGOPSCompare(unittest.TestCase):
                 opponent_cards=tuple(player_2_played_cards),
                 num_cards=self.num_cards
             )
-            self.search_1.expand(self.graph_1, state, depth=4, node_budget=self.node_budget)
+            self.search_1.expand(self.graph_1, state, depth=3, node_budget=self.node_budget)
             action_1 = self.graph_1.get_best_action(state)
 
             # print('nodes expanded alpha beta', self.search_1.get_nodes_expanded())

@@ -49,17 +49,25 @@ class UtilityEstimatorLast(UtilityEstimator):
     def __init__(self):
         super().__init__()
 
-    def estimate(self, node: ValueNode):
+    def estimate(self, node: ValueNode, actor=None):
         '''
-        Estimates the value of a node
+        Estimates the value of a node, optionally for a specific actor
 
         Args:
             node: node to estimate
+            actor: (optional) actor to estimate the value for
 
         Returns:
             utility: estimated utility of the node
         '''
-        if len(node.values_estimates) == 0:
-            return 0.0
+        if actor is None:
+            if len(node.values_estimates) == 0:
+                return 0.0
+            else:
+                return node.values_estimates[-1]
         else:
-            return node.values_estimates[-1]
+            if len(node.actor_to_value_estimates.get(actor, [])) == 0:
+                return 0.0
+            else:
+                return node.actor_to_value_estimates[actor][-1]
+

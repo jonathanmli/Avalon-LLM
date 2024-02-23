@@ -47,10 +47,11 @@ class ValueNode(Node):
     def __init__(self, state, parents=None, children=None, virtual=False):
         super().__init__(state, parents, children, virtual)
         self.state = state # state of the game that this node represents
-        self.values_estimates = [] # values from the rollout policy, in temporal order
+        self.values_estimates = [] # TODO: deprecated. values from the rollout policy, in temporal order, for the main player
         self.action_to_next_state = dict() # maps action to next state
         self.proaction_to_value = dict() # maps action to value (ie. Q-value) for player 0 (protagonist)
         self.probs_over_actions = dict() # maps action to probability of taking that action
+        self.actor_to_value_estimates = dict() # maps actor to list of value estimates
 
     def get_mean_value(self):
         '''
@@ -102,6 +103,23 @@ class SimultaneousValueNode(ValueNode):
         # if self.actions is None:
         #     self.actions = frozenset()
         self.actor_to_actions = dict() # maps actor to actions
+        self.actor_to_action_to_prob = dict() # maps actor to action to probability
+        self.action_to_actor_to_reward = dict() # maps action to actor to intermediate reward
+
+class ValueNode2(Node):
+
+    def __init__(self, state, parents=None, children=None, virtual=False):
+        super().__init__(state, parents, children, virtual)
+        self.state = state # state of the game that this node represents
+        self.action_to_next_state = None # maps action to next state
+        self.actor_to_value_estimates = None # maps actor to list of value estimates
+        self.actor_to_action_to_prob = None # maps actor to action to probability
+        self.action_to_actor_to_reward = None # maps action to actor to intermediate reward
+        self.actors = None # set of actors
+        self.is_expanded = False
+        self.actions = None # set of joint actions
+        self.visits = 0
+        self.actor_to_action_visits = None # maps actor to action to number of visits
 
 class Graph:
     '''
@@ -215,6 +233,101 @@ class ValueGraph(Graph):
                 best_action = action
                 best_value = value
         return best_action
+
+    def to_networkx(self):
+        '''
+        Returns the graph as a networkx graph, with values as node.values
+        '''
+        G = nx.DiGraph()
+        for node in self.id_to_node.values():
+            value = node.get_mean_value()
+            # round value to 4 significant figures
+            value = round(value, 4)
+            visits = node.get_visits()
+            G.add_node(node.id, value = value, visits = visits)
+            for child in node.children:
+                G.add_edge(node.id, child.id)
+        return G
+    
+    def to_pygraphviz(self):
+        '''
+        Returns the graph as a pygraphviz graph, with values as node.values
+        '''
+        G = to_agraph(self.to_networkx())
+        return G
+    
+    def to_mathplotlib(self):
+        '''
+        Returns the graph as a matplotlib graph, with values as node.values
+        '''
+
+        # create graph
+        G = self.to_networkx()
+
+        # Extract 'node.visits' values and normalize them
+        visits = [G.nodes[node]['visits'] for node in G.nodes()]
+        max_visits = max(visits)
+        min_visits = min(visits)
+        norm_visits = [(visit - min_visits) / (max_visits - min_visits) for visit in visits]
+
+        # Choose a colormap
+        cmap = plt.cm.viridis
+
+        # Map normalized visits to colors
+        node_colors = [cmap(norm) for norm in norm_visits]
+        
+        # Draw the graph
+        pos = nx.spring_layout(G)
+        fig, ax = plt.subplots()
+        nx.draw_networkx_edges(G, pos)
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors)
+        
+        node_labels = nx.get_node_attributes(G, 'value')
+        nx.draw_networkx_labels(G, pos, labels = node_labels)
+        # edge_labels = nx.get_edge_attributes(G, 'action')
+        # nx.draw_networkx_edge_labels(G, pos, edge_labels = edge_labels)
+        
+
+        # Create an Axes for the color bar
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_visits, vmax=max_visits))
+        sm.set_array([])
+        cbar = plt.colorbar(sm, ax=ax, label='Node Visits')
+
+        # title should be value graph at time 
+        title = "Value Graph at time " + str(time.time())
+        plt.title(title)
+        plt.axis('off')
+        return plt
+    
+class ValueGraph2(Graph):
+    '''
+    A DAG where each node represents a state and each edge represents an action
+
+    Updated version of ValueGraph
+    '''
+
+    def __init__(self):
+        super().__init__()
+    
+    def add_state(self, state: State, parent_states=[], child_states=[]):
+        '''
+        Adds a state to the tree
+
+        Args:
+            state: state to add
+
+        Returns:
+            node: node corresponding to the state added
+        '''
+        parents = set([self.id_to_node[parent_state] for parent_state in parent_states])
+        children = set([self.id_to_node[child_state] for child_state in child_states])
+        if state not in self.id_to_node:
+            # TODO: should be generalized, test if works
+            node = ValueNode2(state, parents, children)
+            self.id_to_node[state] = node
+            return node
+        else:
+            raise ValueError(f"state {state} already exists in the graph")
 
     def to_networkx(self):
         '''

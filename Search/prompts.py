@@ -49,8 +49,14 @@ the value here''',
 Thought:
 your thoughts here
 
+Your score:
+the score you expect to get at the end of the game
+
+Opponent's score:
+the score you expect your opponent to get at the end of the game
+
 Points:
-the number of points here''', 
+the difference between your score and your opponent's score at the end of the game''', 
 '''Given the current situation, how many more points do you expect to win in the future? Write down your thoughts and output the number of points.
 
 Thought:

@@ -35,7 +35,7 @@ class LLMAgentWithDiscussion(Agent):
     def see_sides(self, sides):
         self.player_sides = sides
     
-    def initialize_game_info(self, player_list) -> None:
+    async def initialize_game_info(self, player_list) -> None:
         """Initiliaze the game info for the agent, which includes game introduction, role, and reveal information for different roles."""
         # Introduction Prompt
         verbal_side = ["Evil", "Good"]

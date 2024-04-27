@@ -1,0 +1,7 @@
+defaults:
+  - env_preset: gops_three_card
+  - base
+  - preset_modular_improve: test
+  - model: gpt-35-turbo
+
+evolver_name: ImprovementLibrary

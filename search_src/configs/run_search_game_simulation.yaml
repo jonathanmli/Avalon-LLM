@@ -1,0 +1,4 @@
+defaults:
+  - env_preset: gops_three_card
+  - base
+  - preset_search_game_simulation: test

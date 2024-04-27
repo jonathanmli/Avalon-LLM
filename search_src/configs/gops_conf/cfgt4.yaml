@@ -1,0 +1,7 @@
+gops_conf:
+    num_batch_runs: 8
+    GOPS_num_cards: 4
+    batch_size: 2
+    evolutions: 10
+    num_responses: 1
+    against_benchmark: True

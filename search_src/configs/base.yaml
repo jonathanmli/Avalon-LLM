@@ -1,0 +1,25 @@
+hydra:
+  job_logging:
+    root:
+      level: INFO
+    formatters:
+      simple:
+        format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        level: DEBUG
+        stream: ext://sys.stdout  # This directs the logs to standard output
+  hydra_logging:
+    root:
+      level: INFO
+    formatters:
+      simple:
+        format: '%(asctime)s - [%(levelname)s] - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        level: DEBUG
+        stream: ext://sys.stdout  # Likewise, for Hydra logs

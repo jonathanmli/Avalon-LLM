@@ -1,0 +1,5 @@
+num_games: 10
+num_players: 5
+num_random_rollouts: 8
+search_node_budget: 16
+search_num_rollouts: 8

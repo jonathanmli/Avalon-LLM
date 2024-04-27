@@ -1,0 +1,8 @@
+num_batch_runs: 4
+batch_size: 1
+evolutions: 10
+num_responses: 1
+against_benchmark: True
+final_eval_num_batch_runs: 1
+num_ideas_per_iteration: 1
+num_fittest_functions: 1

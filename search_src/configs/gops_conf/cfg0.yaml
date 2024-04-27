@@ -1,0 +1,8 @@
+gops_conf:
+    num_batch_runs: 8
+    GOPS_num_cards: 6
+    batch_size: 3
+    evolutions: 8
+    num_responses: 1
+    against_benchmark: True
+    model: "gpt-4"

@@ -7,11 +7,11 @@ class HeuristicsAnalyzer(FeedbackAnalyzer):
     '''
     Analyzes numerical feedback and translates into natural language feedback
     '''
-    def __init__(self, prompt_generator: PromptGenerator, num_samples: int = 6, rng: np.random.Generator = np.random.default_rng(), gen_state_description = lambda x: str(x)):
+    def __init__(self, prompt_generator: PromptGenerator, num_samples: int = 6, rng: np.random.Generator = np.random.default_rng(), ):
         super().__init__()
         self.num_samples = num_samples
         self.rng = rng
-        self.gen_state_description = gen_state_description
+        self.gen_state_description = prompt_generator.gen_state_description
         self.prompt_generator = prompt_generator
 
     def translate(self, data: dict) -> str:

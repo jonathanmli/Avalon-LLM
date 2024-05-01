@@ -1,17 +1,4 @@
-from src.GOPS.baseline_models_GOPS import GOPSState2
-
-def gen_GOPS_state_description(state: GOPSState2):
-    state_description = f'''The state of a GOPS (game of pure strategy) game is as follows:
-    - The score cards that have been revealed are: {state.prize_cards}
-    - The cards that player 0 has played are: {state.player_cards}
-    - The cards that player 1 has played are: {state.opponent_cards}
-    - Player 0's score so far is: {state.get_scores()[0]}
-    - Player 1's score so far is: {state.get_scores()[1]}
-    - The score cards left in the deck are: {state.get_score_deck()}
-    - The cards left in player 0's hand are: {state.get_player_hand()}
-    - The cards left in player 1's hand are: {state.get_opponent_hand()}
-    '''
-    return state_description
+from search_src.GOPS.baseline_models_GOPS import GOPSState2
 
 HIDDEN_STATE_ENUMERATOR_PROMPT = '''Recall the rules of the game and enumerate the possible hidden states of the game that we could be in. Write down your thoughts and output the list of states
 
@@ -140,6 +127,47 @@ def evaluate_state(state) -> tuple[int, int]:
 Please start with "def evaluate_state(state):".
 '''
 
+VALUE_FUNCTION_SIGNATURE = '''The function (written in python) should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
+Specifically, the input tuple will be of length 9, with each element representing the following:
+state[0]: a list of the score cards (integers) that have been played, in the order they were played
+state[1]: a list of the cards (integers) player 0 has played, in the order they were played
+state[2]: a list of the cards (integers) player 1 has played, in the order they were played
+state[3]: boolean, true if it is you and your opponent's turn to play, false if it is time to draw a new score card
+state[4]: float or integer, player 0's so far
+state[5]: float or integer, player 1's score so far
+state[6]: a set of the score cards (integers) left in the deck
+state[7]: a set of the cards (integers) left in player 0's hand
+state[8]: a set of the cards (integers) left in player 1's hand
+
+It should return 2 elements. 
+The first element should be a tuple with 2 floats: the first element being the score you expect player 0 will get at the end of the game, and the second element being the score you expect player 1 will get at the end of the game.
+The second element should be a dictionary of any important intermediate values that you used to calculate the scores.
+For example, if you think player 0 will win 12 total points by the end of the game and player 1 will win 8 total points, the function should return (12, 8).
+
+Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. Any helper functions should be defined within the scope of the function 'evaluate_state'.
+Include comments in your code so that it is readable, but everything should be implemented. The signature of the function should be as follows:
+
+def evaluate_state(state) -> tuple[tuple[float, float], dict]:
+    score_cards = state[0] # list
+    player_0_played_cards = state[1] # list
+    player_1_played_cards = state[2] # list
+    is_turn = state[3] # bool
+    player_0_score = state[4] # float or int
+    player_1_score = state[5] # float or int
+    score_deck = state[6] # set
+    player_0_hand = state[7] # set
+    player_1_hand = state[8] # set
+    ...
+    <intermediate_value1> = value1
+    ...
+    <intermediate_value2> = value2
+    ...
+    return (player_0_expected_score, player_1_expected_score), {'<intermediate_value1>': intermediate_value1, '<intermediate_value2>': intermediate_value2, ...}
+
+Where you can use your own names for the intermediate values and the values themselves.
+Please start with "def evaluate_state(state):"
+'''
+
 # Do not include any other code, comments, or explanation in your output
 
 HEURISTICS_FUNCTION_USAGE_PROMPTS = ['''Given the current situation, using the function defined, what is the value of the state?''']
@@ -208,3 +236,41 @@ The goal of the game is to get the highest total scores. In each round, a player
 The player who wins the most scores wins the game.\
 Basically, you need to win the rounds with high scores. And you should also consider what cards left for you and your opponent to decide your strategy.\
 """
+
+POLICY_FUNCTION_SIGNATURE = '''The function (written in python) should be named `policy_function` and take in a tuple called `state` of the game state as input. 
+Specifically, the input tuple will be of length 9, with each element representing the following:
+state[0]: a list of the score cards (integers) that have been played, in the order they were played
+state[1]: a list of the cards (integers) player 0 has played, in the order they were played
+state[2]: a list of the cards (integers) player 1 has played, in the order they were played
+state[3]: boolean, true if it is you and your opponent's turn to play, false if it is time to draw a new score card
+state[4]: float or integer, player 0's so far
+state[5]: float or integer, player 1's score so far
+state[6]: a set of the score cards (integers) left in the deck
+state[7]: a set of the cards (integers) left in player 0's hand
+state[8]: a set of the cards (integers) left in player 1's hand
+
+It should return 2 elements. The first element is a dictionary mapping players to their optimal actions. For example, if you think player 0 should play card 1 and player 1 should play card 2, the function should return {{0: 1, 1: 2}}. The second element is a dictionary of intermediate values that you used to calculate the optimal actions. For example, if you used the value of the state to calculate the optimal actions, you should return {{'value': value}}.
+
+Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. Any helper functions should be defined within the scope of the main function. 
+Include comments in your code so that it is readable, but everything should be implemented. The signature of the function should be as follows:
+
+def policy_function(state) -> tuple[dict[Any, Any], dict]:
+    score_cards = state[0] # list
+    player_0_played_cards = state[1] # list
+    player_1_played_cards = state[2] # list
+    is_turn = state[3] # bool
+    player_0_score = state[4] # float or int
+    player_1_score = state[5] # float or int
+    score_deck = state[6] # set
+    player_0_hand = state[7] # set
+    player_1_hand = state[8] # set
+    ...
+    <intermediate_value1> = value1
+    ...
+    <intermediate_value2> = value2
+    ...
+    return {<player1>: <player1_optimal_action>, <player2>: <player2_optimal_action>}, {'<intermediate_value1>': intermediate_value1, '<intermediate_value2>': intermediate_value2, ...}
+
+Where you can use your own names for the intermediate values and the values themselves.
+Please start with "def policy_function(state):"
+'''

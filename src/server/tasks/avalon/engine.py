@@ -1,7 +1,7 @@
 from typing import ClassVar, List, Optional, Dict
 import numpy as np
 from pydantic import BaseModel
-from .avalon_exception import AvalonEnvException
+from search_src.Avalon.avalon_exception import AvalonEnvException
 
 class AvalonBasicConfig(BaseModel):
     r"""Avalon game configuration
@@ -45,6 +45,7 @@ class AvalonBasicConfig(BaseModel):
     PHASES: ClassVar = {0 : "Team Selection", 1 : "Team Voting", 2 : "Quest Voting", 3 : "Assassination"}
     ROLES: ClassVar = {0 : "Merlin", 1 : "Percival", 2 : "Morgana", 3 : "Mordred", 4 : "Oberon", 5 : "Servant", 6 : "Minion", 7 : "Assassin"}
     ROLES_REVERSE: ClassVar = {v: k for k, v in ROLES.items()}
+    ROLES_TO_IS_GOOD: ClassVar = {0: True, 1: True, 2: False, 3: False, 4: False, 5: True, 6: False, 7: False}
 
     merlin: bool = True
     percival: bool = False
@@ -120,7 +121,7 @@ class AvalonGameEnvironment():
             self.reset()
 
     @classmethod
-    def from_num_players(cls, num_players: Dict) -> 'AvalonGameEnvironment':
+    def from_num_players(cls, num_players: int) -> 'AvalonGameEnvironment':
         r"""Instantiate the environment with number of players"""
         config = AvalonBasicConfig.from_num_players(num_players)
         cls.config = config
@@ -157,10 +158,10 @@ class AvalonGameEnvironment():
         cls.done = False
         cls.good_victory = False
 
-        cls.quest_results = []
         cls.quest_team = []
         cls.team_votes = []
         cls.quest_votes = []
+        cls.quest_results = []
         
 
         return cls(config)
@@ -177,7 +178,7 @@ class AvalonGameEnvironment():
         self.turn = 0
         self.done = False
         self.good_victory = False
-        self.quest_leader = np.random.randint(0, self.num_players - 1)
+        self.quest_leader = np.random.randint(0, self.num_players)
 
         self.quest_results = []
         self.quest_team = []
@@ -276,7 +277,7 @@ class AvalonGameEnvironment():
             self.turn -= 1
             return self.num_players_for_quest[self.turn]
     
-    def choose_quest_team(self, team: frozenset, leader):
+    def choose_quest_team(self, team: frozenset, leader):  # phase 0
         '''
         chooses quest team
         team: list of players on team
@@ -315,7 +316,7 @@ class AvalonGameEnvironment():
         '''
         return self.quest_team
 
-    def gather_team_votes(self, votes: List):
+    def gather_team_votes(self, votes: List):  # phase 1
         '''
         votes on quest team: list, 0 for reject, 1 for accept
         returns (next phase, whether game is done, whether team is accepted)
@@ -356,7 +357,7 @@ class AvalonGameEnvironment():
         '''
         return self.quest_team_votes
     
-    def gather_quest_votes(self, votes: List):
+    def gather_quest_votes(self, votes: List):  # phase 2
         '''
         votes on quest: list, 0 for fail, 1 for pass
         returns: (next phase, whether game is done, whether the quest succeeded, number of fails)
@@ -382,6 +383,9 @@ class AvalonGameEnvironment():
             
             self.quest_results.append(False)
             self.turn += 1
+            #######################
+            if self.turn == 5:
+                self.turn = 4
 
             # end game if 3 quests failed. Otherwise go to team selection phase
             if len(self.quest_results) - sum(self.quest_results) == 3:
@@ -395,6 +399,10 @@ class AvalonGameEnvironment():
         else:
             self.quest_results.append(True)
             self.turn += 1
+            #######################
+            if self.turn == 5:
+                self.turn = 4
+
 
             # go to assassination phase if 3 quests succeeded. Otherwise go to team selection phase
             if sum(self.quest_results) == 3:
@@ -402,6 +410,7 @@ class AvalonGameEnvironment():
             else:
                 self.phase = 0
             return (self.phase, self.done, True, num_fails)
+
         
     def get_assassin(self):
         '''
@@ -409,7 +418,7 @@ class AvalonGameEnvironment():
         '''
         return np.where(self.roles == 7)[0][0]
         
-    def choose_assassination_target(self, player, target):
+    def choose_assassination_target(self, player, target):  # phase 3
         '''
         chooses assassination target
         returns: (next phase, whether game is done, whether good wins)
@@ -437,29 +446,40 @@ class AvalonGameEnvironment():
         if self.roles[target] == 0:
             self.good_victory = False
             return (self.phase, self.done, False)
-        
+
         # check if at least 3 successfuel quests
         if sum(self.quest_results) >= 3:
             self.good_victory = True
             return (self.phase, self.done, True)
+
+        # # check if at least 3 successfuel quests
+        # if sum(self.quest_results) >= 3:
+        #     self.good_victory = True
+        #     # print('hhhhhhhhhhLLLLLLL')
+        #     # check if target is merlin
+        #     if self.roles[target] == 0:
+        #         self.good_victory = False
+        #         return (self.phase, self.done, False)
+        #     return (self.phase, self.done, True)
         
         # otherwise evil wins
         self.good_victory = False
         return (self.phase, self.done, False)
 
 if __name__ == "__main__":
-    config = AvalonBasicConfig.from_num_players(5)
-    env = AvalonGameEnvironment.from_presets({
-        'num_players': 5,
-        'quest_leader': 0,
-        'role_names': ['Servant', 'Percival', 'Morgana', 'Mordred', 'Oberon']
-    })
+    # config = AvalonBasicConfig.from_num_players(5)
+    # env = AvalonGameEnvironment.from_presets({
+    #     'num_players': 5,
+    #     'quest_leader': 0,
+    #     'role_names': ['Servant', 'Percival', 'Morgana', 'Mordred', 'Oberon']
+    # })
+    #
+    # print(env.get_role(0))
     
-    print(env.get_role(0))
-    
-    env = AvalonGameEnvironment.from_num_players(5)
+    env = AvalonGameEnvironment.from_num_players(7)
+    print(env.roles)
 
-    print(env.get_role(0))
+    # print(env.get_role(0))
     # print(config.dict())
     # print(env.roles)
     # print(env.is_good)

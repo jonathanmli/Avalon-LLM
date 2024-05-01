@@ -1,14 +1,14 @@
-from src.searchlight.headers import *
-from src.searchlight.datastructures.adjusters import *
-from src.searchlight.datastructures.beliefs import *
-from src.searchlight.datastructures.estimators import *
-from src.searchlight.classic_models import *
-from src.GOPS.engine import *
-from src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.headers import *
+from search_src.searchlight.datastructures.adjusters import *
+from search_src.searchlight.datastructures.beliefs import *
+from search_src.searchlight.datastructures.estimators import *
+from search_src.searchlight.classic_models import *
+from search_src.GOPS.engine import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
 import numpy as np
 from tqdm import tqdm
-from src.GOPS.baseline_models_GOPS import GOPSState2
-from src.searchlight.gameplay.agents import SearchAgent
+from search_src.GOPS.baseline_models_GOPS import GOPSState2
+from search_src.searchlight.gameplay.agents import SearchAgent
 
 def compare_search(search1: Search, search2: Search, graph1: ValueGraph2, graph2: ValueGraph2, num_games: int, env):
     '''

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Any, Tuple, Set, Optional
 
-from src.searchlight.headers import *
+from search_src.searchlight.headers import *
 from tqdm import tqdm
 import logging
 import random

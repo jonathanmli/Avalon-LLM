@@ -1,23 +1,23 @@
-from src.experiment.compare_search import *
-from src.GOPS.baseline_models_GOPS import *
-from src.GOPS.engine import *
-from src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.experiment.compare_search import *
+from search_src.GOPS.baseline_models_GOPS import *
+from search_src.GOPS.engine import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
 import numpy as np
-from src.searchlight.headers import *
-from src.searchlight.datastructures.adjusters import *
-from src.searchlight.datastructures.beliefs import *
-from src.searchlight.datastructures.estimators import *
-from src.searchlight.classic_models import *
+from search_src.searchlight.headers import *
+from search_src.searchlight.datastructures.adjusters import *
+from search_src.searchlight.datastructures.beliefs import *
+from search_src.searchlight.datastructures.estimators import *
+from search_src.searchlight.classic_models import *
 from tqdm import tqdm
-from src.searchlight.algorithms.mcts_search import SMMonteCarlo
-# from src.searchlightimprove.llm_utils.llm_api_models import GPT35
-from src.GOPS.examples.func_list import func_list, func1, test_func
-from src.Avalon.examples.avalon_func import avalon_func_list
-from src.searchlight.algorithms.full_search import SMMinimax
-from src.searchlight.gameplay.simulators import *
+from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
+# from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35
+from search_src.GOPS.examples.func_list import func_list, func1, test_func
+from search_src.Avalon.examples.avalon_func import avalon_func_list
+from search_src.searchlight.algorithms.full_search import SMMinimax
+from search_src.searchlight.gameplay.simulators import *
 ####
-from src.Avalon.baseline_models_Avalon import *
-from src.utils import setup_logging_environment
+from search_src.Avalon.baseline_models_Avalon import *
+from search_src.utils import setup_logging_environment
 from types import MappingProxyType
 
 

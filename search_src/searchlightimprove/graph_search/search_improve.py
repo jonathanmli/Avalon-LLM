@@ -1,13 +1,13 @@
-from src.searchlight.algorithms.best_first_search import BestFirstSearch
-from src.searchlight.datastructures.graphs import ValueGraph2
-from src.GOPS.value_heuristic_evaluators import *
-from src.self_improve.self_improve_search import SelfImprovementInitialInferencer
-from src.self_improve.llm_api_models import GPT35Multi
-from src.self_improve.proposers import LLMImprovementProposer
-from src.self_improve.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
-from src.searchlight.datastructures.adjusters import QValueAdjuster
-from src.searchlight.datastructures.estimators import UtilityEstimatorLast
-from src.GOPS.baseline_models_GOPS import *
+from search_src.searchlight.algorithms.best_first_search import BestFirstSearch
+from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.GOPS.value_heuristic_evaluators import *
+from search_src.self_improve.self_improve_search import SelfImprovementInitialInferencer
+from search_src.self_improve.llm_api_models import GPT35Multi
+from search_src.self_improve.proposers import LLMImprovementProposer
+from search_src.self_improve.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
+from search_src.searchlight.datastructures.adjusters import QValueAdjuster
+from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
+from search_src.GOPS.baseline_models_GOPS import *
 
 def bfs_improve(seed_functions: list) -> ValueGraph2:
     '''

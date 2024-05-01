@@ -6,3 +6,4 @@ against_benchmark: True
 final_eval_num_batch_runs: 1
 num_fittest_functions: 1
 num_ideas_per_iteration: 1
+generate_new_seed_functions: False

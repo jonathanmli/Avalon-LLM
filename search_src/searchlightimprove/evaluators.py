@@ -1,12 +1,12 @@
 from .headers import Evaluator
-from src.searchlight.gameplay.simulators import GameSimulator
-from src.searchlight.headers import *
-from src.searchlight.gameplay.agents import SearchAgent
-from src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from src.searchlight.datastructures.graphs import ValueGraph2
-from src.searchlight.datastructures.adjusters import PUCTAdjuster
-from src.searchlight.datastructures.estimators import UtilityEstimatorLast
-from src.searchlight.classic_models import RandomRolloutValueHeuristic
+from search_src.searchlight.gameplay.simulators import GameSimulator
+from search_src.searchlight.headers import *
+from search_src.searchlight.gameplay.agents import SearchAgent
+from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
+from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.adjusters import PUCTAdjuster
+from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
+from search_src.searchlight.classic_models import RandomRolloutValueHeuristic
 
 import numpy as np
 from collections import defaultdict
@@ -19,7 +19,7 @@ class DummyEvaluator(Evaluator):
     def __init__(self):
         super().__init__()
 
-    def evaluate(self, functions: list[str]) -> tuple[list[float],list]:
+    def evaluate(self, objects: list[Any]) -> tuple[list[float],list]:
         '''
         Evaluates a collection of functions
 
@@ -30,7 +30,7 @@ class DummyEvaluator(Evaluator):
             scores: scores of the functions
             notes: notes for each function
         '''
-        return [0.5]*len(functions), [dict()]*len(functions)
+        return [0.5]*len(objects), [dict()]*len(objects)
 
 class SimulateGameEvaluator(Evaluator):
     '''
@@ -42,7 +42,7 @@ class SimulateGameEvaluator(Evaluator):
         super().__init__()
         self.simulator = simulator
 
-    def evaluate(self, functions: list[Any]) -> tuple[list[float], list]:
+    def evaluate(self, objects: list[Any]) -> tuple[list[float], list]:
         raise NotImplementedError
 
 class SimulateSearchGameEvaluator(SimulateGameEvaluator):
@@ -70,9 +70,9 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
     def get_num_batch_runs(self):
         return self.num_batch_runs
 
-    def evaluate(self, functions: list[str]) -> tuple[list[float], list]:
+    def evaluate(self, objects: list[Any]) -> tuple[list[float], list]:
         # create a agents
-        agents = self.create_agents(functions)
+        agents = self.create_agents(objects)
 
         # evaluate the agents
         scores, notes = self.evaluate_agents(agents)
@@ -192,7 +192,7 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
                     trajectory_data = {'trajectory': trajectory, 'heuristics_score_trajectory': heuristics_score[agent], 'heuristics_trajectory': heuristics_trajectory[agent], 'search_trajectory': estimate_trajectory[agent], 'score_trajectory': score_trajectory[agent]}
                     notes_per_agent[agent_id]['trajectory_data'].append(trajectory_data)
         # average the scores
-        score_per_agent = [score / (self.num_batch_runs * len(self.players)) for score in score_per_agent]
+        score_per_agent = [score / (self.num_batch_runs * len(all_combinations)) for score in score_per_agent]
 
         # figure out what notes we want to return
         # should include the following:
@@ -203,7 +203,7 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
         return score_per_agent, notes_per_agent
 
     
-    def create_agents(self, functions: list[str]) -> list[Agent]:
+    def create_agents(self, objects: list[Any]) -> list[Agent]:
         '''
         Creates agents for each function
         Note that we assume the functions are executable

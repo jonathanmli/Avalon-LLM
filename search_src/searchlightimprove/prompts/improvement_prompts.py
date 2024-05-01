@@ -103,6 +103,8 @@ BLOCK_BREAKER = '''\n ------------------------ \n'''
 
 SYS_PROMPT = '''You are a function engineer trying to write a function that can evaluate the value of a state in a game. This is known as a value heuristic, and will be used in lookahead search algorithms to evaluate the value of unexplored states. Your goal is to develop a heuristic that is as accurate as possible without being too expensive to compute. Hence, you are not allowed to runs simulations in the function.\n'''
 
+SYS_PROMPT_POLICY = '''You are a function engineer trying to write a function that outputs the optimal action for each player given a state in a game. This is known as a policy function, and will be used by an agent to play the game. Your goal is to develop a policy function that that produces the best possible actions without being too expensive to compute. Hence, you are not allowed to runs simulations in the function.\n'''
+
 GOPS_RULES = '''The game you want to write a function for is GOPS (game of pure strategy), also known as Goofspiel. The game has two players, and is played with a deck of score cards. Each player is dealt the same hand of cards at the beginning. The goal of the game is to get a score higher than your opponent. At the beginning of each round, a score card is randomly drawn without replacement from the score deck. Then each player plays a card simultaneously from their hand. The player who plays the higher card wins the round and gets the score card. They add the score of the score card to their total score. If the two cards played are the same, the person who wins the next round will get both score cards. The game continues until all score cards have been played. The player with the highest total score wins the game.\n'''
 
 

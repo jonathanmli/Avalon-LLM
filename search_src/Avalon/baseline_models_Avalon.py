@@ -18,7 +18,7 @@ NOTE: Some bugs in MCTS search may appear
 
 class AvalonState(HiddenState):
 
-    def __init__(self, config: AvalonBasicConfig, quest_leader: int, phase: int, turn: int, round: int, done: bool, good_victory: bool, quest_team: frozenset[int], team_votes: tuple[int], quest_votes: tuple[int], quest_results: tuple[int], roles: tuple[int],):
+    def __init__(self, config: AvalonBasicConfig, quest_leader: int, phase: int, turn: int, round: int, done: bool, good_victory: bool, quest_team: frozenset[int], team_votes: tuple[bool, ...], quest_votes: tuple[bool, ...], quest_results: tuple[bool, ...], roles: tuple[int, ...],):
         '''
         Game states is a dictionary mapping from relevant game stats to their values for Avalon
         Should probably include:
@@ -59,9 +59,13 @@ class AvalonState(HiddenState):
         self.player_to_information_set = dict()
         for i in range(self.config.num_players):
             known_sides, self_role  = self.get_private_information(i)
-            information_set =  tuple([self.quest_leader, self.phase, self.turn, self.round, self.done, self.quest_team, self.team_votes, self.quest_votes, self.quest_results, known_sides, self_role])
+            information_set =  tuple([self.quest_leader, self.phase, self.turn, self.round, self.done, self.quest_team, self.team_votes, self.quest_results, known_sides, self_role])
             self.player_to_information_set[i] = information_set
         super().__init__(id)
+
+    def get_state_tuple(self):
+        roles = tuple([int(role) for role in self.roles])
+        return (self.config.num_players, self.quest_leader, self.phase, self.turn, self.round, self.done, list(self.quest_team), self.team_votes, self.quest_votes, self.quest_results, roles)
 
     def get_private_information(self, player: int) -> tuple[tuple[int, ...], int]:
         '''
@@ -78,6 +82,20 @@ class AvalonState(HiddenState):
         
     def get_information_set(self, actor):
         return self.player_to_information_set[actor]
+    
+    @staticmethod
+    def get_known_sides(player: int, roles) -> tuple[int, ...]:
+        '''
+        Returns the private information of the actor
+        '''
+        is_good = [AvalonBasicConfig.ROLES_TO_IS_GOOD[role] for role in roles]
+        # if player is Merlin or evil, return all sides
+        if roles[player] == 0 or not is_good[player]:
+            return tuple(is_good)
+        # otherwise return list of -1 for unknown
+        else:
+            return tuple([-1 if i != player else 1 for i in range(len(roles))])
+        
 
     @staticmethod
     def init_from_env(env: AvalonGameEnvironment):
@@ -327,7 +345,7 @@ class AvalonLLMFunctionalValueHeuristic(ValueHeuristic2):
     '''
 
     EVAL_TEST_STATES = [
-        {'quest_leader': 4, 'phase': 0, 'turn': 0, 'round': 1, 'quest_team': frozenset({1, 4}), 'historical_team_votes': (1, 0, 1, 0, 0), 'historical_quest_results': (), 'players': {0, 1, 2, 3, 4}, 'num_good': 3, 'num_participants_per_quest': [2, 3, 2, 3, 3], 'num_fails_per_quest': [1, 1, 1, 1, 1]},
+        {'quest_leader': 4, 'phase': 0, 'turn': 0, 'round': 1, 'quest_team': frozenset({3, 4}), 'historical_team_votes': (1, 0, 1, 0, 0), 'historical_quest_results': (), 'players': {0, 1, 2, 3, 4}, 'num_good': 3, 'num_participants_per_quest': [2, 3, 2, 3, 3], 'num_fails_per_quest': [1, 1, 1, 1, 1], 'roles': ['Servant', 'Merlin', 'Servant', 'Assassin', 'Minion'], 'is_good': [True, True, True, False, False]},
     ]
 
     def __init__(self, func, parse_first = False):
@@ -479,6 +497,6 @@ class AvalonLLMFunctionalValueHeuristic(ValueHeuristic2):
             # NOTE: add any printed tuples to EVAL_TEST_STATES for future testing
             raise ValueError(f"Function not defined properly: {e}")
         
-        # TODO: convert winrates to zero sum scores
-
+        # convert winrates to zero sum scores (times 2 minus 1)
+        winrates = {player: 2*winrate - 1 for player, winrate in winrates.items()}
         return winrates, notes

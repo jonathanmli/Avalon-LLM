@@ -1,18 +1,18 @@
-from src.experiment.compare_search import *
-from src.GOPS.baseline_models_GOPS import *
-from src.GOPS.engine import *
-from src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.experiment.compare_search import *
+from search_src.GOPS.baseline_models_GOPS import *
+from search_src.GOPS.engine import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
 import numpy as np
-from src.searchlight.headers import *
-from src.searchlight.datastructures.adjusters import *
-from src.searchlight.datastructures.beliefs import *
-from src.searchlight.datastructures.estimators import *
-from src.searchlight.classic_models import *
+from search_src.searchlight.headers import *
+from search_src.searchlight.datastructures.adjusters import *
+from search_src.searchlight.datastructures.beliefs import *
+from search_src.searchlight.datastructures.estimators import *
+from search_src.searchlight.classic_models import *
 from tqdm import tqdm
-from src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from src.GOPS.examples.func_list import func_list, func1, test_func
-from src.searchlight.algorithms.full_search import SMMinimax
-from src.searchlight.gameplay.simulators import *
+from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
+from search_src.GOPS.examples.func_list import func_list, func1, test_func
+from search_src.searchlight.algorithms.full_search import SMMinimax
+from search_src.searchlight.gameplay.simulators import *
 
 def main():
     # TODO: make this generalizable for Avalon? no create separate file is better

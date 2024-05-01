@@ -1,7 +1,7 @@
-from src.searchlightimprove.headers import *
-from src.searchlight.headers import *
-from src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
-from src.searchlight.datastructures.graphs import *
+from search_src.searchlightimprove.headers import *
+from search_src.searchlight.headers import *
+from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
+from search_src.searchlight.datastructures.graphs import *
 
 # TODO: deprecated
 

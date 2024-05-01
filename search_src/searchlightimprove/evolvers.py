@@ -1,9 +1,9 @@
 from .headers import *
-from src.searchlight.bandit import MultiarmedBanditLearner
+from search_src.searchlight.bandit import MultiarmedBanditLearner
 from .llm_utils.llm_api_models import LLMModel
 # from .prompts.improvement_prompts import gen_specific_improvement_prompt, gen_draw_conclusions_from_feedback_prompt, gen_implement_function_from_improvement_prompt
 from .prompts.prompt_generators import PromptGenerator
-from src.searchlight.utils import UpdatablePriorityDictionary
+from search_src.searchlight.utils import UpdatablePriorityDictionary
 
 import numpy as np
 import os
@@ -50,7 +50,7 @@ class BeamEvolver(Evolver):
         # if seed functions are None, generate them
         if seed_functions is None:
             prompt = self.prompt_generator.gen_seed_function_prompt_without_thought()
-            functions = self.generate_seed_functions(self.batch_size, prompt)
+            functions = self.generate_seed_functions(10, prompt)
             seed_functions = [(function, dict()) for function in functions]
 
         # add seed functions
@@ -71,8 +71,7 @@ class BeamEvolver(Evolver):
         '''
         seed_functions = []
         for _ in range(num_seed_functions):
-            seed_function = self.model.generate(prompt, 1)[0]
-            seed_function = self.parse_function(seed_function)
+            seed_function = self.generate_function(prompt = prompt, tries = 10)
             seed_functions.append(seed_function)
         return seed_functions
 
@@ -130,7 +129,7 @@ class BeamEvolver(Evolver):
         # log the following things: self.num_evolutions, proportion of non-zero scores, best score
         non_inf_scores = sum(score != float('-inf') for score in scores)
         proportion_non_inf_scores = non_inf_scores / len(scores)
-        self.logger.info(f'Evolution: {self.num_evolutions}, Number of genearted functions: {len(proposed_functions)}, Proportion of executable functions: {proportion_non_inf_scores}, Best score: {max(scores)}')
+        self.logger.info(f'Evolution: {self.num_evolutions}, Number of generated functions: {len(proposed_functions)}, Proportion of executable functions: {proportion_non_inf_scores}, Best score: {max(scores)}, Proportion of new functions: {sum(is_new_function) / len(is_new_function)}')
 
         # add the proposed functions to the dictionary
         for i, function in enumerate(proposed_functions):
@@ -287,18 +286,21 @@ class ThoughtBeamEvolver(BeamEvolver):
     '''
     def __init__(self, evaluator: Evaluator, analyzer: FeedbackAnalyzer, prompt_generator: PromptGenerator, batch_size: int = 10, seed_functions: Optional[list[tuple[str, dict]]] = None, check_function: Callable[[str], bool] = lambda x: True, parse_function: Callable[[str],str] = lambda x: x, model: Optional[LLMModel] = None, num_fittest_functions: int = 1):
         
+        super().__init__(evaluator=evaluator, analyzer=analyzer, prompt_generator=prompt_generator, batch_size=batch_size, seed_functions=[], check_function=check_function, parse_function=parse_function, model=model, num_fittest_functions=num_fittest_functions)
+
         # generate seed functions with thought if not provided
         if seed_functions is None:
             seed_functions = []
             for i in range(batch_size):
                 thought_prompt = self.prompt_generator.gen_seed_thought_prompt()
                 thought = self.model.generate(thought_prompt, 1)[0]
-                function_prompt = self.prompt_generator.gen_seed_function_prompt_with_thought(thought)
-                function_str = self.generate_function(function_prompt)
+                function_prompt = prompt_generator.gen_seed_function_prompt_with_thought(thought)
+                function_str = self.generate_function(prompt = function_prompt, tries = 10)
                 if function_str is not None:
                     seed_functions.append((function_str, {'abstract': thought}))
 
-        super().__init__(evaluator=evaluator, analyzer=analyzer, prompt_generator=prompt_generator, batch_size=batch_size, seed_functions=seed_functions, check_function=check_function, parse_function=parse_function, model=model, num_fittest_functions=num_fittest_functions)
+        # add seed functions
+        self.add_seed_functions(seed_functions)
 
 
     def evolve_once(self):

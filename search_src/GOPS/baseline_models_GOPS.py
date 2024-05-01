@@ -1,10 +1,10 @@
 import os
 import re
 from typing import Dict, List
-from src.searchlight.headers import *
-# from src.Search.prompts import *
-import src.searchlight.utils as utils
-from src.searchlightimprove.prompts.improvement_prompts import *
+from search_src.searchlight.headers import *
+# from search_src.Search.prompts import *
+import search_src.searchlight.utils as utils
+from search_src.searchlightimprove.prompts.improvement_prompts import *
 # import logging
 
 # FIXME: logging config should be defined in main file (run_*.py)

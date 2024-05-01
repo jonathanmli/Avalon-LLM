@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import datetime
 from abc import ABC, abstractmethod
-from src.searchlight.utils import AbstractLogged
+from search_src.searchlight.utils import AbstractLogged
 
 # from .prompts.improvement_prompts import gen_execution_error_feedback
 from .prompts.prompt_generators import PromptGenerator
@@ -47,7 +47,7 @@ class Evaluator(AbstractLogged):
         super().__init__()
 
     @abstractmethod
-    def evaluate(self, functions: list[str]) -> tuple[list[float],list[dict]]:
+    def evaluate(self, objects: list[Any]) -> tuple[list[float],list[dict]]:
         '''
         Evaluates a collection of functions
 
@@ -60,7 +60,7 @@ class Evaluator(AbstractLogged):
         '''
         pass
     
-    def evaluate_with_benchmark(self, functions: list[str]) -> tuple[list[float], list, dict[str, float]]:
+    def evaluate_with_benchmark(self, objects: list[Any]) -> tuple[list[float], list, dict[str, float]]:
         '''
         Evaluates a collection of functions using a benchmark
 
@@ -72,7 +72,7 @@ class Evaluator(AbstractLogged):
             function_notes: list of notes for each function
             benchmark_scores: dictionary of benchmark scores from name to score
         '''
-        function_scores, function_notes = self.evaluate(functions)
+        function_scores, function_notes = self.evaluate(objects)
         return function_scores, function_notes, dict()
     
 class FeedbackAnalyzer(AbstractLogged):

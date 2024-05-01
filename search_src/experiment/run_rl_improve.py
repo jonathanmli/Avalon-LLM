@@ -1,21 +1,21 @@
-from src.searchlightimprove.headers import *
-from src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
-from src.searchlightimprove.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
-from src.GOPS.baseline_models_GOPS import *
-from src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
-from src.searchlightimprove.analyzers import HeuristicsAnalyzer
-from src.searchlight.gameplay.simulators import GameSimulator
-from src.GOPS.examples.abstract_list3 import abstract_list
-from src.GOPS.examples.func_list3 import func_list
-from src.utils import setup_logging_environment
-from src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
-from src.searchlightimprove.prompts.prompt_generators import PromptGenerator
-from src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
-from src.Avalon.baseline_models_Avalon import *
-from src.searchlight.datastructures.graphs import ValueGraph2
-from src.Avalon.examples.avalon_func import avalon_func_list
-# from src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator
-from src.searchlightimprove.rl_evolver import RLValueHeuristicsSSGEvaluator, RLEvolver
+from search_src.searchlightimprove.headers import *
+from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
+from search_src.searchlightimprove.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
+from search_src.GOPS.baseline_models_GOPS import *
+from search_src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
+from search_src.searchlightimprove.analyzers import HeuristicsAnalyzer
+from search_src.searchlight.gameplay.simulators import GameSimulator
+from search_src.GOPS.examples.abstract_list3 import abstract_list
+from search_src.GOPS.examples.func_list3 import func_list
+from search_src.utils import setup_logging_environment
+from search_src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
+from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
+from search_src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
+from search_src.Avalon.baseline_models_Avalon import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.Avalon.examples.avalon_func import avalon_func_list
+# from search_src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator
+from search_src.searchlightimprove.rl_evolver import RLValueHeuristicsSSGEvaluator, RLEvolver
 import logging
 import os
 import datetime

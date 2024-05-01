@@ -101,3 +101,7 @@ class PromptGenerator:
         --------------------------
         '''
         return string
+    
+    @staticmethod
+    def gen_state_description(state):
+        return str(state)

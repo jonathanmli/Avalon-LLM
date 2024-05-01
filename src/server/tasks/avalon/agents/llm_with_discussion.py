@@ -6,6 +6,7 @@ from ..prompts import *
 from copy import deepcopy
 from ..utils import verbalize_team_result, verbalize_mission_result
 from src.utils import ColorMessage
+import logging
 
 class LLMAgentWithDiscussion(Agent):
     r"""LLM agent with the ability to discuss with other agents."""
@@ -35,7 +36,7 @@ class LLMAgentWithDiscussion(Agent):
     def see_sides(self, sides):
         self.player_sides = sides
     
-    async def initialize_game_info(self, player_list) -> None:
+    async def initialize_game_info(self, player_list, **kwargs) -> None:
         """Initiliaze the game info for the agent, which includes game introduction, role, and reveal information for different roles."""
         # Introduction Prompt
         verbal_side = ["Evil", "Good"]
@@ -89,7 +90,7 @@ class LLMAgentWithDiscussion(Agent):
         })
         self.system_info = content_prompt + '\n' + identity_prompt + '\n' + reveal_info
 
-    async def summarize(self) -> None:
+    async def summarize(self, **kwargs) -> None:
         # print("Summary")
         # self.session.inject()
         summary = await self.session.action({
@@ -98,6 +99,7 @@ class LLMAgentWithDiscussion(Agent):
             "mode": "summarize"
         })
         print("Summary: ", summary)
+        logging.info(f"Summary: {summary}", )
         past_history = deepcopy(self.session.get_history())
         self.session.overwrite_history([])
         self.session.inject({
@@ -109,18 +111,19 @@ class LLMAgentWithDiscussion(Agent):
             'content': summary
         })
         print("History after summarization: ", self.session.get_history())
+        return self.session.get_history()
 
-    async def observe_mission(self, team, mission_id, num_fails, votes, outcome) -> None:
+    async def observe_mission(self, team, mission_id, num_fails, votes, outcome, **kwargs) -> None:
         pass
 
-    async def observe_team_result(self, mission_id, team: frozenset, votes: List[int], outcome: bool) -> None:
+    async def observe_team_result(self, mission_id, team: frozenset, votes: List[int], outcome: bool, **kwargs) -> None:
         # self.session.inject()
         await self.session.action({
             "role": "user",
             "content": verbalize_team_result(team, votes, outcome),
         })
     
-    async def get_believed_sides(self, num_players: int) -> List[float]:
+    async def get_believed_sides(self, num_players: int, **kwargs) -> List[float]:
         input = {
             "role": "user",
             "content": "To what extend do you believe each player to be Good, from Player 0 to Player 4? Please output probabilities within [0, 1] and round to two decimal places. If you are not sure, you can simply output 0.5.",
@@ -145,7 +148,7 @@ class LLMAgentWithDiscussion(Agent):
     #         "content": content_prompt,
     #     })
 
-    async def team_discussion(self, team_size, team_leader_id, mission_id):
+    async def team_discussion(self, team_size, team_leader_id, mission_id, **kwargs):
         """Team discussion phase.
 
         We also summarize the history before this phase at each round. If there's no discussion phase, we summarize the history before the vote phase.
@@ -161,14 +164,16 @@ class LLMAgentWithDiscussion(Agent):
                 "content": content_prompt,
             })
 
-        await self.session.action(receiver="all")
+        dialogue = await self.session.action(receiver="all")
+        print(f"Output: {dialogue}")
+        return dialogue
 
 
-    async def quest_discussion(self, team_size, team, team_leader_id, discussion_history, mission_id):
+    async def quest_discussion(self, team_size, team, team_leader_id, discussion_history, mission_id, **kwargs):
         fails_required = self.config.num_fails_for_quest[mission_id]
 
     
-    async def propose_team(self, team_size, mission_id):
+    async def propose_team(self, team_size, mission_id, **kwargs):
         content_prompt = CHOOSE_TEAM_ACTION.format(team_size, self.num_players-1)
 
         thought = COTHOUGHT_PROMPT
@@ -202,7 +207,7 @@ class LLMAgentWithDiscussion(Agent):
             )
         
     
-    async def vote_on_team(self, team, mission_id):
+    async def vote_on_team(self, team, mission_id, **kwargs):
         """Vote to approve or reject a team.
 
         If there's discussion phase, we will summarize the history before the vote phase.
@@ -240,7 +245,7 @@ class LLMAgentWithDiscussion(Agent):
                 "Vote result should be either 0 or 1, instead of {}.".format(type(vote_result))
             )
     
-    async def vote_on_mission(self, team, mission_id):
+    async def vote_on_mission(self, team, mission_id, **kwargs):
         content_prompt = VOTE_MISSION_ACTION.format(list(team))
 
         thought = COTHOUGHT_PROMPT
@@ -272,7 +277,7 @@ class LLMAgentWithDiscussion(Agent):
             )
         
 
-    async def assassinate(self):
+    async def assassinate(self, **kwargs):
         if self.role != 7:
             raise ValueError("Only the Assassin can assassinate.")
         

@@ -1,13 +1,13 @@
-from src.searchlightimprove.headers import *
-from src.GOPS.baseline_models_GOPS import *
-from src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
-from src.searchlight.gameplay.simulators import GameSimulator
-from src.GOPS.examples.abstract_list3 import abstract_list
-from src.GOPS.examples.func_list3 import func_list
-from src.Avalon.baseline_models_Avalon import *
-from src.Avalon.examples.avalon_func import avalon_func_list
-from src.searchlightimprove.value_heuristic_improve import ValueHeuristicsSSGEvaluator
-from src.utils import setup_logging_environment
+from search_src.searchlightimprove.headers import *
+from search_src.GOPS.baseline_models_GOPS import *
+from search_src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
+from search_src.searchlight.gameplay.simulators import GameSimulator
+from search_src.GOPS.examples.abstract_list3 import abstract_list
+from search_src.GOPS.examples.func_list3 import func_list
+from search_src.Avalon.baseline_models_Avalon import *
+from search_src.Avalon.examples.avalon_func import avalon_func_list
+from search_src.searchlightimprove.value_heuristic_improve import ValueHeuristicsSSGEvaluator
+from search_src.utils import setup_logging_environment
 
 import logging
 import os

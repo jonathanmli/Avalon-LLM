@@ -1,5 +1,5 @@
-from src.self_improve.search_improve import bfs_improve
-from src.GOPS.examples.func_list import *
+from search_src.self_improve.search_improve import bfs_improve
+from search_src.GOPS.examples.func_list import *
 
 TEST_FUNCTION = """
 def evaluate_state(state):

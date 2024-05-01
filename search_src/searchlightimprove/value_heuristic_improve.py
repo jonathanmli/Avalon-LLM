@@ -1,12 +1,12 @@
 from .headers import Evaluator
-from src.searchlight.gameplay.simulators import GameSimulator
-from src.searchlight.headers import *
-from src.searchlight.gameplay.agents import SearchAgent
-from src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from src.searchlight.datastructures.graphs import ValueGraph2
-from src.searchlight.datastructures.adjusters import PUCTAdjuster
-from src.searchlight.datastructures.estimators import UtilityEstimatorLast
-from src.searchlight.classic_models import RandomRolloutValueHeuristic
+from search_src.searchlight.gameplay.simulators import GameSimulator
+from search_src.searchlight.headers import *
+from search_src.searchlight.gameplay.agents import SearchAgent
+from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
+from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.adjusters import PUCTAdjuster
+from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
+from search_src.searchlight.classic_models import RandomRolloutValueHeuristic
 from .evaluators import *
 from typing import Type
 
@@ -51,7 +51,8 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         unpassed_notes = []
         for i, func in enumerate(functions):
             try:
-                # self.check_function(func, False)
+                self.logger.info(f'Checking function {self.check_function}')
+                self.check_function(func, False)
                 passed_functions.append(func)
             except Exception as e:
                 unpassed_notes.append({'execution_error': e})

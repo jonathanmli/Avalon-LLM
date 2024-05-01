@@ -1,9 +1,9 @@
-from src.searchlight.headers import *
-from src.searchlight.datastructures.graphs import *
-# from src.Search.adjusters import *
-from src.searchlight.datastructures.beliefs import *
-# from src.Search.estimators import *
-from src.searchlight.algorithms.mcts_search import *
+from search_src.searchlight.headers import *
+from search_src.searchlight.datastructures.graphs import *
+# from search_src.Search.adjusters import *
+from search_src.searchlight.datastructures.beliefs import *
+# from search_src.Search.estimators import *
+from search_src.searchlight.algorithms.mcts_search import *
 
 class SearchAgent(Agent):
 

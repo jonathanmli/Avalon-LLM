@@ -1,21 +1,20 @@
-from src.searchlightimprove.headers import *
-from src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
-from src.searchlightimprove.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
-from src.GOPS.baseline_models_GOPS import *
-from src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
-from src.searchlightimprove.analyzers import HeuristicsAnalyzer
-from src.searchlight.gameplay.simulators import GameSimulator
-from src.GOPS.examples.abstract_list3 import abstract_list
-from src.GOPS.examples.func_list3 import func_list
-from src.utils import setup_logging_environment
-from src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
-from src.searchlightimprove.prompts.prompt_generators import PromptGenerator
-from src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
-from src.Avalon.baseline_models_Avalon import *
-from src.searchlight.datastructures.graphs import ValueGraph2
-from src.Avalon.examples.avalon_func import avalon_func_list
-# from src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator
-from src.searchlightimprove.value_heuristic_improve import ValueHeuristicsSSGEvaluator
+from search_src.searchlightimprove.headers import *
+from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
+from search_src.GOPS.baseline_models_GOPS import *
+from search_src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
+from search_src.searchlightimprove.analyzers import HeuristicsAnalyzer
+from search_src.searchlight.gameplay.simulators import GameSimulator
+from search_src.GOPS.examples.abstract_list3 import abstract_list
+from search_src.GOPS.examples.func_list3 import func_list
+from search_src.utils import setup_logging_environment
+from search_src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
+from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
+from search_src.Avalon.baseline_models_Avalon import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.Avalon.examples.avalon_func import avalon_func_list
+# from search_src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator
+from search_src.searchlightimprove.value_heuristic_improve import ValueHeuristicsSSGEvaluator
+from search_src.GOPS.prompt_generator import GOPSValuePromptGenerator
 import logging
 import os
 import datetime
@@ -48,6 +47,7 @@ def main(cfg : DictConfig):
     num_ideas_per_iteration = cfg.preset_modular_improve.get("num_ideas_per_iteration", 1)
     num_search_budget = cfg.preset_modular_improve.get("num_search_budget", 16)
     num_random_rollouts = cfg.preset_modular_improve.get("num_random_rollouts", 4)
+    generate_new_seed_functions = cfg.preset_modular_improve.get("generate_new_seed_functions", False)
     evolver_name = cfg.evolver_name
 
     model_type = cfg.model.get("model", "gpt-3.5-turbo")
@@ -71,22 +71,29 @@ def main(cfg : DictConfig):
         actor_enumerator=GOPSActorEnumerator()
         action_enumerator=GOPSActionEnumerator()
         start_state=GOPSState2({-1}, tuple(),tuple(), tuple(), GOPS_num_cards)
+        players = {0, 1}
 
         # create prompt generator
-        prompt_generator = PromptGenerator(environment_rules=GOPS_RULES, function_signature=GOPS_FUNCTION_SIGNATURE)
-        seed_functions = [(func, {'abstract': abstract}) for func, abstract in zip(func_list, abstract_list)]
+        prompt_generator = GOPSValuePromptGenerator()
+
+        if generate_new_seed_functions:
+            seed_functions = None
+        else:
+            seed_functions = [(func, {'abstract': abstract}) for func, abstract in zip(func_list, abstract_list)]
         # create game simulator
         simulator = GameSimulator(transitor=transitor, 
                                   actor_enumerator=actor_enumerator, action_enumerator=action_enumerator, start_state=start_state,
                                   rng=rng)
         # create evaluator
-        evaluator = GOPSValueHeuristicsSSGEvaluator(simulator=simulator, num_batch_runs=num_batch_runs, players = {0,1}, against_benchmark=against_benchmark)
+        # evaluator = GOPSValueHeuristicsSSGEvaluator(simulator=simulator, num_batch_runs=num_batch_runs, players = {0,1}, against_benchmark=against_benchmark)
 
         # create check_function
         check_function = LLMFunctionalValueHeuristic.test_evaluate_static
         parse_function = LLMFunctionalValueHeuristic.parse_llm_function
 
         partial_information = False
+
+        llm_func_value_heuristic_class = LLMFunctionalValueHeuristic
 
     elif env_name == 'Avalon':
         # get relevant parameters
@@ -103,8 +110,12 @@ def main(cfg : DictConfig):
         players = player_set
 
         # create prompt generator for avalon
-        prompt_generator = PromptGenerator(environment_rules=GAME_RULES, function_signature=HEURISTICS_FUNCTION_SIGNATURE)
-        seed_functions = [(func, {'abstract': abstract}) for func, abstract in zip(avalon_func_list, abstract_list)]
+        prompt_generator = PromptGenerator(environment_rules=GAME_RULES, function_signature=HEURISTICS_FUNCTION_SIGNATURE, seed_heuristic_thought_prompt=1)
+
+        if generate_new_seed_functions:
+            seed_functions = None
+        else:
+            seed_functions = [(func, {'abstract': abstract}) for func, abstract in zip(avalon_func_list, abstract_list)]
 
         # create game simulator
         simulator = GameSimulator(transitor=transitor, 
@@ -115,25 +126,26 @@ def main(cfg : DictConfig):
         parse_function = AvalonLLMFunctionalValueHeuristic.parse_llm_generated_function
 
         partial_information = True
-
-        # create evaluator
-        evaluator = ValueHeuristicsSSGEvaluator(
-            simulator=simulator,
-            transitor=transitor,
-            actor_enumerator=actor_enumerator,
-            action_enumerator=action_enumerator,
-            check_function=check_function,
-            llm_func_value_heuristic_class=AvalonLLMFunctionalValueHeuristic,
-            num_batch_runs=num_batch_runs,
-            players=players,
-            rng=rng,
-            against_benchmark=against_benchmark,
-            search_budget=num_search_budget,
-            random_rollouts=num_random_rollouts, 
-            partial_information=partial_information,
-        )
+        llm_func_value_heuristic_class = AvalonLLMFunctionalValueHeuristic
     else:
         raise ValueError(f'Environment {env_name} not supported')
+    
+    # create evaluator
+    evaluator = ValueHeuristicsSSGEvaluator(
+        simulator=simulator,
+        transitor=transitor,
+        actor_enumerator=actor_enumerator,
+        action_enumerator=action_enumerator,
+        check_function=check_function,
+        llm_func_value_heuristic_class=llm_func_value_heuristic_class,
+        num_batch_runs=num_batch_runs,
+        players=players,
+        rng=rng,
+        against_benchmark=against_benchmark,
+        search_budget=num_search_budget,
+        random_rollouts=num_random_rollouts, 
+        partial_information=partial_information,
+    )
 
     # create analyzer
     analyzer = HeuristicsAnalyzer(num_samples=6, prompt_generator=prompt_generator)

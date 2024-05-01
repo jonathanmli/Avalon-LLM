@@ -1,9 +1,9 @@
-from src.searchlight.headers import *
-from src.searchlight.datastructures.beliefs import *
-from src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.headers import *
+from search_src.searchlight.datastructures.beliefs import *
+from search_src.searchlight.datastructures.graphs import ValueGraph2
 
 import itertools
-from src.searchlight.utils import *
+from search_src.searchlight.utils import *
 from datetime import datetime
 
 class FullSearch(Search):

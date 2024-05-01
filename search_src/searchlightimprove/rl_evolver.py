@@ -3,15 +3,40 @@ from searchlight.bandit import MultiarmedBanditLearner
 from .llm_utils.llm_api_models import LLMModel
 # from .prompts.improvement_prompts import gen_specific_improvement_prompt, gen_draw_conclusions_from_feedback_prompt, gen_implement_function_from_improvement_prompt
 from .prompts.prompt_generators import PromptGenerator
-from src.searchlight.utils import UpdatablePriorityDictionary
-from src.searchlight.gameplay.agents import Agent
-from src.searchlight.headers import State, ValueHeuristic2
+from search_src.searchlight.utils import UpdatablePriorityDictionary
+from search_src.searchlight.gameplay.agents import Agent
+from search_src.searchlight.headers import State, ValueHeuristic2
 from .value_heuristic_improve import *
 
 import numpy as np
 import os
 
 from typing import Optional
+
+##################################
+import torch as T
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+
+class VNetwork(nn.Module):
+    def __init__(self, input_dims=3, fc1_dims=64, fc2_dims=64, num_player=2):
+        super(VNetwork, self).__init__()
+        self.input_dims = input_dims
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+        self.fc1 = nn.Linear(self.input_dims, self.fc1_dims)
+        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.fc3 = nn.Linear(self.fc2_dims, num_player)
+
+    def forward(self, observation):
+        state = T.Tensor(observation)
+        x = F.relu(self.fc1(state))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
 
 class RLValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
 
@@ -58,7 +83,7 @@ class RLValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         # create graphs
         graphs = [ValueGraph2(adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(len(models))]
         # create value heuristics
-        value_heuristics = [RLValueHeuristic(model) for model in models]
+        value_heuristics = [RLValueHeuristic(torch_model=model) for model in models]
         # create initial inferencers
         initial_inferencers = [PackageInitialInferencer(self.transitor, self.action_enumerator, self.action_predictor, self.actor_enumerator, value_heuristic) for value_heuristic in value_heuristics]
         # create MCTS search algorithms
@@ -126,10 +151,22 @@ class RLValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         benchmark_scores = {name: score for name, score in zip(benchmark_names, benchmark_scores)}
 
         return function_scores, function_notes, benchmark_scores
-    
+
+
 class RLValueHeuristic(ValueHeuristic2):
     # TODO: implement this class
-    pass
+    def __init__(self, torch_model):
+        self.model = torch_model
+        super().__init__()
+
+    def _evaluate(self, state: State) -> tuple[dict[Any, float], dict]:
+        values = self.model(state)
+        res = dict()
+        for i in range(state.num_player):
+            res[i] = values[i]
+        notes = dict()
+        return tuple([res, notes])
+
 
 class RLEvolver(Evolver):
     '''
@@ -155,24 +192,30 @@ class RLEvolver(Evolver):
         # self.functions_dict = UpdatablePriorityDictionary()
         self.num_evolutions = 0 # number of evolutions conducted
         self.data = [] # data for training the model
+        self.lr_V = 1e-4
+        self.gamma = 0.99
+        self.num_player = 5
+        self.performance_history = []
 
         # TODO: you should create a pytorch model here
-        self.model = None
+        self.model = VNetwork(input_dims=10, fc1_dims=64, fc2_dims=64, num_player=self.num_player)
+        self.V_optimizer = optim.Adam(self.model.parameters(), lr=self.lr_V)
 
         # do initial evaluation of your model
 
         # evaluate the model
-        vh = RLValueHeuristic(torch_model = self.model)
-        scores, notes = self.evaluate(vh)
+        # vh = RLValueHeuristic(torch_model=self.model)
+        scores, notes = self.evaluate([self.model])
         self.data.append(notes[0]['feedback']['trajectory_data'])
+        self.performance_history.append(scores[0])
 
         self.num_evolutions += 1
 
         # create logger
         self.logger = logging.getLogger(self.__class__.__name__)
     
-    def evaluate(self, functions) -> tuple[list[float], list[dict]]:
-        return self.evaluator.evaluate(functions)
+    def evaluate(self, models) -> tuple[list[float], list[dict]]:
+        return self.evaluator.evaluate(models)
     
     def evolve_once(self):
         '''
@@ -185,10 +228,26 @@ class RLEvolver(Evolver):
         self.logger.info('training data: {training_data}')
 
         # TODO: train model
+        for i in range(len(training_data)):
+            state = training_data[i][-1]
+            reward = training_data[i][1]
+            if i+1 > len(training_data):
+                i = i-1
+                next_state = training_data[i+1][-1]
+
+        # learn VNetwork
+        self.V_optimizer.zero_grad()
+        V_pred = self.model(state)
+        V_true = reward + self.gamma * self.model(next_state)
+        loss_fn = nn.MSELoss()
+        V_loss = loss_fn(V_pred, V_true)
+        V_loss.backward()
+        self.V_optimizer.step()
 
         # evaluate the model
-        vh = RLValueHeuristic(torch_model = self.model)
-        scores, notes = self.evaluate(vh)
+        # vh = RLValueHeuristic(torch_model = self.model)
+        scores, notes = self.evaluate([self.model])
+        self.performance_history.append(scores[0])
 
         self.num_evolutions += 1
         self.data.append(notes[0]['feedback']['trajectory_data'])

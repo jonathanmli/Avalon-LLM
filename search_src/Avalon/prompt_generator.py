@@ -8,7 +8,7 @@ class AvalonPromptGenerator(PromptGenerator):
     Generates prompts for Avalon action self improvement
     '''
     def __init__(self, function_signature: str, sys_prompt: str):
-        super().__init__(environment_rules=GAME_RULES, function_signature=function_signature, sys_prompt=sys_prompt)
+        super().__init__(environment_rules=GAME_RULES, function_signature=function_signature, sys_prompt=sys_prompt, seed_heuristic_thought_prompt=1)
     
     @staticmethod
     def gen_state_description(state: AvalonState, with_hidden_info=True):

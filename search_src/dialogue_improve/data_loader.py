@@ -1,5 +1,6 @@
 from search_src.searchlight.utils import AbstractLogged
 # from searchlight.headers import State
+
 from typing import Any
 
 
@@ -13,10 +14,10 @@ class DataLoader(AbstractLogged):
         self.data = []  # This will store the list of data points
         self.rng = rng  # RNG instance for random operations
 
-    def sample_data_point(self) -> tuple[str, tuple, list[Any], list[str], list[int], list[str], list[int], ]:
+    def sample_data_point(self) -> tuple[list[str], tuple, list[Any], list[str], list[int], list[str], list[int], ]:
         '''
         Returns a data point (tuple) containing the following:
-        - discussion_history_summary: string containing the history of the discussion
+        - discussion_history_summary: string containing the history of the discussion for each agent
         - state_info: current state of the game, which is a tuple
         - intended_actions: list of intended actions of each agent (or final action)
         - private_informations: list of private information strings for each agent
@@ -29,13 +30,12 @@ class DataLoader(AbstractLogged):
         # Randomly select a data point using the RNG
         index = self.rng.integers(len(self.data))
         self.logger.info(f"Sampling data point at index {index}")
+        self.logger.info(f"State tuple: {self.data[index][1]}")
         return self.data[index]
     
     def save_data(self, save_path: str):
         json_data = [self.convert_to_serializable(dp) for dp in self.data]
-        with open(save_path, 'a') as f:
-            # f.write(json.dumps(json_data))
-            # f.write('\n')
+        with open(save_path, 'w') as f:
             json.dump(json_data, f)
         self.logger.info(f"Data saved to {save_path}")
 
@@ -47,7 +47,6 @@ class DataLoader(AbstractLogged):
 
     def convert_to_serializable(self, data_point):
         discussion_history_summary, state_info, intended_actions, private_informations, roles, dialogue, speaking_order = data_point
-        roles = tuple([int(role) for role in roles])
         return {
             'discussion_history_summary': discussion_history_summary,
             'state_info': list(state_info),
@@ -61,17 +60,26 @@ class DataLoader(AbstractLogged):
     def convert_from_serializable(self, serializable_data):
         return (
             serializable_data['discussion_history_summary'],
-            tuple(serializable_data['state_info']),
+            self.recursive_convert_all_lists_to_tuples(serializable_data['state_info']),
             serializable_data['intended_actions'],
             serializable_data['private_informations'],
             serializable_data['roles'],
             serializable_data['dialogue'],
             serializable_data['speaking_order']
         )
+    
+    def recursive_convert_all_lists_to_tuples(self, state_info):
+        new_state_info = []
+        for item in state_info:
+            if isinstance(item, list):
+                new_state_info.append(self.recursive_convert_all_lists_to_tuples(item))
+            else:
+                new_state_info.append(item)
+        return tuple(new_state_info)
 
     def add_data_point(self, 
-                       discussion_history_summary: str, 
-                       state_info: tuple, 
+                       discussion_history_summary: list[str], 
+                       state_info: tuple[int, int, int, int, int, bool, bool, list[int], list[bool], list[bool], list[bool], list[int]], # TODO: next time use dataclass for this
                        intended_actions: list[Any], 
                        private_informations: list[str], 
                        roles: list[int], 
@@ -94,6 +102,6 @@ class DataLoader(AbstractLogged):
         '''
         num_players, quest_leader, phase, turn, round, done, good_victory, quest_team, team_votes, quest_votes, quest_results, roles = state_tuple
         
-        return tuple([quest_leader, phase, turn, round, done, quest_team, team_votes, quest_results, good_victory])
+        return tuple([quest_leader, phase, turn, round, quest_team, team_votes, quest_results,])
 
     

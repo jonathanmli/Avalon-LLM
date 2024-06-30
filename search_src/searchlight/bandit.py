@@ -27,15 +27,17 @@ class MultiarmedBanditLearner(AbstractLogged):
         
         super().__init__()
 
-    def add_or_update(self, arm: Any, reward: float, notes: Any):
+    def add_or_update(self, arm: Any, reward: Optional[float], notes: Any):
         '''
         Adds or updates the reward of an arm
 
         Args:
             arm: arm to update
-            reward: reward to update
+            reward: reward to update. if reward = float('inf'), no reward is added (0 visits)
         '''
-        self.arm_to_value_estimates[arm].append(reward)
+        self.total_visits += 1
+        if reward is not None:
+            self.arm_to_value_estimates[arm].append(reward)
         
         # compute value estimate on arm
         value_estimate = self.estimator.estimate_list(self.arm_to_value_estimates[arm])
@@ -48,7 +50,19 @@ class MultiarmedBanditLearner(AbstractLogged):
         # update the arm in the priority dictionary with the new qvalue
         self.upd.add_or_update_key(arm, notes, qvalue)
         self.logger.debug(f'Updated arm {arm} with reward {reward} and qvalue {qvalue}')
-        self.total_visits += 1
+        
+
+    def get_value_estimate_for_arm(self, arm: Any) -> float:
+        '''
+        Returns the estimated reward of an arm
+
+        Args:
+            arm: arm to check
+
+        Returns:
+            estimated reward of the arm
+        '''
+        return self.estimator.estimate_list(self.arm_to_value_estimates[arm])
 
     def get_notes_for_arm(self, arm: Any) -> Any:
         '''

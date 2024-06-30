@@ -67,3 +67,14 @@ def verbalize_mission_result(team: frozenset, outcome: bool):
         verbalized_result += " Player %s" % str(member)
 
     return verbalized_result
+
+def slice_out_new_dialogue(dialogue_history: list[tuple[int, str]], player: int) -> list[tuple[int, str]]:
+    '''
+    Returns a list of dialogue that is new to the player (i.e. from the last time the player spoke, or the beginning of the dialogue if the player has not spoken yet)
+    '''
+    new_dialogue = dialogue_history
+    for i, (speaker, utterance) in enumerate(dialogue_history):
+        if speaker == player:
+            new_dialogue = dialogue_history[i+1:]
+            break
+    return new_dialogue

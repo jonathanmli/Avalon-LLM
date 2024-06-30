@@ -1,4 +1,4 @@
-from search_src.GOPS.baseline_models_GOPS import GOPSState2
+from search_search_src.GOPS.baseline_models_GOPS import GOPSState2
 
 HIDDEN_STATE_ENUMERATOR_PROMPT = '''Recall the rules of the game and enumerate the possible hidden states of the game that we could be in. Write down your thoughts and output the list of states
 

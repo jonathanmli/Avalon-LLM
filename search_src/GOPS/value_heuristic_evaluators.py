@@ -1,24 +1,24 @@
 from typing import Type
 from matplotlib.pylab import Generator
 from numpy.random._generator import default_rng as default_rng
-from search_src.searchlight.gameplay.simulators import GameSimulator
-from search_src.searchlight.headers import ActionEnumerator, ActorEnumerator, ForwardTransitor2
-from search_src.searchlightimprove.evaluators import ActionEnumerator, ActorEnumerator, ForwardTransitor2
-from search_src.searchlightimprove.headers import Evaluator
-from search_src.GOPS.baseline_models_GOPS import *
-from search_src.searchlight.classic_models import *
-# from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35
-from search_src.searchlight.headers import *
-from search_src.searchlight.datastructures.graphs import *
-from search_src.searchlight.datastructures.adjusters import *
-from search_src.searchlight.datastructures.beliefs import *
-from search_src.searchlight.datastructures.estimators import *
-from search_src.searchlight.algorithms.mcts_search import *
-from search_src.searchlight.algorithms.full_search import SMMinimax
-from search_src.searchlight.gameplay.agents import SearchAgent
-from search_src.searchlight.gameplay.simulators import *
-from search_src.searchlightimprove.evaluators import *
-from search_src.searchlightimprove.value_heuristic_improve import LLMFuncValueHeuristic, ValueHeuristicsSSGEvaluator
+from search_search_src.searchlight.gameplay.simulators import GameSimulator
+from search_search_src.searchlight.headers import ActionEnumerator, ActorEnumerator, ForwardTransitor2
+from search_search_src.searchlightimprove.evaluators import ActionEnumerator, ActorEnumerator, ForwardTransitor2
+from search_search_src.searchlightimprove.headers import Evaluator
+from search_search_src.GOPS.baseline_models_GOPS import *
+from search_search_src.searchlight.classic_models import *
+# from search_search_src.searchlightimprove.llm_utils.llm_api_models import GPT35
+from search_search_src.searchlight.headers import *
+from search_search_src.searchlight.datastructures.graphs import *
+from search_search_src.searchlight.datastructures.adjusters import *
+from search_search_src.searchlight.datastructures.beliefs import *
+from search_search_src.searchlight.datastructures.estimators import *
+from search_search_src.searchlight.algorithms.mcts_search import *
+from search_search_src.searchlight.algorithms.full_search import SMMinimax
+from search_search_src.searchlight.gameplay.agents import SearchAgent
+from search_search_src.searchlight.gameplay.simulators import *
+from search_search_src.searchlightimprove.evaluators import *
+from search_search_src.searchlightimprove.value_heuristic_improve import LLMFuncValueHeuristic, ValueHeuristicsSSGEvaluator
 
 import numpy as np
 from collections import defaultdict
@@ -151,7 +151,7 @@ class RandomRolloutEvaluator(Evaluator):
     
 #     def create_agents(self, functions: list[str]) -> list[SearchAgent]:
 #         # create graphs
-#         graphs = [ValueGraph2(adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(len(functions))]
+#         graphs = [ValueGraph(adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(len(functions))]
 #         # create value heuristics
 #         value_heuristics = [LLMFunctionalValueHeuristic(None, func) for func in functions]
 #         # create initial inferencers
@@ -168,7 +168,7 @@ class RandomRolloutEvaluator(Evaluator):
 #         '''
 #         num_agents = 1
 #         # create graphs
-#         graphs = [ValueGraph2(adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(num_agents)]
+#         graphs = [ValueGraph(adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(num_agents)]
 #         # create value heuristics
 #         value_heuristics = [RandomRolloutValueHeuristic(self.actor_enumerator, self.action_enumerator, self.transitor, num_rollouts=self.random_rollout_num_rollouts, rng=self.random_agent.rng) for _ in range(num_agents)]
 #         # create initial inferencers

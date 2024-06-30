@@ -2,8 +2,11 @@ import random
 from ..engine import AvalonBasicConfig, AvalonGameEnvironment
 import itertools
 import warnings
+from ..prompts import *
 from typing import List, Dict, Tuple
 from .agent import Agent
+from copy import deepcopy
+import logging
 
 class NaiveAgent(Agent):
     r"""Agent with naive strategies.
@@ -17,7 +20,9 @@ class NaiveAgent(Agent):
     """
 
     def __init__(self, id: int, role: int, config: AvalonBasicConfig, name: str, side: int=None, sides: List[int] = None, **kwargs):
+        print("Checkpoint Naive 0")
         super().__init__(id, role, config)
+        print("Checkpoint Naive 1")
         self.name = name
         self.id = id
         self.config = config
@@ -25,6 +30,7 @@ class NaiveAgent(Agent):
         self.team = None
         self.side = side # 1 for good, 0 for evil
         self.history = None
+        print("Checkpoint Naive 2")
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
@@ -53,7 +59,7 @@ class NaiveAgent(Agent):
     async def vote_on_mission(self, mission_id, team: frozenset, **kwargs):
         return self.side
     
-    async def initialize_game_info(self, player_list):
+    async def initialize_game_info(self, player_list, env=None):
         pass
 
     def assign_side(self, side):

@@ -53,6 +53,7 @@ class UCBAdjuster(QValueAdjuster):
 
     def __init__(self, c=np.sqrt(2)) -> None:
         self.c = c
+        self.small_value = 1e-2
 
     def adjust(self, qvalue: float, prior: float=1.0, state_visits: int=1, state_action_visits:int=1) -> float:
         '''
@@ -67,6 +68,9 @@ class UCBAdjuster(QValueAdjuster):
         Returns:
             adjusted qvalue
         '''
-        return qvalue + prior*np.sqrt(state_visits/(state_action_visits)) *self.c
+        # if state_action_visits == 0, set it to a small value
+        state_action_visits = max(state_action_visits, self.small_value)
+        # print('ucb', qvalue, prior, state_visits, state_action_visits, self.c)
+        return qvalue + prior*np.sqrt(np.log(state_visits)/(state_action_visits)) *self.c
 
     

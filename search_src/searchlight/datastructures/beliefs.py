@@ -1,7 +1,6 @@
 import numpy as np
-from ..headers import State
 from collections import defaultdict
-from typing import Any, Tuple, Set, Optional
+from typing import Any, Tuple, Set, Optional, Hashable
 from ..utils import AbstractLogged
 
 
@@ -44,66 +43,115 @@ class Node:
     def __gt__(self, other):
         return self.id > other.id
 
-class ValueNode2(Node):
+class ValueNode(Node):
     action_to_next_state: dict
-    actor_to_value_estimates: dict
-    actor_to_action_to_prob: dict
+    actor: Optional[int]
+    actor_to_value_estimates: dict[int, list]
+    action_to_prob_weights: dict
     action_to_actor_to_reward: dict
     is_expanded: bool
     visits: int
-    actor_to_action_visits: dict
-    actor_to_best_action: dict
-    done: bool
+    action_to_visits: dict
+    actions: set[Hashable]
     notes: dict
 
     def __init__(self, state, parents=None, children=None, virtual=False):
         super().__init__(state, parents, children, virtual)
         self.state = state # state of the game that this node represents
+        self.actor = None # the actor for this state. None if the node is terminal
+
         self.action_to_next_state = dict() # maps action to next state
-        self.actor_to_value_estimates = defaultdict(list) # maps actor to list of value estimates
-        self.actor_to_action_to_prob = dict() # maps actor to action to probability
         self.action_to_actor_to_reward = dict() # maps action to actor to intermediate reward
-        self.done = False # whether the node is terminal or not
+        self.action_to_prob_weights = defaultdict(lambda: 1.0) # maps action to probability for the actor
 
-        self.is_expanded = False
+        self.actor_to_value_estimates = defaultdict(list) # maps actor to list of value estimates
+        
+        self.action_to_visits = defaultdict(int) # maps action to number of visits
+
         self.visits = 0
-        self.actor_to_action_visits = defaultdict(lambda: defaultdict(int)) # maps actor to action to number of visits
-
-        self.actor_to_best_action = dict() # maps actor to best action (mainly for full search)
         self.notes = dict() # notes about the node
-    
-    def get_joint_actions(self) -> set[tuple[tuple[Any, Any]]]:
-        return set(self.action_to_next_state.keys())
+
+        self.acting_player_information_set = state # the information set for the acting player
+
+        # self.is_expanded = False
+        self.actions = set()
+
+    def reset(self):
+        self.visits = 0
+        self.action_to_visits = defaultdict(int)
+        self.actor = None
+        self.action_to_next_state = dict()
+        self.action_to_actor_to_reward = dict()
+        self.action_to_prob_weights = defaultdict(lambda: 1.0)
+        self.actor_to_value_estimates = defaultdict(list)
+        self.notes = dict()
+        
+    def get_action_to_probs(self) -> dict:
+        '''
+        Normalizes the action to prob weights and returns it
+        '''
+        total = sum(self.action_to_prob_weights.values())
+        return {action: prob/total for action, prob in self.action_to_prob_weights.items()}
     
     def get_next_states(self) -> set:
         return set(self.action_to_next_state.values())
     
-    def get_actors(self) -> set:
-        return set(self.actor_to_action_to_prob.keys())
+    def get_actor(self) -> int:
+        if self.actor is None:
+            raise ValueError("Node is terminal")
+        return self.actor
     
-    def get_actions_for_actor(self, actor) -> set:
-        return set(self.actor_to_action_to_prob[actor].keys())
+    def set_actor(self, actor: int):
+        self.actor = actor
+    
+    def get_actions(self) -> set:
+        # return set(self.action_to_next_state.keys())
+        return self.actions
 
     def is_done(self) -> bool:
-        return not self.get_actors()
+        return self.actor is None
+    
+    def get_acting_player_information_set(self) -> Hashable:
+        return self.acting_player_information_set
 
-    def check(self):
-        '''
-        Checks if all the fields are consistent
-        '''
-        # keys of self.actor_to_value_estimates should be the same as self.actors
-        assert set(self.actor_to_value_estimates.keys()) == self.get_actors()
-        # keys of self.actor_to_action_to_prob should be the same as self.actors
-        assert set(self.actor_to_action_to_prob.keys()) == self.get_actors()
-        # keys of self.action_to_actor_to_reward should be the same as self.actions
-        assert set(self.action_to_actor_to_reward.keys()) == self.get_joint_actions()
-        # keys of self.action_to_next_state should be the same as self.actions
-        assert set(self.action_to_next_state.keys()) == self.get_joint_actions()
-        # keys of self.actor_to_action_visits should be the same as self.actors
-        assert set(self.actor_to_action_visits.keys()) == self.get_actors()
-        # keys of self.actor_to_best_action should be the same as self.actors
-        assert set(self.actor_to_best_action.keys()) == self.get_actors()
+    def set_acting_player_information_set(self, information_set: Hashable):
+        self.acting_player_information_set = information_set
 
+    def get_unvisited_actions(self) -> set[Hashable]:
+        return self.get_actions() - set(self.action_to_visits.keys())
+
+class InformationSetNode(Node):
+    '''
+    We need to record here
+    - the information set id
+    - the nodes in this information set
+    - the acting player
+    '''
+
+    states_in_set: set
+    acting_player: int
+    information_set: Hashable
+    actions: set
+
+    def __init__(self, information_set: Hashable, acting_player: int, parents=None, children=None, virtual=False):
+        super().__init__(information_set, parents, children, virtual)
+        self.acting_player = acting_player
+        self.states_in_set = set()
+        self.information_set = information_set
+        self.actions = set()
+    
+    def add_state(self, state: Hashable):
+        self.states_in_set.add(state)
+    
+    def get_states_in_set(self) -> set:
+        return self.states_in_set
+    
+    def add_actions(self, actions: set):
+        self.actions.update(actions)
+
+    def get_actor(self) -> int:
+        return self.acting_player
+    
 
 class Graph(AbstractLogged):
     '''
@@ -113,7 +161,7 @@ class Graph(AbstractLogged):
         self.id_to_node = dict() # maps id to node
         super().__init__()
 
-    def get_node(self, id)-> Optional[None]:
+    def get_node(self, id)-> Optional[Any]:
         '''
         Returns the node corresponding to the id
 

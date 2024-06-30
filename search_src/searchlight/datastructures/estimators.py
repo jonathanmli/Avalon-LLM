@@ -1,5 +1,5 @@
 import numpy as np
-from .beliefs import ValueNode2
+from .beliefs import ValueNode
 
 class UtilityEstimator:
     '''
@@ -8,7 +8,7 @@ class UtilityEstimator:
     def __init__(self):
         pass
 
-    def estimate(self, node: ValueNode2, actor=0) -> float:
+    def estimate(self, node: ValueNode, actor=0) -> float:
         '''
         Estimates the value of a node
 
@@ -40,7 +40,7 @@ class UtilityEstimatorMean(UtilityEstimator):
     def __init__(self):
         super().__init__()
 
-    def estimate(self, node: ValueNode2, actor=None) -> float:
+    def estimate(self, node: ValueNode, actor=None) -> float:
         '''
         Estimates the value of a node
 
@@ -85,7 +85,7 @@ class UtilityEstimatorLast(UtilityEstimator):
     def __init__(self):
         super().__init__()
 
-    def estimate(self, node: ValueNode2, actor=None) -> float:
+    def estimate(self, node: ValueNode, actor=None) -> float:
         '''
         Estimates the value of a node, optionally for a specific actor
 

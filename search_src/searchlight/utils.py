@@ -148,6 +148,10 @@ class UPDwithSampling(UpdatablePriorityDictionary):
 
         probabilities = exp_priorities / exp_priorities.sum()
 
+        self.logger.debug(f"exp_priorities: {exp_priorities}")
+        self.logger.debug(f"Probabilities: {probabilities}")
+
+
         # Sample one of the top k items based on the softmax probabilities
         sampled_index = self.rng.choice(len(top_k_items), p=probabilities)
         return top_k_items[sampled_index]

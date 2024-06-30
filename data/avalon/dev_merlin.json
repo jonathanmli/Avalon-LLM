@@ -1,0 +1,27 @@
+[
+    {
+        "num_players": 5,
+        "quest_leader": 0,
+        "role_names": ["Merlin", "Servant", "Servant", "Assassin", "Minion"]
+    },
+    {
+        "num_players": 5,
+        "quest_leader": 0,
+        "role_names": ["Merlin", "Assassin", "Servant", "Servant", "Minion"]
+    },
+    {
+        "num_players": 5,
+        "quest_leader": 0,
+        "role_names": ["Merlin", "Assassin", "Servant", "Servant", "Minion"]
+    },
+    {
+        "num_players": 5,
+        "quest_leader": 0,
+        "role_names": ["Merlin", "Servant", "Assassin", "Servant", "Minion"]
+    },
+    {
+        "num_players": 5,
+        "quest_leader": 0,
+        "role_names": ["Merlin", "Minion", "Assassin", "Servant", "Servant"]
+    }
+]

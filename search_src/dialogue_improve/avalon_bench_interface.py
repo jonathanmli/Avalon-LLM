@@ -5,7 +5,6 @@ from .dialogue_generator import DialogueGenerator
 from .dialogue_discrimination import DialogueDiscriminator
 from .prompt_generator import PromptGenerator
 from searchlightimprove.llm_utils.llm_api_models import GPT35Multi
-from .data_loader import DataLoader
 
 class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
     def __init__(self, name: str, num_players: int, id: int, role: int, role_name: str, config:AvalonBasicConfig, session: AvalonSessionWrapper=None, side=None, seed=None, func_str=None, **kwargs):
@@ -24,7 +23,6 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
             seed=seed,
             **kwargs
         )
-        # TODO: instantiate the followings after initialize_game_info
         private_information = ""
         self.action_planner = ActionPlanner(
             config=self.config,
@@ -49,38 +47,31 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
             private_information=private_information
         )
 
-    async def team_discussion(self, team_size, team_leader_id, mission_id, env=None):
+    async def team_discussion(self, team_size, team_leader_id, mission_id):
         """
         Team discussion
         """
-        data_loader = DataLoader()
-        data_loader.add_data_point(DISCUSSION_HISTORY, STATE_TUPLE, ACTION_INTENTS, PRIVATE_INFORMATIONS, ROLES, DIALOGUE, SPEAKER_ORDER)
-        self.dialogue_discriminator.update_beliefs(history=)
-        action = self.get_action_intent(env)
-        dialogue = self.dialogue_generator.generate_dialogue(
-            intended_action=action,
-            history=,
-        )
-
-    async def propose_team(self, team_size, mission_id, env=None):
+        self.dialogue_generator.generate_dialogue()
+    
+    async def propose_team(self, env, team_size, mission_id):
         """
         Propose Team
         """
         return self.get_action_intent(env)
     
-    async def vote_on_team(self, team, mission_id, env=None):
+    async def vote_on_team(self, team, mission_id):
         """
         Vote on team
         """
         return self.get_action_intent(env)
 
-    def convert_to_avalon_state(self, env=None) -> AvalonState:
+    def convert_to_avalon_state(self, env) -> AvalonState:
         '''
         Converts the current Avalonbench game state to an AvalonState object
         '''
         return AvalonState.init_from_env(env)
     
-    def get_action_intent(self, env=None):
+    def get_action_intent(self, env):
         '''
         Returns the action intent of the agent
         '''

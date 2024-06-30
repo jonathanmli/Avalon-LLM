@@ -250,6 +250,7 @@ class MultiAgentProxy(Proxy):
     
     
     def set_current_agent(self, agent_id: int) -> int:
+        print("Setting Current Agent to ", agent_id)
         self.history[self.current_agent] = deepcopy(self.session.history)
         self.current_agent = agent_id
         self.session.history = deepcopy(self.history[self.current_agent])

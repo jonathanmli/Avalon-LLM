@@ -1,5 +1,5 @@
-from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
-from search_src.searchlightimprove.prompts.improvement_prompts import SYS_PROMPT,SYS_PROMPT_POLICY
+from search_search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
+from search_search_src.searchlightimprove.prompts.improvement_prompts import SYS_PROMPT,SYS_PROMPT_POLICY
 from .prompts import GOPS_RULES, VALUE_FUNCTION_SIGNATURE, POLICY_FUNCTION_SIGNATURE 
 from .baseline_models_GOPS import GOPSState2
 

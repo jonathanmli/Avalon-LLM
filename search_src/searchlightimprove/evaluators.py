@@ -56,13 +56,15 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
     def __init__(self, simulator: GameSimulator,
                  num_batch_runs: int = 10,
                  players = {0, 1}, 
-                 rng = np.random.default_rng(),):
+                 rng = np.random.default_rng(), 
+                 stochastic_combinations = True):
         super().__init__(simulator=simulator,)
         self.players = players
         self.num_batch_runs = num_batch_runs
         self.random_agent = RandomAgent(rng)
         self.random_agent.set_player(-1)
         self.rng = rng
+        self.stochastic_combinations = stochastic_combinations
 
     def set_num_batch_runs(self, num_batch_runs: int):
         self.num_batch_runs = num_batch_runs
@@ -90,22 +92,22 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
                 if i != j:
                     assert agent1 != agent2
 
-        # enumerate all possible combinations of len(players) of range(len(functions))
-        all_combinations = list(itertools.combinations(range(len(agents)), len(self.players)))
+        if not self.stochastic_combinations:
+            # enumerate all possible permutations of len(players) of range(len(functions))
+            all_permutations = list(itertools.permutations(range(len(agents)), len(self.players)))
+
+        # enumerate all possible permutations of len(players) of range(len(functions))
+        # all_combinations = list(itertools.combinations(range(len(agents)), len(self.players)))
 
         # simulate games for each combination
         score_per_agent = [0.0 for _ in range(len(agents))]
         notes_per_agent = [defaultdict(list) for _ in range(len(agents))]
+        num_plays_per_agent = [0 for _ in range(len(agents))]
         
         # loop through number of batch runs
         for _ in range(self.num_batch_runs):
-            for combination in all_combinations:
-                # print the combination for debugging
-                # print('combination', combination)
-
-                # print self.players for debugging
-                # print('self.players', self.players)
-
+            
+            def play_out_combination(combination):
                 # assign agents to players
                 agent_subset = {actor: agents[combination[i]] for i, actor in enumerate(self.players)}
                 # set_player the agents to correct actor
@@ -125,7 +127,7 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
                             assert agent1 != agent2
 
                 # log agent subset for debugging
-                self.logger.info(f'agent_subset: {agent_subset}')
+                # self.logger.info(f'agent_subset: {agent_subset}')
 
 
                 score, trajectory = self.simulator.simulate_game(agent_subset)
@@ -153,7 +155,8 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
         
                                 # get the heuristic feedback
                                 if node is None:
-                                    self.logger.info('State {} not found in graph'.format(state))
+                                    self.logger.debug('State {} not found in graph'.format(state))
+                                    # usually this is normal and is because the agent did not explore the state
                                     heuristics_trajectory[agent].append(dict())
                                     estimate_trajectory[agent].append(search_estimate)
                                     heuristics_score[agent].append(dict())
@@ -188,18 +191,48 @@ class SimulateSearchGameEvaluator(SimulateGameEvaluator):
                     agent_id = combination[i]
                     agent = agent_subset[actor]
                     score_per_agent[agent_id] += score[actor]
+                    num_plays_per_agent[agent_id] += 1
                     # combine all the trajectory data into a single dictionary for that agent
                     trajectory_data = {'trajectory': trajectory, 'heuristics_score_trajectory': heuristics_score[agent], 'heuristics_trajectory': heuristics_trajectory[agent], 'search_trajectory': estimate_trajectory[agent], 'score_trajectory': score_trajectory[agent]}
                     notes_per_agent[agent_id]['trajectory_data'].append(trajectory_data)
+            
+            if not self.stochastic_combinations:
+                # enumerate all possible permutations of len(players) of range(len(functions))
+                
+                for permutation in all_permutations:
+                    # print the combination for debugging
+                    # print('combination', combination)
+
+                    # print self.players for debugging
+                    # print('self.players', self.players)
+                    play_out_combination(permutation)
+            else:
+                # sample a random permutation of len(players) of range(len(functions))
+                permutation = self.rng.permutation(len(agents))[:len(self.players)]
+                play_out_combination(permutation)
         # average the scores
-        score_per_agent = [score / (self.num_batch_runs * len(all_combinations)) for score in score_per_agent]
+        for i in range(len(score_per_agent)):
+            if num_plays_per_agent[i] == 0:
+                score_per_agent[i] = 0.0
+                self.logger.warning(f'Agent {i} did not play any games')
+            else:
+                score_per_agent[i] /= num_plays_per_agent[i]
+        # if self.stochastic_combinations:
+        #     score_per_agent = [score / self.num_batch_runs for score in score_per_agent]
+        # else:
+        #     score_per_agent = [score / (self.num_batch_runs * len(all_permutations)) for score in score_per_agent]
+
+        # log len(notes_per_agent[agent_id]['trajectory_data']) for agent 0 
+        # self.logger.info(f'len(notes_per_agent[0][trajectory_data]): {len(notes_per_agent[0]["trajectory_data"])}')
+        # now log the trajectory data for agent 0
+        # self.logger.info(f'notes_per_agent[0]["trajectory_data"]: {notes_per_agent[0]["trajectory_data"]}')
 
         # figure out what notes we want to return
         # should include the following:
         # - trajectories of all games played
         # - execution error feedback
         # - what the heuristic function evaluated to for each state (node) and related components
-
+        
         return score_per_agent, notes_per_agent
 
     

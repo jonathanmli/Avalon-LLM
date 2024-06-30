@@ -33,7 +33,7 @@ class SMMonteCarlo(InferenceSearch2):
         self.node_budget = node_budget
         self.early_stopping_threshold = early_stopping_threshold
         
-    def _expand(self, graph: ValueGraph2, state: State,):
+    def _expand(self, datastructure: ValueGraph2, state: State,):
         '''
         Expand starting from a node
         
@@ -49,7 +49,7 @@ class SMMonteCarlo(InferenceSearch2):
         Returns:
             best_action: best action to take for player in the given state
         '''
-
+        graph = datastructure
         self.nodes_expanded = 0
         num_rollout = self.num_rollout
 
@@ -65,16 +65,7 @@ class SMMonteCarlo(InferenceSearch2):
             # run one simulation
             self.mc_simulate(graph, state)
             num_rollout -= 1
-
-        # # select a joint action to take
-        # node = graph.get_node(state)
-        # joint_action = self.select_action(node, graph)
-
-        # # get the action from joint action that corresponds to the player
-        # best_action = dict(joint_action)[player]
-
-        # return best_action
-
+            
     def initial_inference(self, state: State):
         '''
         Conducts initial inference on a state

@@ -157,11 +157,16 @@ class LLMAgentWithDiscussion(Agent):
         # await self.summarize()
 
         fails_required = self.config.num_fails_for_quest[mission_id]
-        content_prompt = CHOOSE_TEAM_LEADER
+        content_prompt = CHOOSE_TEAM_LEADER + DISCUSSION_SUFFIX
         if self.id == team_leader_id:
             self.session.inject({
                 "role": "user",
                 "content": content_prompt,
+            })
+        else:
+            self.session.inject({
+                "role": "user",
+                "content": DISCUSSION_SUFFIX
             })
 
         dialogue = await self.session.action(receiver="all")

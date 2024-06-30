@@ -5,24 +5,39 @@ There are five Quests in the game and five turns, one for each quest. Good playe
 
 At the beginning of the game, each player is assigned a role secretly and randomly. Private information is then revealed to each player. A random player is selected as the leader for the first round.
 
-Each round, after a round of discussion, the leader will select a team of players to participate in the Quest. Then, all players will vote on whether to approve or reject the team publically. If the team is approved (a strict majority vote to approve), the Quest will be carried out. If the team is not approved, the next player becomes the leader and the next round will start. If four teams are rejected in a row, the fifth team will automatically be approved.
+Each round, after a round of discussion, the leader will select a team of players to participate in the Quest. Then, all players will vote on whether to approve or reject the team publicly. If the team is approved (a strict majority vote to approve), the Quest will be carried out. If the team is not approved, the next player becomes the leader and the next round will start. If four teams are rejected in a row, the fifth team will automatically be approved.
 
-If the team is approved, each teammember chooses to pass or fail the Quest anonymously. Usually if there is at least one fail vote, the Quest fails. Otherwise, the Quest succeeds.In either case, we move on to the next turn and the next quest. 
+If the team is approved, each team-member chooses to pass or fail the Quest anonymously. Usually if there is at least one fail vote, the Quest fails. Otherwise, the Quest succeeds. In either case, we move on to the next turn and the next quest. Note that while the number of votes to fail the Quest is public information, exactly who cast the fail votes is not.
 
 Below are the roles in the game:
 
-Servant of Arthur (Servant): A Good player who does not know who is on the Evil side. Servant's job is to make sure that three Quests succeed.
+Servant of Arthur (Servant): A Good player who does not know who is on the Evil side. Servant's job is to make sure that three Quests succeed and Merlin is not assassinated.
 
 Minion of Mordred (Minion): An Evil player who knows who is on the Evil side. Minion's job is to fail three Quests without being identified by the Good players.
 
-Merlin: A Good player who knows who is on the Evil side. Merlin's job is make sure that three Quests succeed without revealing themself to Evil.
+Merlin: A Good player who knows who is on the Evil side. Merlin's job is make sure that three Quests succeed without revealing them-self to Evil players.
 
-Assassion: An Evil player who knows who is on the Evil side. Assassin's job is to assassinate Merlin if the Evil players can identify who Merlin is. If the Assassin successfully assassinates Merlin, the Evil players win the game immediately, even if three quests succeeded.
+Assassin: An Evil player who knows who is on the Evil side. Assassin's job identify and assassinate Merlin. If the Assassin successfully assassinates Merlin, the Evil players win the game immediately, even if three quests succeeded.
 
-Hence, Evil players usually know who is on the Evil side, but Good players usually do not know who is on the Evil side. 
+Hence, Evil players know who is on the Evil side, but Good players (except Merlin) usually do not know who is on the Evil side. 
 
-Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, persuasion, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day. Hence, players should rarely reveal their true identity to other players. Players will, can, and should lie to achieve their goals.
+Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, persuasion, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day. Hence, players should rarely reveal their true identity to other players. Players will, can, and should lie to achieve their goals. \n
 """
+
+# def evaluate_state(state: dict):
+#     players: set[int] = state['players'] # a set, the ids of the players in the game, usually ints
+#     turn: int = state['turn'] # int, the turn we are on in the game (i.e. how many quests have been attempted so far)
+#     phase: int = state['phase'] # int, the phase of the game we are in (numbered as follows, 0: team selection, 1: team approval, 2: quest phase, 3: assassination)
+#     round: int = state['round'] # int, how many rounds of discussion have occurred this turn
+#     quest_leader: int = state['quest_leader'] # player id, the player who is the leader currently (only relevant in the team selection phase)
+#     quest_team: set[int] = state['quest_team'] # set of player ids, the quest team, i.e. players who are on the quest team (only relevant in the team approval phase and quest phase). empty if no team has been proposed yet
+#     historical_quest_results: list[bool] = state['historical_quest_results'] # list of bools, quest results, i.e. whether the previous quests have succeeded or failed, in the order they have occurred. empty if no quests have been attempted yet
+#     historical_team_votes: list[bool] = state['historical_team_votes'] # list of bools, the teams votes for the most recent team proposed, empty if no team has been proposed yet
+#     num_good: int = state['num_good'] # int, the number of good players in the game
+#     num_participants_per_quest: list[int] = state['num_participants_per_quest'] # list of ints, number of participants required for each quest in order
+#     num_fails_per_quest: list[int] = state['num_fails_per_quest'] # list of ints, number of fails required for each quest to fail in order
+#     roles: list[str] = state['roles'] # a list player roles (strings), where each string is the role of the player and one of the following: 'Merlin', 'Minion', 'Servant', 'Assassin', 'Oberon', 'Morgana', 'Percival', 'Mordred'. the first element is the role of player 0, the second element is the role of player 1, etc.
+#     is_good: list[bool] = state['is_good'] # a list of bools, where the bools indicate whether they are good or not (True for good, False for evil). the first element is the role of player 0, the second element is the role of player 1, etc.
 
 # TODO: add hidden information
 HEURISTICS_FUNCTION_SIGNATURE = '''The function should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
@@ -33,33 +48,106 @@ For example, if the ids of the players are {0,1,2}, and you think player 0 has a
 
 The second element should be a dictionary of any important intermediate values that you used to calculate the scores. For example, if you calculated the probability of Merlin being assassinated, you could include that in the second element as `intermediate_value['merlin_assassination_probability']`.
 
+Since Avalon has 4 different phases, with different actions per phase, you should consider each phase separately. Recall that the phases are as follows: 0: team selection, 1: team approval, 2: quest phase, 3: assassination. Note that you are trying to evaluate the state of the game with full information, including the identities of all the players. Also note that at the end of the game either the Good or Evil side will win, so you just need to estimate the expected probability that Good will win, and the probability that Evil will win is 1 - probability that Good will win. Also since there are two ways in which Evil can win, you should consider both of these scenarios: 1) Evil wins by failing three quests, and 2) Evil wins by assassinating Merlin. Recall also that you have full information when evaluating the state, given by 'roles' and 'is_good', so you do not have to guess the roles of the players.
+
 Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. Any helper functions should be defined within the scope of the function 'evaluate_state'.
 Include comments in your code so that it is readable, but everything should be implemented. The signature of the function should be as follows:
 
 def evaluate_state(state: dict) -> tuple[dict[Any, float], dict]:
-    players = state['players'] # a set, the ids of the players in the game, usually ints
-    turn = state['turn'] # int, the turn we are on in the game (i.e. how many quests have been attempted so far)
-    phase = state['phase'] # int, the phase of the game we are in (numbered as follows, 0: team selection, 1: team approval, 2: quest phase, 3: assassination)
-    round = state['round'] # int, how many rounds of discussion have occurred this turn
-    quest_leader = state['quest_leader'] # player id, the player who is the leader currently (only relevant in the team selection phase)
-    quest_team = state['quest_team'] # set of player ids, the quest team, i.e. players who are on the quest team (only relevant in the team approval phase and quest phase)
-    historical_quest_results = state['historical_quest_results'] # list of bools, quest results, i.e. whether the previous quests have succeeded or failed, in the order they have occurred
-    historical_team_votes = state['historical_team_votes'] # list of lists of bools, team votes, i.e. the historical votes on the teams proposed so far
-    num_good = state['num_good'] # int, the number of good players in the game
-    num_participants_per_quest = state['num_participants_per_quest'] # list of ints, number of participants required for each quest in order
-    num_fails_per_quest = state['num_fails_per_quest'] # list of ints, number of fails required for each quest to fail in order
-    roles = state['roles'] # a dictionary of player ids to strings, where each string is the role of the player and one of the following: 'Merlin', 'Minion', 'Servant', 'Assassin', 'Oberon', 'Morgana', 'Percival', 'Mordred'
-    is_good = state['is_good']: a dictionary of player ids to bools, where the bools indicate whether they are good or not (True for good, False for evil)
-    ...
-    <intermediate_value1> = value1
-    ...
-    <intermediate_value2> = value2
-    ...
-    return {<player_name>:<player_expected_winrate>, ...}, {'<intermediate_value1>': intermediate_value1, '<intermediate_value2>': intermediate_value2, ...}
+    players: set[int] = state['players']  # A set containing the IDs of the players in the game, usually integers.
+    turn: int = state['turn']  # An integer representing the current turn in the game.
+    phase: int = state['phase']  # An integer representing the phase of the game: 0 for team selection, 1 for team approval, 2 for quest phase, and 3 for assassination.
+    round_number: int = state['round']  # An integer representing the number of rounds of discussion that have occurred this turn.
+    quest_leader: int = state['quest_leader']  # An integer representing the player who is currently the leader (only relevant in the team selection phase).
+    quest_team: set[int] = state['quest_team']  # A set of player IDs representing the quest team (only relevant in the team approval and quest phases). Empty if no team has been proposed yet.
+    historical_quest_results: list[bool] = state['historical_quest_results']  # A list of booleans representing the results of previous quests (True for success, False for failure). Empty if no quests have been attempted yet.
+    historical_team_votes: list[bool] = state['historical_team_votes']  # A list of booleans representing the votes for the most recent team proposed. Empty if no team has been proposed yet.
+    num_good: int = state['num_good']  # An integer representing the number of good players in the game.
+    num_participants_per_quest: list[int] = state['num_participants_per_quest']  # A list of integers representing the number of participants required for each quest in order.
+    num_fails_per_quest: list[int] = state['num_fails_per_quest']  # A list of integers representing the number of fails required for each quest to fail in order.
+    roles: list[str] = state['roles']  # A list of player roles (strings), with each string being one of the following: 'Merlin', 'Minion', 'Servant', 'Assassin', 'Oberon', 'Morgana', 'Percival', 'Mordred'. The first element represents the role of player 0, the second element represents the role of player 1, and so on.
+    is_good: list[bool] = state['is_good']  # A list of booleans indicating whether each player is good or evil (True for good, False for evil). The first element represents the role of player 0, the second element represents the role of player 1, and so on.
+
+    prob_good_victory = 0.5 # probability that Good will win
+
+    if phase == 0: # team selection phase
+        ...
+        <intermediate_value1> = value1
+        ...
+        <intermediate_value2> = value2
+        ...
+    elif phase == 1: # team approval phase
+        ...
+        <intermediate_value1> = value1
+        ...
+        <intermediate_value2> = value2
+        ...
+    elif phase == 2: # quest phase
+        ...
+        <intermediate_value1> = value1
+        ...
+        <intermediate_value2> = value2
+        ...
+    elif phase == 3: # assassination phase
+        ...
+        <intermediate_value1> = value1
+        ...
+        <intermediate_value2> = value2
+        ...
+
+    expected_winrates_per_player = dict()
+    prob_evil_victory = 1 - prob_good_victory
+    for player in players:
+        if is_good[player]:
+            expected_winrates_per_player[player] = prob_good_victory
+        else:
+            expected_winrates_per_player[player] = prob_evil_victory
+    
+    intermediate_values = {'<intermediate_value1>': intermediate_value1, '<intermediate_value2>': intermediate_value2, ...}
+    player_scores = expected_winrates_per_player
+    return player_scores, intermediate_values # make sure the return is exactly in this format
 
 Where you can use your own names for the intermediate values and the values themselves.
 Please start with "def evaluate_state(state):".
 '''
+
+# {<player_name>:<player_expected_winrate>, ...}
+
+# HEURISTICS_FUNCTION_SIGNATURE = '''The function should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
+# Specifically, the input will be a dictionary, and it should return 2 elements. 
+
+# The first return element should be a tuple with a dictionary from player name to float. The float should represent the expected win rate of the player. All players should be included as keys in the dictionary.
+# For example, if the ids of the players are {0,1,2}, and you think player 0 has a 0.8 chance of winning, player 1 has a 0.2 chance of winning, and player 2 has a 0.5 chance of winning, the first element should be: {0: 0.8, 1: 0.2, 2: 0.5}.
+
+# The second element should be a dictionary of any important intermediate values that you used to calculate the scores. For example, if you calculated the probability of Merlin being assassinated, you could include that in the second element as `intermediate_value['merlin_assassination_probability']`.
+
+# Make sure your output only includes the code of the function itself in plain text such that it is executable using exec() in python. Any helper functions should be defined within the scope of the function 'evaluate_state'.
+# Include comments in your code so that it is readable, but everything should be implemented. The signature of the function should be as follows:
+
+# def evaluate_state(state: dict) -> tuple[dict[Any, float], dict]:
+#     players = state['players'] # a set, the ids of the players in the game, usually ints
+#     turn = state['turn'] # int, the turn we are on in the game (i.e. how many quests have been attempted so far)
+#     phase = state['phase'] # int, the phase of the game we are in (numbered as follows, 0: team selection, 1: team approval, 2: quest phase, 3: assassination)
+#     round = state['round'] # int, how many rounds of discussion have occurred this turn
+#     quest_leader = state['quest_leader'] # player id, the player who is the leader currently (only relevant in the team selection phase)
+#     quest_team = state['quest_team'] # set of player ids, the quest team, i.e. players who are on the quest team (only relevant in the team approval phase and quest phase)
+#     historical_quest_results = state['historical_quest_results'] # list of bools, quest results, i.e. whether the previous quests have succeeded or failed, in the order they have occurred
+#     historical_team_votes = state['historical_team_votes'] # list of lists of bools, team votes, i.e. the historical votes on the teams proposed so far
+#     num_good = state['num_good'] # int, the number of good players in the game
+#     num_participants_per_quest = state['num_participants_per_quest'] # list of ints, number of participants required for each quest in order
+#     num_fails_per_quest = state['num_fails_per_quest'] # list of ints, number of fails required for each quest to fail in order
+#     roles = state['roles'] # a dictionary of player ids to strings, where each string is the role of the player and one of the following: 'Merlin', 'Minion', 'Servant', 'Assassin', 'Oberon', 'Morgana', 'Percival', 'Mordred'
+#     is_good = state['is_good']: a dictionary of player ids to bools, where the bools indicate whether they are good or not (True for good, False for evil)
+#     ...
+#     <intermediate_value1> = value1
+#     ...
+#     <intermediate_value2> = value2
+#     ...
+#     return {<player_name>:<player_expected_winrate>, ...}, {'<intermediate_value1>': intermediate_value1, '<intermediate_value2>': intermediate_value2, ...}
+
+# Where you can use your own names for the intermediate values and the values themselves.
+# Please start with "def evaluate_state(state):".
+# '''
 
 # HEURISTICS_FUNCTION_SIGNATURE = '''The function should be named `evaluate_state` and take in a tuple called `state` of the game state as input. 
 # Specifically, the input will be a dictionary, which includes the following:

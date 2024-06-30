@@ -1,43 +1,15 @@
-from .llm_utils.llm_api_models import LLMModel, GPT35Multi
-import logging
-import pandas as pd
-import plotly.express as px
-import datetime
+# from .llm_utils.llm_api_models import LLMModel, GPT35Multi
+# import logging
+# import pandas as pd
+# import plotly.express as px
+# import datetime
 from abc import ABC, abstractmethod
-from search_src.searchlight.utils import AbstractLogged
+from searchlight.utils import AbstractLogged
 
 # from .prompts.improvement_prompts import gen_execution_error_feedback
-from .prompts.prompt_generators import PromptGenerator
+# from .prompts.prompt_generators import PromptGenerator
 
 from typing import Any, Optional, Callable
-
-class ImprovementProposer(ABC):
-    '''
-    Abstract class for an improvement proposer, which takes as input a base string and proposes a collection of improved strings
-    '''
-    def __init__(self):
-        # Create a logger for each instance with the name of the class
-        self.logger = logging.getLogger(self.__class__.__name__)
-    
-    @abstractmethod
-    def propose(self, base: str, abstract: str = '', feedback: str = '') -> tuple[list[str], list[str]]:
-        '''
-        Proposes improvements to a single base string (usually a function as a string)
-
-        Args:
-            base: base string to improve
-            abstract: abstract representation of the base string
-            feedback: any notes about the prompt (e.g. context, specific suggestions)
-                which can include the following:
-                - notes['heuristic']: feedback from the heuristic function
-                - notes['execution_error']: feedback from the execution error function
-                - notes['trajectory']: trajectory of simulated games
-
-        Returns:
-            proposed_functions: collection of proposed functions
-            proposed_abstracts: collection of abstract representations of the proposed functions
-        '''
-        pass
     
 class Evaluator(AbstractLogged):
     '''
@@ -59,21 +31,6 @@ class Evaluator(AbstractLogged):
             notes: notes for each function
         '''
         pass
-    
-    def evaluate_with_benchmark(self, objects: list[Any]) -> tuple[list[float], list, dict[str, float]]:
-        '''
-        Evaluates a collection of functions using a benchmark
-
-        Args:
-            functions: collection of functions to evaluate
-
-        Returns:
-            function_scores: list of scores for each function
-            function_notes: list of notes for each function
-            benchmark_scores: dictionary of benchmark scores from name to score
-        '''
-        function_scores, function_notes = self.evaluate(objects)
-        return function_scores, function_notes, dict()
     
 class FeedbackAnalyzer(AbstractLogged):
     '''
@@ -99,8 +56,6 @@ class Evolver(AbstractLogged):
     '''
     Abstract class for evolving functions
     '''
-    def __init__(self):
-        pass
 
     @abstractmethod
     def evolve(self, num_cycles: int):
@@ -108,4 +63,105 @@ class Evolver(AbstractLogged):
         Evolves the functions for a certain number of cycles
         '''
         pass
+
+class EvolverDependency(AbstractLogged):
+    '''
+    Abstract class that must be defined for evolution process
+    '''
+
+    @classmethod
+    @abstractmethod
+    def evaluate(cls, strategy: Any, strategy_info: dict) -> tuple[float, bool]:
+        '''
+        Evaluates an strategy. Modifies the strategy_info in place
+
+        Args:
+            strategy: strategy to evaluate
+            strategy_info: info for the strategy
+
+        Returns:
+            score: score of the strategy
+            success: whether the evaluation was successful
+        '''
+        pass
+
+
+
+class Evolver2(AbstractLogged):
+    '''
+    Abstract class for evolving strategies
+    '''
+
+    def __init__(self, evolver_dependency: EvolverDependency):
+        super().__init__()
+        self.evolver_dependency = evolver_dependency
+
+    def evolve(self, num_cycles: int) -> None:
+        '''
+        Evolves the strategies for a certain number of cycles
+        '''
+        self._evolve(num_cycles)
+        
+    @abstractmethod
+    def _evolve(self, num_cycles: int) -> None:
+        '''
+        Evolves the strategies for a certain number of cycles
+        '''
+        pass
+
+    @abstractmethod
+    def get_best_strategy(self) -> tuple[Any, float, dict]:
+        '''
+        Returns the best strategy
+
+        Returns:
+            best_strategy: best strategy
+            best_score: best score
+            best_info: best info
+        '''
+        pass
+
+class StrategyLibrary(AbstractLogged):
+    '''
+    Abstract class for storing and retrieving strategies to improve upon
+    '''
+    @abstractmethod
+    def add_or_update_strategy(self, strategy: Any, notes: dict, score: float):
+        '''
+        Adds or updates a strategy in the strategies dictionary
+
+        Args:
+            strategy: strategy to add or update
+            notes: notes for the strategy
+            score: score of the strategy
+        '''
+        pass
+
+    @abstractmethod
+    def select_strategies(self, k: int = 1) -> list[tuple[Any, dict, float]]:
+        '''
+        Selects the k strategies to improve upon
+
+        Args:
+            k: number of strategies to select. If k = -1, select all strategies
+
+        Returns:
+            items: items of the form (strategy, info, priority)
+        '''
+        pass
+
+    @abstractmethod
+    def get_best_strategy(self) -> tuple[Any, dict, float]:
+        '''
+        Returns the best strategy
+
+        Returns:
+            best_strategy: best strategy
+            best_info: best info
+            best_score: best score
+        '''
+        pass
+
+
+
         

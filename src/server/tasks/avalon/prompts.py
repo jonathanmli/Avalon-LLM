@@ -1,26 +1,30 @@
 INTRODUCTION = """You are playing a game called The Resistance: Avalon.
 
-The Resistance: Avalon is the game of hidden identities and social dedeuction. There are two teams in the game: Good and Evil. Each player has a hidden identity and side. 
+The Resistance: Avalon is the game of hidden identities and social deduction. There are two teams in the game: Good and Evil. Each player has a hidden identity (role) and side. 
 
 There are five Quests in the game. Good players aim to help three Quests succeed, while Evil players aim to fail three Quests. Different quests require different numbers of players to participate. 
 
-Each round, after a round of discussion, the leader will select a team of players to participate in the Quest. Then, all players will vote on whether to approve or reject the team. If the team is approved (a strict majority vote to approve), the Quest will be carried out. If the team is not approved, the next player becomes the leader and the next round will start. If four teams are rejected in a row, the fifth team will automatically be approved.
+At the beginning of the game, each player is assigned a role secretly and randomly. Private information is then revealed to each player. A random player is selected as the leader for the first round.
+
+Each round, after a round of discussion, the leader will select a team of players to participate in the Quest. Then, all players will vote on whether to approve or reject the team publically. If the team is approved (a strict majority vote to approve), the Quest will be carried out. If the team is not approved, the next player becomes the leader and the next round will start. If four teams are rejected in a row, the fifth team will automatically be approved.
 
 If the team is approved, each teammember chooses to pass or fail the Quest anonymously. Usually if there is at least one fail vote, the Quest fails. Otherwise, the Quest succeeds.
 
 Below are the roles in the game:
 
-Servant of Arthur (Servant): A good player who does not know who is on the Evil side. Servant's job is to help Good players to complete three Quests without being failed by the Evil players.
+Servant of Arthur (Servant): A Good player who does not know who is on the Evil side. Servant's job is to make sure that three Quests succeed.
 
 Minion of Mordred (Minion): An Evil player who knows who is on the Evil side. Minion's job is to fail three Quests without being identified by the Good players.
 
-Merlin: A Good player who knows who is on the Evil side. Merlin's job is to help Good players to complete three Quests without being failed by the Evil players. However, if the Evil players can identify who Merlin is, the Evil players will win the game immediately.
+Merlin: A Good player who knows who is on the Evil side. Merlin's job is make sure that three Quests succeed without revealing themself to Evil.
 
-Assassion: An Evil player who knows who is on the Evil side. Assassin's job is to assassinate Merlin if the Evil players can identify who Merlin is. If Assassin successfully assassinates Merlin, the Evil players will win the game immediately.
+Assassion: An Evil player who knows who is on the Evil side. Assassin's job is to assassinate Merlin if the Evil players can identify who Merlin is. If the Assassin successfully assassinates Merlin, the Evil players win the game immediately, even if three quests succeeded.
 
 Hence, Evil players usually know who is on the Evil side, but Good players usually do not know who is on the Evil side. 
 
-Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, persuasion, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day. Hence, players should rarely reveal their true identity to other players. 
+Players may make any claims during the game, at any point in the game. Discussion, deception, accusation, persuasion, and logical deduction are all equally important in order for Good to prevail or Evil to rule the day. Hence, players should rarely reveal their true identity to other players. Players will, can, and should lie to achieve their goals.
+
+In the current game, there are 5 players, including Player 0, Player 1, Player 2, Player 3, and Player 4. 3 players are good, including 1 Merlin, and 2 Servant(s). 3 players are evil, including 1 Assassin, and 1 Minion. The number of participants required for each quest are 2,3,2,3,3 respectively. 
 """
 
 TUTORIAL_STRATEGIES_PROMPTS_ZERO_SHOT = {
@@ -146,3 +150,5 @@ INFO_ROLE = """"There are {} players, including Player 0, Player 1, Player 2, Pl
 
 INFO_YOUR_ROLE = """You are {}, with identity {}. You are on the side of {}. Please do not forget your identity throughout the game.
 """
+
+DISCUSSION_SUFFIX = """\nProduce dialogue that aligns with your goals for the discussion. Note that dialogue will be seen by all players in the game. **Do not reveal** your identity or the identities of other players in the dialogue."""

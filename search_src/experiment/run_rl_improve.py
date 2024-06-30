@@ -2,7 +2,7 @@ from search_src.searchlightimprove.headers import *
 from search_src.searchlightimprove.llm_utils.llm_api_models import GPT35Multi
 from search_src.searchlightimprove.prompts.improvement_prompts import IMPROVEMENT_PROMPTS
 from search_src.GOPS.baseline_models_GOPS import *
-from search_src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
+# from search_src.GOPS.value_heuristic_evaluators import GOPSValueHeuristicsSSGEvaluator
 from search_src.searchlightimprove.analyzers import HeuristicsAnalyzer
 from search_src.searchlight.gameplay.simulators import GameSimulator
 from search_src.GOPS.examples.abstract_list3 import abstract_list
@@ -10,7 +10,7 @@ from search_src.GOPS.examples.func_list3 import func_list
 from search_src.utils import setup_logging_environment
 from search_src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
 from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
-from search_src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
+# from search_src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
 from search_src.Avalon.baseline_models_Avalon import *
 from search_src.searchlight.datastructures.graphs import ValueGraph2
 from search_src.Avalon.examples.avalon_func import avalon_func_list
@@ -45,7 +45,7 @@ def main(cfg : DictConfig):
     final_eval_num_batch_runs = cfg.preset_modular_improve.get("final_eval_num_batch_runs", 1)
     save_dir = cfg.get("save_dir", hydra_working_dir)
     num_search_budget = cfg.preset_modular_improve.get("num_search_budget", 16)
-    num_random_rollouts = cfg.preset_modular_improve.get("num_random_rollouts", 4)
+    num_random_rollouts = cfg.preset_modular_improve.get("num_random_rollouts", 2)
 
     logger.info(str(OmegaConf.to_yaml(cfg)))
 
@@ -91,10 +91,12 @@ def main(cfg : DictConfig):
         raise ValueError(f'Environment {env_name} not supported')
     
     # create evaluator
-    evaluator = RLValueHeuristicsSSGEvaluator(simulator=simulator, num_batch_runs=num_batch_runs, players = players, rng=rng, against_benchmark=against_benchmark, search_budget=num_search_budget, random_rollouts=num_random_rollouts, transitor=transitor, actor_enumerator=actor_enumerator, action_enumerator=action_enumerator,)
+    evaluator = RLValueHeuristicsSSGEvaluator(simulator=simulator, num_batch_runs=num_batch_runs, players=players, rng=rng, against_benchmark=against_benchmark, search_budget=num_search_budget, random_rollouts=num_random_rollouts, transitor=transitor, actor_enumerator=actor_enumerator, action_enumerator=action_enumerator,)
 
     # create evolver
-    evolver = RLEvolver(evaluator=evaluator, batch_size=batch_size)
+    # TODO: env_name
+    print(' ________seed________ = ', rd_seed)
+    evolver = RLEvolver(evaluator=evaluator, batch_size=batch_size, rd_seed=rd_seed, config=cfg)
 
     # log how long it took to initialize
     endtime = datetime.datetime.now()
@@ -132,4 +134,6 @@ def main(cfg : DictConfig):
 if __name__ == '__main__':
     setup_logging_environment(log_level=logging.INFO)
     print('Running main')
-    main()
+    random_seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+    for rd_seed in random_seeds:
+        main()

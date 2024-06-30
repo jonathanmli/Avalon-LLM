@@ -5,8 +5,10 @@ from ..datastructures.beliefs import *
 from ..datastructures.adjusters import *
 from ..datastructures.graphs import ValueGraph2
 
-from queue import PriorityQueue
+# from queue import PriorityQueue
 import logging
+# import heapq
+import heapq
 
 class InferenceSearch2(Search):
     '''
@@ -121,62 +123,48 @@ class BestFirstSearch(InferenceSearch2):
     '''
     Abstract class for best first search algorithms
     '''
-    def __init__(self, initial_inferencer: InitialInferencer2, rng: np.random.Generator = np.random.default_rng(), node_budget:int = 100, cut_cycles: bool = False):
-        
+    class QueueItem:
+        def __init__(self, priority, state):
+            self.priority = priority
+            self.state = state
+
+        def __lt__(self, other):
+            return self.priority < other.priority
+
+    def __init__(self, initial_inferencer: InitialInferencer2, rng: np.random.Generator = np.random.default_rng(), node_budget:int = 100, cut_cycles: bool = False, best_player: int = 0, early_stopping_threshold: Optional[dict] = None,):
         self.rng = rng
         self.node_budget = node_budget
-        self.unexpanded_states = PriorityQueue()
+        self.unexpanded_states = []
+        self.best_player = best_player
+        self.early_stopping_threshold = early_stopping_threshold
         super().__init__(initial_inferencer, cut_cycles=cut_cycles)
 
-    def _expand(self, graph: ValueGraph2, state: State,):
+    def add_to_unexpanded_states(self, priority, state):
+        heapq.heappush(self.unexpanded_states, BestFirstSearch.QueueItem(priority, state))
+
+    def pop_from_unexpanded_states(self):
+        return heapq.heappop(self.unexpanded_states).state
+
+    def _expand(self, datastructure: ValueGraph2, state: State):
         '''
         Expand starting from a node
         '''
-
-        # TODO: make sure popped_state is in cone of state. Yes already doing it inefficiently
-        self.nodes_expanded = 0
-
-        # if graph does not have state, add it to unexpanded_states
+        graph = datastructure
         if not graph.get_node(state):
-            self.unexpanded_states.put((0, state))
-        while self.nodes_expanded < self.node_budget and not self.unexpanded_states.empty():
-            # pop node from queue
-            (priority, popped_state) = self.unexpanded_states.get()
+            self.add_to_unexpanded_states(0, state)
+        
+        while self.nodes_expanded < self.node_budget and self.unexpanded_states:
+            popped_state = self.pop_from_unexpanded_states()
 
-            # print('popped_state', popped_state)
-
-            # get node from graph
             node, did_expand = self.infer_node(graph, popped_state)
 
-            # print('children', node.children)
-
-            
-
             if did_expand:
-                # TODO: backpropagate the value from the next state
-                # graph.backpropagate(node, action, next_state)
-                # we need to backpropogate to all parents of node
-
-                # add all children of node to queue
-                # TODO: change to qvalues instead (adjusted_q_values = graph.get_adjusted_qvalues(node))
-                # TODO: make sure all actors are accounted for?
                 for child in node.children:
-                    # child priority should be the estimated value of the child
-                    child_priority = -graph.get_estimated_value(child, 0)
-
-                    # log the child state and priority
+                    child_priority = -graph.get_estimated_value(child, self.best_player)
                     self.logger.debug(f'child state: {child.state}, priority: {child_priority}')
+                    self.add_to_unexpanded_states(child_priority, child.state)
 
-                    self.unexpanded_states.put((child_priority, child.state))
-
-                # increment nodes expanded
+                    if self.early_stopping_threshold is not None:
+                        if -child_priority >= self.early_stopping_threshold[self.best_player]:
+                            return
                 self.increment_nodes_expanded()
-                pass
-
-            
-            
-                
-            
-
-
-        

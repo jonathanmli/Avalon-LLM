@@ -41,7 +41,7 @@ def gen_draw_conclusions_from_feedback_prompt(function, feedback):
     tells the LLM to draw conclusions from feedback
     '''
     # combine FEEDBACK_PROMPTS, function, feedback, and thoughts
-    return SYS_PROMPT + GOPS_RULES + PREVIOUS_FUNCTION_INTRO + function + FEEDBACK_INTRO + feedback + CONCLUSION_FROM_FEEDBACK #+ INPUT_BELOW_BREAKER
+    return SYS_PROMPT + GOPS_RULES + PREVIOUS_FUNCTION_INTRO + function + FEEDBACK_INTRO + feedback + '\n' + CONCLUSION_FROM_FEEDBACK #+ INPUT_BELOW_BREAKER
 
 def gen_implement_function_from_improvement_prompt(function, idea):
     '''
@@ -101,16 +101,17 @@ INPUT_BELOW_BREAKER = '''\n >>>>>>>>>>>>>>>>>>>>>>>>>> \n'''
 
 BLOCK_BREAKER = '''\n ------------------------ \n'''
 
-SYS_PROMPT = '''You are a function engineer trying to write a function that can evaluate the value of a state in a game. This is known as a value heuristic, and will be used in lookahead search algorithms to evaluate the value of unexplored states. Your goal is to develop a heuristic that is as accurate as possible without being too expensive to compute. Hence, you are not allowed to runs simulations in the function.\n'''
+SYS_PROMPT = '''You are a function engineer trying to write a function that can evaluate the value of a state in a game. This is known as a value heuristic, and will be used in look-ahead search algorithms to evaluate the value of unexplored states. Your goal is to develop a heuristic that is as accurate as possible without being too expensive to compute. Hence, you are not allowed to runs simulations in the function.\n'''
 
 SYS_PROMPT_POLICY = '''You are a function engineer trying to write a function that outputs the optimal action for each player given a state in a game. This is known as a policy function, and will be used by an agent to play the game. Your goal is to develop a policy function that that produces the best possible actions without being too expensive to compute. Hence, you are not allowed to runs simulations in the function.\n'''
 
-GOPS_RULES = '''The game you want to write a function for is GOPS (game of pure strategy), also known as Goofspiel. The game has two players, and is played with a deck of score cards. Each player is dealt the same hand of cards at the beginning. The goal of the game is to get a score higher than your opponent. At the beginning of each round, a score card is randomly drawn without replacement from the score deck. Then each player plays a card simultaneously from their hand. The player who plays the higher card wins the round and gets the score card. They add the score of the score card to their total score. If the two cards played are the same, the person who wins the next round will get both score cards. The game continues until all score cards have been played. The player with the highest total score wins the game.\n'''
+# SYS_PROMPT_DIALOGUE = '''You are a coach trying to write a section of a strategy guide on how to play a game well.\n'''
+
+# GOPS_RULES = '''The game you want to write a function for is GOPS (game of pure strategy), also known as Goofspiel. The game has two players, and is played with a deck of score cards. Each player is dealt the same hand of cards at the beginning. The goal of the game is to get a score higher than your opponent. At the beginning of each round, a score card is randomly drawn without replacement from the score deck. Then each player plays a card simultaneously from their hand. The player who plays the higher card wins the round and gets the score card. They add the score of the score card to their total score. If the two cards played are the same, the person who wins the next round will get both score cards. The game continues until all score cards have been played. The player with the highest total score wins the game.\n'''
 
 
 
-HEURISTICS_SEED_THOUGHT_PROMPT =  '''Given the rules of the game, come up with a function that can be used to evaluate the value of a state in the game.
-Write down your thoughts and pseudocode for the function.
+HEURISTICS_SEED_THOUGHT_PROMPT =  '''Given the rules of the game, write down your thoughts and pseudocode for how to create a function to evaluate the value of a state in the game.
 
 -----
 Thoughts:
@@ -142,8 +143,7 @@ Use an if-else function to check the following,
 Remember that the function should output the score that you expect to get at the end of the game and the score that you expect your opponent will get at the end of the game. 
 For example, if you think you will win 12 total points by the end of the game and your opponent will win 8 total points, the function should return (12, 8).'''
 
-HEURISTICS_SEED_THOUGHT_PROMPT_2 =  '''Given the rules of the game, come up with a function that can be used to evaluate the value of a state in the game.
-Write down your thoughts and pseudocode for the function.
+HEURISTICS_SEED_THOUGHT_PROMPT_2 =  '''Given the rules of the game, write down your thoughts and pseudocode for how to create a function to evaluate the value of a state in the game.
 
 -----
 Thoughts:
@@ -157,9 +157,7 @@ Below is an example for the game of GOPS (Goofspiel), where I calculate the expe
                                
 "
 Thoughts:
-In GOPS, the value of a state can be determined by the current total score of each player, the remaining score cards in the deck, and the cards left in each player's hand.\n- Winning a round with a high score card can significantly impact the total score, so having high-value cards left in hand is important.\n- The distribution of score cards in the deck can also affect the value of a state, as certain cards may be more valuable than others.\n\nPseudocode:\n1. Define a function evaluate_state(state) that takes the current state of the game as input.\n2. Calculate the total score of each player based on the current state.\n3. Determine the remaining score cards in the deck and the cards left in each player's hand.\n4. Evaluate the potential value of the state by considering factors such as:\n   - The difference in total scores between the players\n   - The value of the cards left in each player's hand\n   - The distribution of score cards in the deck\n5. Return a tuple containing the expected score for the current player and the opponent player at the end of the game.\n
-Pseudocode:
-```\nfunction evaluate_state(state):\n    player_score = calculate_total_score(state, player)\n    opponent_score = calculate_total_score(state, opponent)\n    \n    remaining_score_cards = get_remaining_score_cards(state)\n    player_hand = get_player_hand(state, player)\n    opponent_hand = get_player_hand(state, opponent)\n    \n    player_potential_score = calculate_potential_score(player_score, player_hand, remaining_score_cards)\n    opponent_potential_score = calculate_potential_score(opponent_score, opponent_hand, remaining_score_cards)\n    \n    return (player_potential_score, opponent_potential_score)                          
+In GOPS, the value of a state can be determined by the current total score of each player, the remaining score cards in the deck, and the cards left in each player's hand.\n- Winning a round with a high score card can significantly impact the total score, so having high-value cards left in hand is important.\n- The distribution of score cards in the deck can also affect the value of a state, as certain cards may be more valuable than others.\n\nPseudocode:\n1. Define a function evaluate_state(state) that takes the current state of the game as input.\n2. Calculate the total score of each player based on the current state.\n3. Determine the remaining score cards in the deck and the cards left in each player's hand.\n4. Evaluate the potential value of the state by considering factors such as:\n   - The difference in total scores between the players\n   - The value of the cards left in each player's hand\n   - The distribution of score cards in the deck\n5. Return a tuple containing the expected score for the current player and the opponent player at the end of the game.\n                      
 "
                  
 Remember that the function should output the expected score for all players at the end of the game, one for each player.'''
@@ -171,17 +169,14 @@ IMPROVEMENT_PROMPTS = [
     "Below is a reward function for the game of GOPS (game of pure strategy) that is used in reinforcement learning and Monte Carlo Tree Search to evaluate the value of a state. Write a new Python function that improves upon the function given below. Make sure to include comments in your code so that it is readable describing what you improved on a why. Your output should ONLY include the new function, with any comments written as comments in the code. Also, do not change the name of the function.",
 ]
 
-PREVIOUS_FUNCTION_INTRO = '''Previously you generated the following function to evaluate the value of a state in the game of GOPS.
+PREVIOUS_FUNCTION_INTRO = '''Previously you generated the following function to evaluate the value of a state in the game.
 
     Previous function: \n'''
 
-FEEDBACK_INTRO = '''\n Below is some feedback on how the function you generated performed when we tested it. Note that simulations involve high variance and the actual scores may not match the expected scores exactly.
+FEEDBACK_INTRO = '''\n Below is some feedback on how the function you generated performed when we tested it. Note that simulations involve high variance and the actual scores may not match the expected scores exactly. Hence, you should focus on trying to get the scores produced by your function to match those predicted by look-ahead search as closely as possible. 
     
     Feedback: \n'''
 
-FEEDBACK_INTRO = '''Below is some feedback on how the function you generated performed when we tested it. Note that simulations involve high variance and the actual scores may not match the expected scores exactly.
-    
-    Feedback: \n'''
 
 MODIFY_ABSTRACT = '''Given the conclusions you drew from the feedback, modify your previous thoughts and pseudocode accordingly. Notate very clearly what parts of your previous thoughts and pseudocode that you modified and why. We reproduce your previous thoughts and pseudocode below for your reference. \n'''
 

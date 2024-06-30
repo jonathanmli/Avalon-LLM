@@ -3,12 +3,14 @@ from search_src.searchlight.gameplay.simulators import GameSimulator
 from search_src.searchlight.headers import *
 from search_src.searchlight.gameplay.agents import SearchAgent
 from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
 from search_src.searchlight.datastructures.adjusters import PUCTAdjuster
-from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
+from search_src.searchlight.datastructures.estimators import UtilityEstimatorMean
 from search_src.searchlight.classic_models import RandomRolloutValueHeuristic
+from .llm_utils.llm_api_models import LLMModel
 from .evaluators import *
 from typing import Type
+from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
 
 class LLMFuncValueHeuristic(ValueHeuristic2):
 
@@ -17,8 +19,8 @@ class LLMFuncValueHeuristic(ValueHeuristic2):
 
 class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
 
-    def __init__(self, simulator: GameSimulator, transitor: ForwardTransitor2, actor_enumerator: ActorEnumerator, action_enumerator: ActionEnumerator, check_function, llm_func_value_heuristic_class: Type[LLMFuncValueHeuristic], players, num_batch_runs: int = 10,  rng: np.random.Generator = np.random.default_rng(), against_benchmark=False, search_budget=16, random_rollouts=16, partial_information=False):
-        super().__init__(simulator, num_batch_runs, players, rng)
+    def __init__(self, simulator: GameSimulator, transitor: ForwardTransitor2, actor_enumerator: ActorEnumerator, action_enumerator: ActionEnumerator, check_function, llm_func_value_heuristic_class: Type[LLMFuncValueHeuristic], players, num_batch_runs: int = 10,  rng: np.random.Generator = np.random.default_rng(), against_benchmark=False, search_budget=16, random_rollouts=16, partial_information=False, stochastic_combinations = True, filler_heuristic: Optional[ValueHeuristic2] = None, use_filler_as_benchmark: bool =True, set_filler_to_best_func: bool = True):
+        super().__init__(simulator, num_batch_runs, players=players, rng=rng, stochastic_combinations=stochastic_combinations)
         self.against_benchmark = against_benchmark
         self.transitor = transitor
         self.actor_enumerator = actor_enumerator
@@ -28,12 +30,17 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         self.llm_func_value_heuristic_class = llm_func_value_heuristic_class
         self.search_budget = search_budget
         self.random_rollouts = random_rollouts
+        self.filler_heuristic = filler_heuristic
+        self.use_filler_as_benchmark = use_filler_as_benchmark
+        self.set_filler_to_best_func = set_filler_to_best_func
 
         if not partial_information:
             self.value_graph_class = ValueGraph2
         else:
             self.value_graph_class = PartialValueGraph
 
+    def set_filler_heuristic(self, filler_heuristic: Optional[ValueHeuristic2]):
+        self.filler_heuristic = filler_heuristic
 
     def evaluate(self, functions: list[str]) -> tuple[list[float], list]:
         '''
@@ -51,9 +58,10 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         unpassed_notes = []
         for i, func in enumerate(functions):
             try:
-                self.logger.info(f'Checking function {self.check_function}')
+                self.logger.debug(f'Checking function {self.check_function}')
                 self.check_function(func, False)
                 passed_functions.append(func)
+                # TODO: maybe don't need this
             except Exception as e:
                 unpassed_notes.append({'execution_error': e})
 
@@ -73,6 +81,13 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
                 function_scores, function_notes, benchmark_scores = self.evaluate_with_benchmark([func])
                 passed_scores.append(function_scores[0])
                 passed_notes.append(function_notes[0])
+
+        # if set_filler_to_best_func is True, set the filler heuristic to the best passed function
+        if self.set_filler_to_best_func:
+            best_index = np.argmax(passed_scores)
+            best_func = passed_functions[best_index]
+            best_value_heuristic = self.llm_func_value_heuristic_class(func=best_func)
+            self.set_filler_heuristic(best_value_heuristic)
 
         # print('passed_scores', passed_scores)
         # print('passed_notes', passed_notes)
@@ -96,7 +111,7 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
     
     def create_agents(self, functions: list[str]) -> list[SearchAgent]:
         # create graphs
-        graphs = [self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(len(functions))]
+        graphs = [self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorMean()) for _ in range(len(functions))]
         # create value heuristics
         value_heuristics = [self.llm_func_value_heuristic_class(func=func) for func in functions]
         # create initial inferencers
@@ -114,24 +129,42 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         '''
         num_agents = 1
         # create graphs
-        graphs = [self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast()) for _ in range(num_agents)]
+        graphs = [self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorMean()) for _ in range(num_agents)]
+
         # create value heuristics
-        value_heuristics = [RandomRolloutValueHeuristic(actor_enumerator=self.actor_enumerator, action_enumerator=self.action_enumerator, forward_transitor=self.transitor, num_rollouts=self.random_rollouts, rng=self.random_agent.rng,  players= self.players) for _ in range(num_agents)]
+        if self.use_filler_as_benchmark and self.filler_heuristic is not None:
+            value_heuristic = self.get_filler_heuristic()
+            names = ['FillerHeuristicMCTS' for _ in range(num_agents)]
+            value_heuristics = [value_heuristic for _ in range(num_agents)]
+        else:
+            value_heuristics = [RandomRolloutValueHeuristic(actor_enumerator=self.actor_enumerator, action_enumerator=self.action_enumerator, forward_transitor=self.transitor, num_rollouts=self.random_rollouts, rng=self.random_agent.rng,  players= self.players) for _ in range(num_agents)]
+            names = ['RandomRolloutValueHeuristicMCTS' for _ in range(num_agents)]
         # create initial inferencers
         initial_inferencers = [PackageInitialInferencer(self.transitor, self.action_enumerator, self.action_predictor, self.actor_enumerator, value_heuristic) for value_heuristic in value_heuristics]
         # create MCTS search algorithms
         search_algorithms = [SMMonteCarlo(initial_inferencer=initial_inferencer, rng=self.random_agent.rng, node_budget=self.search_budget, num_rollout=self.search_budget) for initial_inferencer in initial_inferencers]
         # create agents
         agents = [SearchAgent(search_algorithm, graph, self.rng) for graph, search_algorithm in zip(graphs, search_algorithms)]
-        return ['RandomRolloutValueHeuristicMCTS'], agents
+        return names, agents
+    
+    def get_filler_heuristic(self) -> ValueHeuristic2:
+        '''
+        Returns a filler heuristic that does not correspond to any function. 
+        '''
+        if self.filler_heuristic is None:
+            return RandomRolloutValueHeuristic(actor_enumerator=self.actor_enumerator, action_enumerator=self.action_enumerator, forward_transitor=self.transitor, num_rollouts=self.random_rollouts, rng=self.random_agent.rng,  players= self.players)
+        else:
+            # log the filler heuristic for debugging
+            self.logger.info(f'Using filler heuristic {self.filler_heuristic}')
+            return self.filler_heuristic
     
     def get_filler_agent(self) -> SearchAgent:
         '''
         Returns a filler agent that does not correspond to any function. 
         '''
         # return new random agent 
-        graph = self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorLast())
-        value_heuristic = RandomRolloutValueHeuristic(actor_enumerator=self.actor_enumerator, action_enumerator=self.action_enumerator, forward_transitor=self.transitor, num_rollouts=self.random_rollouts, rng=self.random_agent.rng,  players= self.players)
+        graph = self.value_graph_class(players=self.players, adjuster=PUCTAdjuster(), utility_estimator=UtilityEstimatorMean())
+        value_heuristic = self.get_filler_heuristic()
         initial_inferencer = PackageInitialInferencer(self.transitor, self.action_enumerator, self.action_predictor, self.actor_enumerator, value_heuristic)
         search_algorithm = SMMonteCarlo(initial_inferencer=initial_inferencer, rng=self.random_agent.rng, node_budget=self.search_budget, num_rollout=self.search_budget)
         return SearchAgent(search_algorithm, graph, self.rng)
@@ -154,7 +187,7 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
 
         Also possibly increases search budget for the agents. 
 
-        Functions are assumed to be executable.
+        Functions are assumed to be executable. 
 
         Args:
             functions: list of functions to evaluate
@@ -192,3 +225,27 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         benchmark_scores = {name: score for name, score in zip(benchmark_names, benchmark_scores)}
 
         return function_scores, function_notes, benchmark_scores
+    
+
+class LLMCriticValueHeuristicEvaluator(Evaluator):
+
+    def __init__(self, llm_model: LLMModel, prompt_generator: PromptGenerator):
+        super().__init__()
+        self.llm_model = llm_model
+        self.prompt_generator = prompt_generator
+
+    def evaluate(self, functions: list[str]) -> tuple[list[float], list]:
+        notes = []
+        scores = []
+        for func in functions:
+            score, note = self.evaluate_single_function(func)
+            notes.append(note)
+            scores.append(score)
+        return scores, notes
+
+    def evaluate_single_function(self, func: str) -> tuple[float, dict]:
+        prompt = self.prompt_generator.gen_critic_score_prompt(func)
+        response = self.llm_model.generate(prompt)[0]
+        explanation, score = self.prompt_generator.parse_critic_score(response)
+        note = {'explanation': explanation, "score":score}
+        return score, note

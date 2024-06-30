@@ -1,7 +1,7 @@
 from search_src.experiment.compare_search import *
 from search_src.GOPS.baseline_models_GOPS import *
 from search_src.GOPS.engine import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
 import numpy as np
 from search_src.searchlight.headers import *
 from search_src.searchlight.datastructures.adjusters import *
@@ -34,8 +34,6 @@ def main(cfg: DictConfig):
     logger.info('Starting initialization')
     starttime = datetime.datetime.now()
 
-    # create random state
-    random_state = np.random.RandomState(12)
     # create rng
     rng = np.random.default_rng(12)
     ###############
@@ -70,13 +68,13 @@ def main(cfg: DictConfig):
 
     # create q adjuster and utility estimator
     q_adjuster = PUCTAdjuster()
-    utility_estimator = UtilityEstimatorLast()
+    utility_estimator = UtilityEstimatorMean()
     policy_predictor = PolicyPredictor()
 
     # create graph, one for each player
     graphs = dict()
     for player in players:
-        graphs[player] = ValueGraph2(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players={player})
+        graphs[player] = PartialValueGraph(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players=players)
 
     value_heuristics = dict()
     inferencers = dict()

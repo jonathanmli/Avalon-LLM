@@ -15,6 +15,38 @@ avalon-dev-single:
   parameters:
     name: "AvalonBench-dev-single"
     data_file: "data/avalon/dev.json"
+    agent_list: ["search", "naive", "naive", "naive", "naive"]
+
+avalon-dev-single-baseline:
+  parameters:
+    name: "AvalonBench-dev-single"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["llm", "naive", "naive", "naive", "naive"]
+
+avalon-dev-single-discuss-servant:
+  parameters:
+    name: "AvalonBench-dev-single"
+    data_file: "data/avalon/dev_servant.json"
+    agent_list: ["search", "speak_naive", "speak_naive", "speak_naive", "speak_naive"]
+    discussion: True
+
+avalon-dev-single-discuss:
+  parameters:
+    name: "AvalonBench-dev-discuss"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["search", "speak_naive", "speak_naive", "speak_naive", "speak_naive"]
+    discussion: True
+
+avalon-dev-single-search:
+  parameters:
+    name: "AvalonBench-dev-discuss"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["search", "naive", "naive", "naive", "naive"]
+
+avalon-dev-single-baseline:
+  parameters:
+    name: "AvalonBench-dev-discuss"
+    data_file: "data/avalon/dev.json"
     agent_list: ["llm", "naive", "naive", "naive", "naive"]
 
 avalon-dev-multi:

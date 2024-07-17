@@ -4,20 +4,24 @@ concurrency:
   task:
     # avalon-dev-multi: 3
     # avalon-dev-naive: 3
-    avalon-dev-single-search: 1
+    # avalon-dev-single-search: 1
     # avalon-dev-single-baseline: 1
-    # avalon-dev-single-discuss: 1
+    avalon-dev-single-discuss: 1
+    # avalon-dev-single-baseline-discuss: 1
   agent:
-    gpt-3.5-turbo-0125: 1
+    # gpt-3.5-turbo-0125: 1
+    gpt-4-turbo-2024-04-09: 1
 
 assignments: # List[Assignment] | Assignment
   - agent: # "task": List[str] | str ,  "agent": List[str] | str
-      - gpt-3.5-turbo-0125
+      # - gpt-3.5-turbo-0125
+      - gpt-4-turbo-2024-04-09
     task:
       # - avalon-dev-multi
-      - avalon-dev-single-search
+      # - avalon-dev-single-search
       # - avalon-dev-single-baseline
-      # - avalon-dev-single-discuss
+      - avalon-dev-single-discuss
+      # - avalon-dev-single-baseline-discuss
       # - avalon-dev-single-baseline
       # - avalon-dev-naive
 

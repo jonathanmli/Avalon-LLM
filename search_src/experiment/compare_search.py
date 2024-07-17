@@ -4,13 +4,13 @@ from search_src.searchlight.datastructures.beliefs import *
 from search_src.searchlight.datastructures.estimators import *
 from search_src.searchlight.classic_models import *
 from search_src.GOPS.engine import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 import numpy as np
 from tqdm import tqdm
 from search_src.GOPS.baseline_models_GOPS import GOPSState2
 from search_src.searchlight.gameplay.agents import SearchAgent
 
-def compare_search(search1: Search, search2: Search, graph1: ValueGraph2, graph2: ValueGraph2, num_games: int, env):
+def compare_search(search1: Search, search2: Search, graph1: ValueGraph, graph2: ValueGraph, num_games: int, env):
     '''
     Evaluate two search algorithms by playing num_games games and comparing their performance.
 
@@ -49,7 +49,7 @@ def compare_search(search1: Search, search2: Search, graph1: ValueGraph2, graph2
     print('player 2 average score', player_2_total_score/num_games)
     return (player_1_win_count/num_games, player_2_win_count/num_games, player_1_nodes_expanded/num_games, player_2_nodes_expanded/num_games, player_1_total_score/num_games, player_2_total_score/num_games)
 
-def play_gops_game(search1: Search, search2: Search, graph1: ValueGraph2, graph2: ValueGraph2, env: GOPSEnvironment, ):
+def play_gops_game(search1: Search, search2: Search, graph1: ValueGraph, graph2: ValueGraph, env: GOPSEnvironment, ):
     # reset search
     search1.reset()
     search2.reset()
@@ -114,7 +114,7 @@ def play_gops_game(search1: Search, search2: Search, graph1: ValueGraph2, graph2
     # return player scores and total nodes expanded
     return (env.get_player1_score(), env.get_player2_score(), search1.get_total_nodes_expanded(), search2.get_total_nodes_expanded())
             
-def compare_search2(search1: Search, search2: Search, graph1: ValueGraph2, graph2: ValueGraph2, simulator: GameSimulator, num_games: int = 100, rng: np.random.Generator = np.random.default_rng()):
+def compare_search2(search1: Search, search2: Search, graph1: ValueGraph, graph2: ValueGraph, simulator: GameSimulator, num_games: int = 100, rng: np.random.Generator = np.random.default_rng()):
     '''
     Evaluate two search algorithms by playing num_games games and comparing their performance.
 

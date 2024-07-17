@@ -4,7 +4,7 @@ from search_src.searchlight.gameplay.simulators import GameSimulator
 from search_src.searchlight.headers import *
 from search_src.searchlight.gameplay.agents import SearchAgent
 from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
+from search_src.searchlight.datastructures.graphs import ValueGraph, PartialValueGraph
 from search_src.searchlight.datastructures.adjusters import PUCTAdjuster
 from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
 from search_src.searchlight.classic_models import RandomRolloutValueHeuristic

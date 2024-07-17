@@ -12,7 +12,7 @@ from search_src.searchlightimprove.evolvers import ImprovementLibraryEvolver, Be
 from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
 # from search_src.searchlightimprove.prompts.improvement_prompts import GOPS_RULES, GOPS_FUNCTION_SIGNATURE
 from search_src.Avalon.baseline_models_Avalon import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 from search_src.Avalon.examples.avalon_func import avalon_func_list
 # from search_src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator
 from search_src.searchlightimprove.rl_evolver import RLValueHeuristicsSSGEvaluator, RLEvolver

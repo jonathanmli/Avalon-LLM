@@ -24,7 +24,7 @@ class GOPSSessionWrapper(SessionWrapper):
 
     async def action(self, input: Dict):
         if isinstance(self.session, Session):
-            print("SESSION")
+            # print("SESSION")
             self.inject({
                 "role": input['role'],
                 "content": input['content']
@@ -43,9 +43,9 @@ class GOPSSessionWrapper(SessionWrapper):
             else:
                 return None
         elif isinstance(self.session, FakeSession):
-            print("FAKE SESSION")
+            # print("FAKE SESSION")
             return input.pop('naive_result', None)
     
     def inject(self, input: Dict):
-        print("INJECT")
+        # print("INJECT")
         return self.session.inject(input)

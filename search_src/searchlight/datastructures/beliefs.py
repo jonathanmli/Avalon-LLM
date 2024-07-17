@@ -47,9 +47,10 @@ class ValueNode(Node):
     action_to_next_state: dict
     actor: Optional[int]
     actor_to_value_estimates: dict[int, list]
+    actor_to_action_to_prob: dict
     action_to_prob_weights: dict
     action_to_actor_to_reward: dict
-    is_expanded: bool
+    is_expanded: bool = False
     visits: int
     action_to_visits: dict
     actions: set[Hashable]
@@ -75,6 +76,7 @@ class ValueNode(Node):
 
         # self.is_expanded = False
         self.actions = set()
+        self.actor_to_action_to_prob = dict() # maps actor to action to probability
 
     def reset(self):
         self.visits = 0
@@ -85,6 +87,23 @@ class ValueNode(Node):
         self.action_to_prob_weights = defaultdict(lambda: 1.0)
         self.actor_to_value_estimates = defaultdict(list)
         self.notes = dict()
+
+    def check(self):
+        '''
+        Checks if all the fields are consistent
+        '''
+        # keys of self.actor_to_value_estimates should be the same as self.actors
+        assert set(self.actor_to_value_estimates.keys()) == self.get_actors()
+        # keys of self.actor_to_action_to_prob should be the same as self.actors
+        assert set(self.actor_to_action_to_prob.keys()) == self.get_actors()
+        # keys of self.action_to_actor_to_reward should be the same as self.actions
+        assert set(self.action_to_actor_to_reward.keys()) == self.get_joint_actions()
+        # keys of self.action_to_next_state should be the same as self.actions
+        assert set(self.action_to_next_state.keys()) == self.get_joint_actions()
+        # keys of self.actor_to_action_visits should be the same as self.actors
+        assert set(self.actor_to_action_visits.keys()) == self.get_actors()
+        # keys of self.actor_to_best_action should be the same as self.actors
+        assert set(self.actor_to_best_action.keys()) == self.get_actors()
         
     def get_action_to_probs(self) -> dict:
         '''
@@ -95,6 +114,9 @@ class ValueNode(Node):
     
     def get_next_states(self) -> set:
         return set(self.action_to_next_state.values())
+    
+    def get_joint_actions(self) -> set[tuple[tuple[Any, Any]]]:
+        return set(self.action_to_next_state.keys())
     
     def get_actor(self) -> int:
         if self.actor is None:
@@ -110,6 +132,12 @@ class ValueNode(Node):
 
     def is_done(self) -> bool:
         return self.actor is None
+    
+    def get_actors(self) -> set:
+        return set(self.actor_to_action_to_prob.keys())
+
+    def get_actions_for_actor(self, actor) -> set:
+        return set(self.actor_to_action_to_prob[actor].keys())
     
     def get_acting_player_information_set(self) -> Hashable:
         return self.acting_player_information_set
@@ -152,6 +180,66 @@ class InformationSetNode(Node):
     def get_actor(self) -> int:
         return self.acting_player
     
+class ValueNode2(Node):
+    action_to_next_state: dict
+    actor_to_value_estimates: dict
+    actor_to_action_to_prob: dict
+    action_to_actor_to_reward: dict
+    is_expanded: bool
+    visits: int
+    actor_to_action_visits: dict
+    actor_to_best_action: dict
+    done: bool
+    notes: dict
+
+    def __init__(self, state, parents=None, children=None, virtual=False):
+        super().__init__(state, parents, children, virtual)
+        self.state = state # state of the game that this node represents
+        self.action_to_next_state = dict() # maps action to next state
+        self.actor_to_value_estimates = defaultdict(list) # maps actor to list of value estimates
+        self.actor_to_action_to_prob = dict() # maps actor to action to probability
+        self.action_to_actor_to_reward = dict() # maps action to actor to intermediate reward
+        self.done = False # whether the node is terminal or not
+
+        self.is_expanded = False
+        self.visits = 0
+        self.actor_to_action_visits = defaultdict(lambda: defaultdict(int)) # maps actor to action to number of visits
+
+        self.actor_to_best_action = dict() # maps actor to best action (mainly for full search)
+        self.notes = dict() # notes about the node
+    
+    def get_joint_actions(self) -> set[tuple[tuple[Any, Any]]]:
+        return set(self.action_to_next_state.keys())
+    
+    def get_next_states(self) -> set:
+        return set(self.action_to_next_state.values())
+    
+    def get_actors(self) -> set:
+        return set(self.actor_to_action_to_prob.keys())
+    
+    def get_actions_for_actor(self, actor) -> set:
+        return set(self.actor_to_action_to_prob[actor].keys())
+
+    def is_done(self) -> bool:
+        return not self.get_actors()
+
+    def check(self):
+        '''
+        Checks if all the fields are consistent
+        '''
+        # keys of self.actor_to_value_estimates should be the same as self.actors
+        assert set(self.actor_to_value_estimates.keys()) == self.get_actors()
+        # keys of self.actor_to_action_to_prob should be the same as self.actors
+        assert set(self.actor_to_action_to_prob.keys()) == self.get_actors()
+        # keys of self.action_to_actor_to_reward should be the same as self.actions
+        assert set(self.action_to_actor_to_reward.keys()) == self.get_joint_actions()
+        # keys of self.action_to_next_state should be the same as self.actions
+        assert set(self.action_to_next_state.keys()) == self.get_joint_actions()
+        # keys of self.actor_to_action_visits should be the same as self.actors
+        assert set(self.actor_to_action_visits.keys()) == self.get_actors()
+        # keys of self.actor_to_best_action should be the same as self.actors
+        assert set(self.actor_to_best_action.keys()) == self.get_actors()
+
 
 class Graph(AbstractLogged):
     '''

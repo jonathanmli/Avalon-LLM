@@ -20,9 +20,7 @@ class NaiveAgent(Agent):
     """
 
     def __init__(self, id: int, role: int, config: AvalonBasicConfig, name: str, side: int=None, sides: List[int] = None, **kwargs):
-        print("Checkpoint Naive 0")
         super().__init__(id, role, config)
-        print("Checkpoint Naive 1")
         self.name = name
         self.id = id
         self.config = config
@@ -30,7 +28,6 @@ class NaiveAgent(Agent):
         self.team = None
         self.side = side # 1 for good, 0 for evil
         self.history = None
-        print("Checkpoint Naive 2")
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side

@@ -14,6 +14,14 @@ gpt-3.5-turbo-0125:
             model: "gpt-3.5-turbo-0125"
             max_tokens: 1024
 
+gpt-4-turbo-2024-04-09:
+    import: "./openai-chat.yaml"
+    parameters:
+        name: "gpt-4-turbo-2024-04-09"
+        body:
+            model: "gpt-4-turbo-2024-04-09"
+            max_tokens: 1024
+
 text-davinci-003:
     import: "./openai-text.yaml"
     parameters:

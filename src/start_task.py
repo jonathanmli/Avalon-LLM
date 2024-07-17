@@ -103,7 +103,7 @@ if __name__ == "__main__":
                 requests.get("http://localhost:5000/api/list_workers")
                 break
             except Exception as e:
-                print("Waiting for controller to start...")
+                # print("Waiting for controller to start...")
                 time.sleep(0.5)
         else:
             raise Exception("Controller failed to start")

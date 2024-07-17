@@ -1,5 +1,5 @@
 from search_src.searchlight.algorithms.best_first_search import BestFirstSearch
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 from search_src.GOPS.value_heuristic_evaluators import *
 from search_src.self_improve.self_improve_search import SelfImprovementInitialInferencer
 from search_src.self_improve.llm_api_models import GPT35Multi
@@ -9,7 +9,7 @@ from search_src.searchlight.datastructures.adjusters import QValueAdjuster
 from search_src.searchlight.datastructures.estimators import UtilityEstimatorLast
 from search_src.GOPS.baseline_models_GOPS import *
 
-def bfs_improve(seed_functions: list) -> ValueGraph2:
+def bfs_improve(seed_functions: list) -> ValueGraph:
     '''
     Use best first search to improve a collection of seed functions
 
@@ -39,7 +39,7 @@ def bfs_improve(seed_functions: list) -> ValueGraph2:
     estimator = UtilityEstimatorLast()
 
     # create graph
-    graph = ValueGraph2(adjuster=adjuster, utility_estimator=estimator)
+    graph = ValueGraph(adjuster=adjuster, utility_estimator=estimator)
 
     # create initial inferencer
     initial_inferencer = SelfImprovementInitialInferencer(proposer, evaluator, graph)

@@ -1,7 +1,7 @@
 from search_src.experiment.compare_search import *
 from search_src.GOPS.baseline_models_GOPS import *
 from search_src.GOPS.engine import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 import numpy as np
 from search_src.searchlight.headers import *
 from search_src.searchlight.datastructures.adjusters import *
@@ -27,8 +27,8 @@ def main():
     utility_estimator = UtilityEstimatorLast()
 
     # create graph, one for each player
-    graph_1 = ValueGraph2(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players={0,1})
-    graph_2 = ValueGraph2(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players={0,1})
+    graph_1 = ValueGraph(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players={0,1})
+    graph_2 = ValueGraph(adjuster=q_adjuster, utility_estimator=utility_estimator, rng=rng, players={0,1})
 
     # create config
     action_enumerator = GOPSActionEnumerator()

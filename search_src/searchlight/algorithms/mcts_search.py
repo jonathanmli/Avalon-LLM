@@ -3,7 +3,7 @@ from ..headers import *
 from ..datastructures.estimators import *
 from ..datastructures.beliefs import *
 from ..datastructures.adjusters import *
-from ..datastructures.graphs import ValueGraph2
+from ..datastructures.graphs import ValueGraph
 from ..algorithms.best_first_search import InferenceSearch2
 
 class SMMonteCarlo(InferenceSearch2):
@@ -33,7 +33,7 @@ class SMMonteCarlo(InferenceSearch2):
         self.node_budget = node_budget
         self.early_stopping_threshold = early_stopping_threshold
         
-    def _expand(self, datastructure: ValueGraph2, state: State,):
+    def _expand(self, datastructure: ValueGraph, state):
         '''
         Expand starting from a node
         
@@ -66,7 +66,7 @@ class SMMonteCarlo(InferenceSearch2):
             self.mc_simulate(graph, state)
             num_rollout -= 1
             
-    def initial_inference(self, state: State):
+    def initial_inference(self, state):
         '''
         Conducts initial inference on a state
         '''
@@ -74,16 +74,19 @@ class SMMonteCarlo(InferenceSearch2):
         # print('initial_inferencer', self.initial_inferencer)
         return self.initial_inferencer.predict(state)
     
-    def get_best_action(self, graph: ValueGraph2, state: State, actor=0):
+    def get_best_action(self, graph: ValueGraph, state, actor=0):
         '''
         Get the best action to take for the given state
         '''
         node = graph.get_node(state)
         if node is None:
             return None
-        return dict(graph.select_action(node))[actor]
 
-    def mc_simulate(self, graph: ValueGraph2, state: State, prev_node = None, threshold = None) -> bool:
+        # return dict(graph.select_action(node))[actor]
+        # FIXME: should return the action from the same actor
+        return list(dict(graph.select_action(node)).values())[0]
+
+    def mc_simulate(self, graph: ValueGraph, state, prev_node = None, threshold = None) -> bool:
         '''
         Runs one simulation (rollout) from the given state
 
@@ -100,25 +103,19 @@ class SMMonteCarlo(InferenceSearch2):
             is_expanded: whether the node is expanded or not
         '''
         # print('simulating state', state)
-
         node, did_expand = self.infer_node(graph, state)
-
         # check if node is terminal
         if node.get_actors() is None or not node.get_actors() or node.is_done():
             return False
-        
         # if not then select an action to simulate
         action = graph.select_action(node)
         # print('selected action', action)
         # print('state', state)
         # print('possible actions', node.actions)
-
         # get the next state
         next_state = node.action_to_next_state[action]
-
         # simulate the next state
         is_expanded = self.mc_simulate(graph, next_state, node, threshold=threshold)
-
         # backpropagate the value from the next state
         graph.backpropagate(node, action, next_state)
 

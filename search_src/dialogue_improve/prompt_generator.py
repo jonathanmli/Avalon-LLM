@@ -95,7 +95,7 @@ class PromptGenerator(AbstractLogged):
     
     @staticmethod
     def gen_summary_preamble(summary: str) -> str:
-        print(f"Summary: {summary}")
+        # print(f"Summary: {summary}")
         return "\n \n Here is a summary of previous rounds of discussion so far:\n \n " + summary
     
     @staticmethod

@@ -2,7 +2,7 @@ from .llm_with_discussion import LLMAgentWithDiscussion # this part is not corre
 from ..engine import AvalonBasicConfig
 from ..wrapper import AvalonSessionWrapper, Session
 from search_src.Avalon.baseline_models_Avalon import AvalonState, AvalonLLMFunctionalValueHeuristic
-from search_src.dialogue_improve.action_planner import AvalonActionPlannerAgent
+from search_src.dialogue_improve.action_planner import AvalonActionPlannerAgent, BaselineAvalonActionPlannerAgent
 from search_src.dialogue_improve.dialogue_generator import DialogueGenerator
 from search_src.dialogue_improve.dialogue_discrimination import DialogueDiscriminator
 from search_src.dialogue_improve.prompt_generator import PromptGenerator
@@ -14,6 +14,8 @@ from good_examples.Avalon.value_heuristics.list import functions as value_heuris
 from good_examples.Avalon.dialogue_guide.list import guides as dialogue_guides
 
 from ..utils import slice_out_new_dialogue
+from ..utils import verbalize_team_result
+from src.utils import ColorMessage
 
 class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
     def __init__(self, name: str, num_players: int, id: int, role: int, role_name: str, config:AvalonBasicConfig, session: AvalonSessionWrapper=None, side=None, seed=None, func_str=None, **kwargs):
@@ -107,18 +109,11 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
         # )
         value_heuristic = AvalonLLMFunctionalValueHeuristic(func=self.func_str)
 
-        print("ID:", self.id)
-        print("Get Known Sides: ", [role[0] for role in player_list])
         known_sides = AvalonState.get_known_sides(self.id, [role[0] for role in player_list])
-        print("Initial Known Sides: ", known_sides)
-        print("Player ID: ", self.id)
-        print("Config: ", self.config)
-        print("Value Heuristic: ", value_heuristic)
-        print("GPT Model: ", GPT35Multi())
         dialogue_guide = dialogue_guides[self.id % len(dialogue_guides)] # I guess the id should just be an arbitrary number?
-        print(env.roles)
         role_to_dialogue_guide = {role: dialogue_guide for role in env.roles}
-        self.action_planner = AvalonActionPlannerAgent(
+        # self.action_planner = AvalonActionPlannerAgent(
+        self.action_planner = BaselineAvalonActionPlannerAgent(
             config=self.config,
             llm_model=GPT35Multi(),
             player=self.id,
@@ -132,13 +127,18 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
         #     value_heuristic=None,
         #     dialogue_guide=None
         # )
-        print("Checkpoint: initialize_game_info")
+
+    async def observe_team_result(self, mission_id, team: frozenset, votes: List[int], outcome: bool, **kwargs) -> None:
+        # self.session.inject()
+        self.session.inject({
+            "role": "user",
+            "content": verbalize_team_result(team, votes, outcome),
+        })
 
     async def team_discussion(self, team_size, team_leader_id, mission_id, env=None, dialogue_history=None, **kwargs):
         """
         Team discussion
         """
-        print(f"Checkpoint: team_discussion")
         # history = kwargs.pop("history", "")
         # self.dialogue_discriminator.update_beliefs(history=history)
         # action = self.get_action_intent(env)
@@ -156,39 +156,62 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
         # )
         state = self.convert_to_avalon_state(env)
         actor, legal_actions = self.action_planner.actor_action_enumerator.enumerate(state)
-        information_set = self.action_planner.information_function.get_information_set(state, actor)
+        known_sides, self_role = state.get_private_information(actor)
+        state.self_role = self_role
+        state.self_player = actor
+        state.known_sides = known_sides
+        # information_set = self.action_planner.information_function.get_information_set(state, actor)
         new_dialogue = slice_out_new_dialogue(dialogue_history.get_list(), player=self.id)
-        self.action_planner.observe_dialogue(state=information_set, new_dialogue=new_dialogue)
-        utterance = self.action_planner.produce_utterance(state=information_set)
+        self.action_planner.observe_dialogue(state=state, new_dialogue=new_dialogue)
+        utterance = self.action_planner.produce_utterance(state=state)
         return utterance
 
     async def propose_team(self, team_size, mission_id, env=None):
         """
         Propose Team
         """
-        print(f"Checkpoint: propose_team")
-        return list(self.get_action_intent(env))
+        action = list(self.get_action_intent(env))
+        print(ColorMessage.blue("Action:") + " ", f"Propose team {action}")
+        return action
     
     async def vote_on_team(self, team, mission_id, env=None):
         """
         Vote on team
         """
-        print(f"Checkpoint: vote_on_team")
-        return bool(self.get_action_intent(env))
+        verbal_team_act = {
+            0: "Reject the team",
+            1: "Approve the team",
+        }
+        action = self.get_action_intent(env)
+        print(ColorMessage.blue("Action:") + " " + verbal_team_act[action])
+        return action
     
     async def vote_on_mission(self, team, mission_id, env=None):
         """
         Vote on mission
         """
-        print(f"Checkpoint: vote_on_mission")
-        return bool(self.get_action_intent(env))
+        verbal_team_act = {
+            0: "Fail the mission",
+            1: "Pass the mission",
+        }
+        action = self.get_action_intent(env)
+        print(ColorMessage.blue("Action:") + " " + verbal_team_act[action])
+        return action
     
     async def assassinate(self, env=None):
         """
         Assassinate
         """
-        print(f"Checkpoint: assassinate")
-        return self.get_action_intent(env)
+        action = self.get_action_intent(env)
+        print(ColorMessage.blue("Action:") + " ", f"Assassinate Player {action}")
+        return action
+    
+    async def get_believed_sides(self, num_players: int, **kwargs) -> List[float]:
+        """
+        Get the believed sides of all players
+        """
+        belief_p_is_good = self.action_planner.dialogue_discriminator.get_p_is_good()
+        return belief_p_is_good
 
 
     def convert_to_avalon_state(self, env=None) -> AvalonState:
@@ -201,7 +224,6 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
         '''
         Returns the action intent of the agent
         '''
-        print("Checkpoint intent 1")
         # state = self.convert_to_avalon_state(env)
         # print("Checkpoint intent 2")
         # belief_p_is_good = self.dialogue_discriminator.get_p_is_good()
@@ -232,10 +254,12 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
             print("Wrong Actor")
         # FIXME: should I use the get_information_set here? Am I passing the correct actor?
         # information_set = self.action_planner.information_function.get_information_set(state, actor)
-        information_set = self.action_planner.information_function.get_information_set(state, actor)
-        action = self.action_planner.act(information_set, legal_actions)
+        # information_set = self.action_planner.information_function.get_information_set(state, actor)
+        action = self.action_planner.act(state, legal_actions)
         # action = self.action_planner.act(state, legal_actions)
-        print(action)
+        print()
+        print(ColorMessage.cyan(f"##### Search Agent (Player {self.id}, Role: {self.role_name}) #####"))
+        print()
         # mock_dialogue = [
         #     (0, "I think we should approve this team."),
         #     (1, "I think we should reject this team."),

@@ -18,7 +18,7 @@ NOTE: Some bugs in MCTS search may appear
 '''
 
 
-class AvalonState(StateTemplate):
+class AvalonState(HiddenState):
 
     simultaneous_actions: tuple[tuple[Any, Any], ...]
 
@@ -57,10 +57,18 @@ class AvalonState(StateTemplate):
         self.acting_players = acting_players # players that still need to act, in order
         self.simultaneous_actions = simultaneous_actions # tuples of (player, action)
 
+        self.self_player = acting_players
+
         # make sure all elements in here are basic types or tuple, frozenset to make it hashable and easily comparable
         id = tuple([self.quest_leader, self.phase, self.turn, self.round, self.done,
                     self.quest_team, self.team_votes, self.quest_votes,
                     self.quest_results, self.roles, self.acting_players, self.simultaneous_actions])
+        
+        self.player_to_information_set = dict()
+        for i in range(self.config.num_players):
+            known_sides, self_role  = self.get_private_information(i)
+            information_set =  tuple([self.quest_leader, self.phase, self.turn, self.round, self.done, self.quest_team, self.team_votes, self.quest_results, known_sides, self_role])
+            self.player_to_information_set[i] = information_set
         super().__init__(id)
 
     def get_state_tuple(self):
@@ -78,19 +86,10 @@ class AvalonState(StateTemplate):
         # otherwise return list of -1 for unknown
         else:
             return tuple([-1 if i != player else 1 for i in range(self.config.num_players)]), self.roles[player]
-
-    def get_private_information_string(self, player: int) -> str:
-        '''
-        Returns the private information in a paragraph format
-        '''
-        known_sides, self_role = self.get_private_information(player)
-        known_sides_str = ', '.join([f'Player {i} is {"Good" if side else "Evil"}' for i, side in enumerate(known_sides) if side != -1])
-        out = f"""Your role is {self.config.ROLES[self_role]} and you are on the side of {"Good" if self.config.ROLES_TO_IS_GOOD[self_role] else "Evil"}.
         
-        You know the following information:
-        {known_sides_str}
-        """
-        return out
+    
+    def get_information_set(self, actor):
+        return self.player_to_information_set[actor]
     
     @staticmethod
     def get_known_sides(player: int, roles) -> tuple[int, ...]:
@@ -196,7 +195,7 @@ class AvalonState(StateTemplate):
         # remove the acting player from the acting players
         acting_players = self.acting_players[1:]
         # add the action to the simultaneous actions
-        simultaneous_actions = self.simultaneous_actions + ((self.acting_players[0], action),)
+        simultaneous_actions = self.simultaneous_actions + ((self.acting_players[0], action[self.acting_players[0]]),)
 
         return AvalonState(self.config, self.quest_leader, self.phase, self.turn, self.round, self.done, self.good_victory, self.quest_team, self.team_votes, self.quest_votes, self.quest_results, self.roles, acting_players, simultaneous_actions)
 
@@ -209,6 +208,50 @@ class AvalonState(StateTemplate):
                 return i
         
         raise ValueError('No assassin found')
+    
+    # def initial_state_randomize(self, rng: np.random.Generator = np.random.default_rng()):
+    #     '''
+    #     Randomizes the initial state
+    #     '''
+    #     # only do this if the phase is 0 and the round is 0 and the turn is 0
+    #     # if self.phase == 0 and self.round == 0 and self.turn == 0:
+    #         # randomly permute the roles
+    #     self.roles = tuple(rng.permutation(self.roles))
+    #     # print('roles = ', self.roles)
+
+    def gen_str_description(self) -> str:
+        '''
+        Generate string description of the information set
+        '''
+        if self.phase == 0:
+            phase_description = f'''This is the team selection phase. The current leader is player {self.quest_leader}
+            '''
+            if self.round != 0 or self.turn != 0:
+                phase_description += f'''The previous team {self.quest_team} was approved by players {[index for index, value in enumerate(self.team_votes) if value == True]} and rejected by players {[index for index, value in enumerate(self.team_votes) if value == False]}
+                '''
+        elif self.phase == 1:
+            phase_description = f'''This is the team voting phase. The current leader is player {self.quest_leader} who selected {self.quest_team} as the quest team
+            '''
+        elif self.phase == 2:
+            phase_description = f'''This is the quest voting phase. The team {self.quest_team} was approved with {self.team_votes.count(True)} votes for and {self.team_votes.count(False)} votes against
+            '''
+        elif self.phase == 3:
+            phase_description = f'''This is the assassination phase.
+            '''
+        else:
+            raise ValueError('Invalid phase')
+        # print("known_sides", self.known_sides)
+        # print("np.where(self.known_sides == 1 or True)", np.where(self.known_sides == 1 or True))
+        information_set_description = f'''The current state of the game is as follows:
+        - There are {self.config.num_players} players in the game, with {self.config.num_good} good players and {self.config.num_evil} evil players
+        - We are on quest number {self.turn}, which requires {self.config.num_players_for_quest[self.turn]} players and {self.config.num_fails_for_quest[self.turn]} fails to fail
+        - This is round {self.round} of discussion, 5 rounds max
+        - The previous results for the quest were {self.quest_results} (True for Success, False for Fail)
+        - You are player {self.self_player} with role {self.config.ROLES[self.self_role]} and side {"Good" if self.config.ROLES_TO_IS_GOOD[self.self_role] else "Evil"}
+        - You know that players {[index for index, value in enumerate(self.known_sides) if value == 1 or value is True]} are good and players {[index for index, value in enumerate(self.known_sides) if value == 0 or value is False]} are evil. The rest you do not know.
+        ''' + phase_description
+
+        return information_set_description
 
     def get_is_good(self):
         '''
@@ -222,44 +265,6 @@ class AvalonState(StateTemplate):
         Returns the roles in string format
         '''
         return [self.config.ROLES[role] for role in self.roles]
-    
-    def __str__(self):
-        return self.gen_state_description(with_hidden_info=True)
-
-    def gen_state_description(self, with_hidden_info=True):
-        state = self
-        if with_hidden_info:
-            hidden_info = f'''- The roles of the players in order are {state.get_roles_in_str_list()} with sides {state.get_is_good()} (True for Good, False for Evil)
-            '''
-        else:
-            hidden_info = ''
-
-        if state.phase == 0:
-            phase_description = f'''- The current phase of the game is the team selection phase
-            - The current leader is player {state.quest_leader}
-            '''
-        elif state.phase == 1:
-            phase_description = f'''- The current phase of the game is the team voting phase
-            - The current leader is player {state.quest_leader} who selected {state.quest_team} as the quest team
-            '''
-        elif state.phase == 2:
-            phase_description = f'''- The current phase of the game is the quest voting phase
-            - The team {state.quest_team} was approved with {state.quest_votes.count(True)} votes for and {state.quest_votes.count(False)} votes against
-            '''
-        elif state.phase == 3:
-            phase_description = f'''- The current phase of the game is the assassination phase
-            - The assassin is player {state.get_assassin()}
-            '''
-        else:
-            raise ValueError('Invalid phase')
-        
-        state_description = f'''The current state of the game is as follows:
-        - The number of players in the game is: {state.config.num_players}
-        - This is the quest number {state.turn} which requires {state.config.num_players_for_quest[state.turn]} players and {state.config.num_fails_for_quest[state.turn]} fails to fail 
-        - This is the {state.round} round of discussion
-        - The previous results for the quest were {state.quest_results} (True for Success, False for Fail)
-        ''' + hidden_info + phase_description
-        return state_description
 
 class AvalonInformationSet(StateTemplate):
     
@@ -283,6 +288,13 @@ class AvalonInformationSet(StateTemplate):
         id = tuple([self.quest_leader, self.phase, self.turn, self.round, self.done,
                     self.quest_team, self.team_votes,
                     self.quest_results, self.known_sides, self.self_role, self.self_player])
+
+        self.player_to_information_set = dict()
+        for i in range(self.config.num_players):
+            known_sides, self_role  = self.get_private_information(i)
+            information_set =  tuple([self.quest_leader, self.phase, self.turn, self.round, self.done, self.quest_team, self.team_votes, self.quest_results, known_sides, self_role])
+            self.player_to_information_set[i] = information_set        
+
         super().__init__(id)
 
     def get_tuple(self):
@@ -290,6 +302,19 @@ class AvalonInformationSet(StateTemplate):
  
     def __str__(self):
         return self.gen_str_description()
+    
+    def get_private_information(self, player: int) -> tuple[tuple[int, ...], int]:
+        '''
+        Returns the private information of the actor
+        '''
+
+        is_good = self.get_is_good()
+        # if player is Merlin or evil, return all sides
+        if self.roles[player] == 0 or not is_good[player]:
+            return tuple(is_good), self.roles[player]
+        # otherwise return list of -1 for unknown
+        else:
+            return tuple([-1 if i != player else 1 for i in range(self.config.num_players)]), self.roles[player]
 
     def gen_str_description(self) -> str:
         '''
@@ -325,6 +350,81 @@ class AvalonInformationSet(StateTemplate):
 
         return information_set_description
     
+    def get_information_set(self, actor):
+        return self.player_to_information_set[actor]
+    
+    @staticmethod
+    def init_from_state_tuple(config: AvalonBasicConfig, quest_leader: int, phase: int, turn: int, round: int, done: bool, good_victory: bool, quest_team: tuple[int, ...], team_votes: tuple[bool, ...], quest_votes: tuple[bool, ...], quest_results: tuple[bool, ...], roles: tuple[int, ...], ):
+        if phase == -1:
+            acting_players = tuple([-1])
+        elif phase == 0:
+            acting_players = tuple([quest_leader])
+        elif phase == 1:
+            acting_players = tuple(range(config.num_players))
+        elif phase == 2:
+            acting_players = tuple(quest_team)
+        elif phase == 3:
+            # find assassin by looking through roles
+            assassin = 0
+            for i, role in enumerate(roles):
+                if role == 7:
+                    assassin = i
+                    break
+            acting_players = tuple([assassin])
+        return AvalonInformationSet(config, quest_leader, phase, turn, round, done, good_victory, quest_team, team_votes, quest_votes, quest_results, roles, acting_players, tuple())
+
+    def get_is_good(self):
+        '''
+        Returns the side of each player according to the role (True for good, False for evil)
+        '''
+        is_good = [self.config.ROLES_TO_IS_GOOD[role] for role in self.roles]
+        return is_good
+    
+    def get_roles_in_str_list(self):
+        '''
+        Returns the roles in string format
+        '''
+        return [self.config.ROLES[role] for role in self.roles]
+
+    def copy(self):
+        '''
+        Returns a copy of the state
+
+        We want to keep the env the same, but copy everything else
+        '''
+        return AvalonState(self.config, self.quest_leader, self.phase, self.turn, self.round, self.done, self.good_victory, self.quest_team, self.team_votes, self.quest_votes, self.quest_results, self.roles, self.acting_players, self.simultaneous_actions)
+
+    def get_acting_player(self):
+        '''
+        Returns the acting player
+        '''
+        return self.acting_players[0]
+    
+    def next_simulaneous_state_copy(self, action: Any):
+        '''
+        Returns a copy of the state
+
+        Args:
+            action: the action taken by the acting player
+        '''
+        # remove the acting player from the acting players
+        acting_players = self.acting_players[1:]
+        # add the action to the simultaneous actions
+        simultaneous_actions = self.simultaneous_actions + ((self.acting_players[0], action[self.acting_players[0]]),)
+
+        return AvalonState(self.config, self.quest_leader, self.phase, self.turn, self.round, self.done, self.good_victory, self.quest_team, self.team_votes, self.quest_votes, self.quest_results, self.roles, acting_players, simultaneous_actions)
+
+    def get_assassin(self):
+        '''
+        Returns the assassin
+        '''
+        for i, role in enumerate(self.roles):
+            if role == 7:
+                return i
+        
+        raise ValueError('No assassin found')
+    
+    
 class AvalonInformationFunction(InformationFunction):
 
     actor_state_to_information_set: dict[tuple[int, AvalonState], AvalonInformationSet]
@@ -339,7 +439,6 @@ class AvalonInformationFunction(InformationFunction):
         if actor == -1:
             # actor is environment
             acting_player = state.get_acting_player()
-            print("actor = ", actor)
             # assert acting_player == actor, f"Acting player {acting_player} is not the same as actor {actor}" NOTE: this is not true
             known_sides = tuple()
             self_role = -1
@@ -537,7 +636,7 @@ class AvalonActorActionEnumerator(ActorActionEnumerator):
             actor = None
         else:
             actor = state.get_acting_player()
-        print(f"Actor is {actor}")
+        # print(f"Actor is {actor}")
         # if state.roles are all -1, then we need to assign roles
         if state.phase == -1:
             actions = self.permutations_of_roles
@@ -627,13 +726,11 @@ class AvalonTransitor(ForwardTransitor):
         '''
 
         # print('state = ', state.id)
-        
         acting_player = state.get_acting_player()
         acting_action = action
         reward = dict()
         for i in range(self.env.config.num_players):
             reward[i] = 0
-        
         # if we need to assign roles, do it now
         if state.phase == -1:
             new_roles = action
@@ -655,7 +752,7 @@ class AvalonTransitor(ForwardTransitor):
                 return next_state, reward
             
         # combine state.simultaneous_actions with actions to get the full action set
-        all_actions = {**dict(state.simultaneous_actions), acting_player: acting_action}
+        all_actions = {**dict(state.simultaneous_actions), acting_player: acting_action[acting_player]}
         
         # otherwise use env to transition
 
@@ -675,8 +772,8 @@ class AvalonTransitor(ForwardTransitor):
         self.env.is_good = np.array(state.get_is_good())
         # state.assassin
 
-
         if self.env.phase == 0:
+
             action = all_actions[state.quest_leader]
             self.env.choose_quest_team(action, self.env.quest_leader)
             # self.env.phase, self.env.done, self.env.quest_leader = 
@@ -700,13 +797,11 @@ class AvalonTransitor(ForwardTransitor):
             self.env.choose_assassination_target(player, action)
 
             # self.env.phase, self.env.done, self.env.good_victory = 
-        
         # now extract all relevant information from the environment engine to the next state
         next_state = AvalonState.init_from_env(self.env)
 
         # print('next_state = ', next_state.id)
         # print('done = ', self.env.done)
-
         if self.env.done and self.env.good_victory:
             for ii in range(self.env.config.num_players):
                 (role_ii, role_ii_name, role_ii_good) = self.env.get_role(ii)
@@ -722,7 +817,6 @@ class AvalonTransitor(ForwardTransitor):
                     reward[ii] = -1
                 else:
                     reward[ii] = 1
-
         return (next_state, reward)
 
 class AvalonLLMFunctionalValueHeuristic(ValueHeuristic):
@@ -909,3 +1003,80 @@ class AvalonLLMFunctionalValueHeuristic(ValueHeuristic):
         # convert winrates to zero sum scores (times 2 minus 1)
         winrates = {player: 2*winrate - 1 for player, winrate in winrates.items()}
         return winrates, notes
+    
+
+class AvalonActionEnumerator(ActionEnumerator):
+
+    def __init__(self, avalon_env: AvalonGameEnvironment):
+        super().__init__()
+        self.num_players_per_quest = avalon_env.config.num_players_for_quest
+        num_players = avalon_env.config.num_players
+        self.all_players = set(range(num_players))
+        
+        self.player_combinations = dict()
+        for quest_size in set(avalon_env.config.num_players_for_quest):
+            # get all combinations of players of size quest_size
+            combinations = list(itertools.combinations(self.all_players, quest_size))
+            self.player_combinations[quest_size] = set([frozenset(combine) for combine in combinations])
+
+        # get all possible permutations of roles as tuples
+        permutations_of_roles = list(itertools.permutations([role_id for role_id, _, _ in avalon_env.get_roles()]))
+        self.permutations_of_roles = set([tuple(permutation) for permutation in permutations_of_roles])
+        # print('self.permutations_of_roles = ', self.permutations_of_roles)
+        # print type of first item in permutations_of_roles
+        # print('type(permutations_of_roles[0]) = ', type(permutations_of_roles[0][0]))
+
+
+    def _enumerate(self, state: AvalonState, actor) -> set:
+        '''
+        Enumerates the actions for the given state and actor
+
+        Args:
+            state: current state
+            actor: actor to enumerate actions for
+
+        Returns:
+            actions: list of actions
+        '''
+
+        # if state.roles are all -1, then we need to assign roles
+        if state.phase == -1:
+            actions = self.permutations_of_roles
+
+        elif state.phase == 0:
+            turn = state.turn
+            actions = self.player_combinations[self.num_players_per_quest[turn]]
+
+        elif state.phase == 1:
+            actions = {0, 1}
+
+        elif state.phase == 2:
+            actions = {0, 1}
+
+        elif state.phase == 3:
+            actions = self.all_players
+
+        return actions
+    
+class AvalonActorEnumerator(ActorEnumerator):
+
+    def __init__(self):
+        super().__init__()
+
+    def _enumerate(self, state: AvalonState) -> set:
+        '''
+        Enumerates the actors for the given state
+
+        Args:
+            state: current state
+
+        Returns:
+            actors: set of actors
+        '''
+
+        if state.done:
+            actors = set()
+        else:
+            actors = set([state.get_acting_player()])
+
+        return actors

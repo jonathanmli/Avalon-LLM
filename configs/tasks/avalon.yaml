@@ -37,6 +37,13 @@ avalon-dev-single-discuss:
     agent_list: ["search", "speak_naive", "speak_naive", "speak_naive", "speak_naive"]
     discussion: True
 
+avalon-dev-single-baseline-discuss:
+  parameters:
+    name: "AvalonBench-dev-discuss"
+    data_file: "data/avalon/dev.json"
+    agent_list: ["llm", "speak_naive", "speak_naive", "speak_naive", "speak_naive"]
+    discussion: True
+
 avalon-dev-single-search:
   parameters:
     name: "AvalonBench-dev-discuss"

@@ -112,7 +112,7 @@ class MultiAgentProxy(Proxy):
             receiver = kwargs.pop("receiver", None)
             max_rounds = kwargs.pop("max_rounds", 0)
             require_reply = kwargs.pop("require_reply", False)
-            print("Action...")
+            # print("Action...")
             self.set_current_agent(sender)
 
             self.balance_history()
@@ -250,7 +250,7 @@ class MultiAgentProxy(Proxy):
     
     
     def set_current_agent(self, agent_id: int) -> int:
-        print("Setting Current Agent to ", agent_id)
+        # print("Setting Current Agent to ", agent_id)
         self.history[self.current_agent] = deepcopy(self.session.history)
         self.current_agent = agent_id
         self.session.history = deepcopy(self.history[self.current_agent])

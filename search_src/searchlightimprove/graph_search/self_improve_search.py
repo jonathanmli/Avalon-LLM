@@ -6,7 +6,7 @@ from search_src.searchlight.datastructures.graphs import *
 # TODO: deprecated
 
 class SelfImprovementInitialInferencer(InitialInferencer2):
-    def __init__(self, improvement_proposer: ImprovementProposer, evaluator: Evaluator, graph: ValueGraph2):
+    def __init__(self, improvement_proposer: ImprovementProposer, evaluator: Evaluator, graph: ValueGraph):
         super().__init__()
         self.improvement_proposer = improvement_proposer
         self.evaluator = evaluator

@@ -3,7 +3,7 @@ from search_src.searchlight.gameplay.simulators import GameSimulator
 from search_src.searchlight.headers import *
 from search_src.searchlight.gameplay.agents import SearchAgent
 from search_src.searchlight.algorithms.mcts_search import SMMonteCarlo
-from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
+from search_src.searchlight.datastructures.graphs import ValueGraph, PartialValueGraph
 from search_src.searchlight.datastructures.adjusters import PUCTAdjuster
 from search_src.searchlight.datastructures.estimators import UtilityEstimatorMean
 from search_src.searchlight.classic_models import RandomRolloutValueHeuristic
@@ -35,7 +35,7 @@ class ValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         self.set_filler_to_best_func = set_filler_to_best_func
 
         if not partial_information:
-            self.value_graph_class = ValueGraph2
+            self.value_graph_class = ValueGraph
         else:
             self.value_graph_class = PartialValueGraph
 

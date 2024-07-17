@@ -98,7 +98,7 @@ class LLMAgentWithDiscussion(Agent):
             "content": "Please summarize the history. Try to keep all useful information, including your identity, other player's identities, and your observations in the game.",
             "mode": "summarize"
         })
-        print("Summary: ", summary)
+        # print("Summary: ", summary)
         logging.info(f"Summary: {summary}", )
         past_history = deepcopy(self.session.get_history())
         self.session.overwrite_history([])
@@ -110,7 +110,7 @@ class LLMAgentWithDiscussion(Agent):
             'role': "user",
             'content': summary
         })
-        print("History after summarization: ", self.session.get_history())
+        # print("History after summarization: ", self.session.get_history())
         return self.session.get_history()
 
     async def observe_mission(self, team, mission_id, num_fails, votes, outcome, **kwargs) -> None:

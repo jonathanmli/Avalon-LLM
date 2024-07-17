@@ -141,9 +141,9 @@ class Session:
         return return_messages
 
     async def action(self, *injection) -> AgentOutput:
-        print("session.action")
+        # print("session.action")
         self.inject(list(injection))
-        print("pulling env")
+        # print("pulling env")
         agent_response = await self.controller.env_pull(
             self.filter_messages(self.history)
         )

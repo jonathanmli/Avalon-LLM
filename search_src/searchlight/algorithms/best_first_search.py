@@ -3,7 +3,7 @@ from ..headers import *
 from ..datastructures.estimators import *
 from ..datastructures.beliefs import *
 from ..datastructures.adjusters import *
-from ..datastructures.graphs import ValueGraph2
+from ..datastructures.graphs import ValueGraph
 
 # from queue import PriorityQueue
 import logging
@@ -29,13 +29,13 @@ class InferenceSearch2(Search):
         self.record_notes = record_notes
         
 
-    def initial_inference(self, state: State):
+    def initial_inference(self, state):
         '''
         Conducts initial inference on a state
         '''
         return self.initial_inferencer.predict(state)
     
-    def infer_node(self, graph: ValueGraph2, state: State):
+    def infer_node(self, graph: ValueGraph, state):
         '''
         Conducts initial inference on a state
 
@@ -51,17 +51,14 @@ class InferenceSearch2(Search):
         did_expand = False
         if node is None: # node does not exist, create it. this should never happen unless root node
             node = graph.add_state(state)   
-
         if not node.is_expanded:
             did_expand = True
-
             # conduct initial inference on the node
             (policies, next_values, intermediate_rewards, transitions, notes) = self.initial_inference(state)
             node.actor_to_action_to_prob = policies
             node.action_to_actor_to_reward = intermediate_rewards
             node.action_to_next_state = transitions
             node.is_expanded = True
-
             # cut out actions that lead to cycles (i.e. actions that lead to states that are already in the graph)
             if self.cut_cycles:
                 actions_to_remove = set()
@@ -84,7 +81,6 @@ class InferenceSearch2(Search):
 
                     # del node.actor_to_action_to_prob[0][action]
                     # TODO: we should also ban actions that lead to joint_actions that are already in the graph
-
             # increment nodes expanded
             self.increment_nodes_expanded()
 
@@ -145,7 +141,7 @@ class BestFirstSearch(InferenceSearch2):
     def pop_from_unexpanded_states(self):
         return heapq.heappop(self.unexpanded_states).state
 
-    def _expand(self, datastructure: ValueGraph2, state: State):
+    def _expand(self, datastructure: ValueGraph, state):
         '''
         Expand starting from a node
         '''

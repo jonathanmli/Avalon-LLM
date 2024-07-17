@@ -10,7 +10,7 @@ from search_src.utils import setup_logging_environment
 from search_src.searchlightimprove.evolvers import ImprovementLibraryEvolver, BeamEvolver, ThoughtBeamEvolver
 from search_src.searchlightimprove.prompts.prompt_generators import PromptGenerator
 from search_src.Avalon.baseline_models_Avalon import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 from search_src.Avalon.examples.avalon_func import avalon_func_list
 from search_src.Avalon.examples.avalon_abstract import avalon_abstract_list
 # from search_src.Avalon.value_heuristic_evaluators import AvalonValueHeuristicsSSGEvaluator

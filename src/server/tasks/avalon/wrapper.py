@@ -49,7 +49,7 @@ class AvalonSessionWrapper(SessionWrapper):
 
     def inject(self, input: Dict, **kwargs):
         if isinstance(self.session, Session):
-            print("SESSION")
+            # print("SESSION")
             self.session.inject({
                 'role': input['role'],
                 'content': input['content']

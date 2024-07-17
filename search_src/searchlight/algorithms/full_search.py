@@ -1,6 +1,6 @@
 from search_src.searchlight.headers import *
 from search_src.searchlight.datastructures.beliefs import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2
+from search_src.searchlight.datastructures.graphs import ValueGraph
 
 import itertools
 from search_src.searchlight.utils import *
@@ -55,7 +55,7 @@ class SMMinimax(FullSearch):
         self.oracle = oracle
         self.node_budget = node_budget
 
-    def get_best_action(self, graph: ValueGraph2, state: State, actor=0):
+    def get_best_action(self, graph: ValueGraph, state: State, actor=0):
         '''
         Get the best action to take for the given state
         '''
@@ -67,7 +67,7 @@ class SMMinimax(FullSearch):
         else:
             raise ValueError('Actor not found in node')
         
-    def expand(self, graph: ValueGraph2, state: State,) -> None:
+    def expand(self, graph: ValueGraph, state: State,) -> None:
         '''
         Expand starting from a node
         
@@ -81,7 +81,7 @@ class SMMinimax(FullSearch):
         self.nodes_expanded = 0
         self._expand(graph, state, None, self.depth, )
 
-    def _expand(self, graph: ValueGraph2, state: State, 
+    def _expand(self, graph: ValueGraph, state: State, 
                 prev_node = None, depth=3,) -> dict:
         '''
         Expand starting from a node
@@ -281,7 +281,7 @@ class SMMinimax(FullSearch):
 #         super().__init__(forward_transistor, value_heuristic, actor_enumerator,
 #                          action_enumerator, action_predictor, utility_estimator)
         
-#     def expand(self, graph: ValueGraph2, state: State,
+#     def expand(self, graph: ValueGraph, state: State,
 #                 prev_node = None, depth=3, render = False, 
 #                 revise = False, oracle = True, 
 #                 alpha = -float('inf'), beta = float('inf'), threshold = 0.0,

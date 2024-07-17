@@ -21,9 +21,7 @@ class NaiveSpeakableAgent(Agent):
     """
 
     def __init__(self, id: int, role: int, config: AvalonBasicConfig, name: str, session: AvalonSessionWrapper=None, side: int=None, sides: List[int] = None, **kwargs):
-        print("Checkpoint Naive 0")
         super().__init__(id, role, config)
-        print("Checkpoint Naive 1")
         self.name = name
         self.id = id
         self.config = config
@@ -33,7 +31,6 @@ class NaiveSpeakableAgent(Agent):
         self.history = None
         self.session = session
         self.discussion = kwargs.pop('discussion', None)
-        print("Checkpoint Naive 2")
         if sides is None:
             self.player_sides = [-1] * self.config.num_players # -1 for unknown, 0 for evil, 1 for good
             self.player_sides[id] = side
@@ -65,18 +62,15 @@ class NaiveSpeakableAgent(Agent):
         return self.side
     
     async def initialize_game_info(self, player_list, **kwargs) -> None:
-        print(f"Initiliaze Game Info as Player {self.id}")
+        # print(f"Initiliaze Game Info as Player {self.id}")
         """Initiliaze the game info for the agent, which includes game introduction, role, and reveal information for different roles."""
         # Introduction Prompt
         verbal_side = ["Evil", "Good"]
         intro_prompt = INTRODUCTION
         intro_prompt += '\n'
-        print("Checkpoint Prompt 1")
         content_prompt = intro_prompt + INFO_ROLE.format(self.num_players, self.num_good, int(self.merlin), self.num_good - int(self.merlin) - int(self.percival), self.num_evil, self.num_evil - int(self.morgana) - int(self.mordred) - int(self.oberon) - 1)
-        print("Checkpoint Prompt 2")
         identity_prompt = INFO_YOUR_ROLE.format(self.name, self.role_name, verbal_side[self.side]) # and do not pretend to be other roles throughout the game."
         self.identity_prompt = identity_prompt
-        print("Checkpoint Prompt")
         # Reveal Prompt
         reveal_info = ''
         minion_list = []
@@ -113,14 +107,12 @@ class NaiveSpeakableAgent(Agent):
             "content": content_prompt,
             "mode": "system",
         })
-        print("Checkpoint Inject 1")
         self.session.inject({
             # "role": "system",
             "role": "user",
             "content": identity_prompt + '\n' + reveal_info,
             "mode": "system",
         })
-        print("Checkpoint Inject 2")
         self.system_info = content_prompt + '\n' + identity_prompt + '\n' + reveal_info
 
     async def summarize(self, **kwargs) -> None:
@@ -131,7 +123,7 @@ class NaiveSpeakableAgent(Agent):
             "content": "Please summarize the history. Try to keep all useful information, including your identity, other player's identities, and your observations in the game.",
             "mode": "summarize"
         })
-        print("Summary: ", summary)
+        # print("Summary: ", summary)
         logging.info(f"Summary: {summary}", )
         past_history = deepcopy(self.session.get_history())
         self.session.overwrite_history([])
@@ -143,7 +135,7 @@ class NaiveSpeakableAgent(Agent):
             'role': "user",
             'content': summary
         })
-        print("History after summarization: ", self.session.get_history())
+        # print("History after summarization: ", self.session.get_history())
         return self.session.get_history()
 
     async def team_discussion(self, team_size, team_leader_id, mission_id, **kwargs):

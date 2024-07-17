@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 # import matplotlib.pyplot as plt
-from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
+from search_src.searchlight.datastructures.graphs import ValueGraph, PartialValueGraph
 
 
 class RLValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
@@ -35,7 +35,7 @@ class RLValueHeuristicsSSGEvaluator(SimulateSearchGameEvaluator):
         self.players = players
 
         if not partial_information:
-            self.value_graph_class = ValueGraph2
+            self.value_graph_class = ValueGraph
         else:
             self.value_graph_class = PartialValueGraph
 

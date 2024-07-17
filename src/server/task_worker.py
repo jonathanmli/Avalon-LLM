@@ -265,4 +265,4 @@ if __name__ == "__main__":
         self_address=args.self,
     )
     app.include_router(router_, prefix="/api")
-    uvicorn.run(app=app, host="0.0.0.0", port=args.port, log_level=logging.DEBUG)
+    uvicorn.run(app=app, host="0.0.0.0", port=args.port, log_level=logging.WARNING)

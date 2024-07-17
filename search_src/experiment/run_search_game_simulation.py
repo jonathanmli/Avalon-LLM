@@ -1,7 +1,7 @@
 from search_src.experiment.compare_search import *
 from search_src.GOPS.baseline_models_GOPS import *
 from search_src.GOPS.engine import *
-from search_src.searchlight.datastructures.graphs import ValueGraph2, PartialValueGraph
+from search_src.searchlight.datastructures.graphs import ValueGraph, PartialValueGraph
 import numpy as np
 from search_src.searchlight.headers import *
 from search_src.searchlight.datastructures.adjusters import *

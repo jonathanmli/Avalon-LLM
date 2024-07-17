@@ -1,9 +1,9 @@
 from .headers import *
-from .datastructures.graphs import ValueGraph2
+from .datastructures.graphs import ValueGraph
 
 class ValueGraphBoltzmannPolicyPredictor(PolicyPredictor):
 
-    def __init__(self, graph: ValueGraph2, adjusted_q = False):
+    def __init__(self, graph: ValueGraph, adjusted_q = False):
         super().__init__()
         self.graph = graph
         self.adjusted_q = adjusted_q

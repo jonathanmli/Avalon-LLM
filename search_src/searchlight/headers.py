@@ -24,15 +24,14 @@ class StateTemplate(ABC):
             id: id of the state, should be unique, usually the name of the state
             notes: any notes about the state
         '''
-
         self.id = id
         if notes is None:
             notes = dict()
         self.notes = notes
-
         # ensure that the state is hashable
         hash(self.id)
-    
+
+
     def copy(self):
         '''
         Returns a copy of the state
@@ -50,6 +49,16 @@ class StateTemplate(ABC):
     
     def __eq__(self, other):
         return self.id == other.id
+    
+class HiddenState(StateTemplate):
+    '''
+    Abstract class for a hidden state. Has additional get information set method
+    '''
+    def get_information_set(self, actor):
+        '''
+        Returns the information set for the actor
+        '''
+        return self.id
     
 # END_STATE = State('END_STATE')
 
@@ -363,49 +372,187 @@ class ValueHeuristic(ABC):
 #             assert isinstance(joint_action, tuple)
 #             assert isinstance(next_state, State)
 
-# class PackageInitialInferencer(InitialInferencer2):
+class ActionEnumerator(ABC):
+    '''
+    Abstract class for an action enumerator
 
-#     def __init__(self, transitor: ForwardTransitor, action_enumerator: ActionEnumerator, 
-#                  action_predictor: PolicyPredictor, actor_enumerator: ActorEnumerator,
-#                  value_heuristic: ValueHeuristic):
-#         super().__init__()
-#         self.transitor = transitor
-#         self.action_enumerator = action_enumerator
-#         self.action_predictor = action_predictor
-#         self.actor_enumerator = actor_enumerator
-#         self.value_heuristic = value_heuristic
+    Some conventions on actor names:
+        -1: environment
+        0: player 1, the main player who is trying to maximize reward
+        1: player 2, usually the opponent player who is trying to minimize reward
+        2+: other adaptive actors
+    '''
 
-#     def _predict(self, state: State) -> tuple[dict, dict, dict[tuple[tuple[Any, Any],...],Any], dict[tuple[tuple[Any, Any],...],Any], dict[State,dict]]:
-#         # predict actors using actor_enumerator
-#         actors = self.actor_enumerator.enumerate(state)
-#         # predict actions using action_enumerator for each actor
-#         actor_to_actions = {actor: self.action_enumerator.enumerate(state, actor) for actor in actors}
-#         # predict probs using action_predictor for each actor
-#         actor_to_action_to_probs = {actor: self.action_predictor.predict(state, actor_to_actions[actor], actor) for actor in actors}
-#         # get joint actions from actor_to_actions. joint actions should be tuples of tuples (actor, action), i.e. joint_action1 = ((actor1, action1), (actor2, action2))
-#         # joint actions should contain cartesian product of actions for each actor
-#         joint_actions = dict_to_set_of_cartesian_products(actor_to_actions)
+    def __init__(self):
+        pass
+    
+    def enumerate(self, state, actor) -> set:
+        '''
+        Enumerates the possible actions given the current state and actor
 
-#         notes = dict()
+        Args:
+            state: current state
+            actor: actor to enumerate actions for
 
-#         if (actors is None) or (not actors):
-#             joint_action_to_next_state = dict()
-#             next_state_to_value = dict()
-#             joint_action_to_rewards = dict()
-#             next_state_to_notes = dict()
-#         else:
-#             # get transitioned states from transitor for each joint action
-#             joint_action_to_next_state_rewards_notes = {joint_action: self.transitor.transition(state, {actor: action for actor, action in joint_action}) for joint_action in joint_actions}
-#             joint_action_to_next_state = {joint_action: joint_action_to_next_state_rewards_notes[joint_action][0] for joint_action in joint_actions}
-#             joint_action_to_rewards = {joint_action: joint_action_to_next_state_rewards_notes[joint_action][1] for joint_action in joint_actions}
+        Returns:
+            actions: list of actions
+        '''
+        actions = self._enumerate(state, actor)
+        # make sure that actions is not empty
+        assert actions
+        return actions
+    
+    @abstractmethod
+    def _enumerate(self, state, actor) -> set:
+        '''
+        Enumerates the possible actions given the current state and actor
 
-#             # get value of each next state using value_heuristic
-#             next_state_to_value_notes = {next_state: self.value_heuristic.evaluate(next_state) for next_state in joint_action_to_next_state.values()}
-#             next_state_to_value = {next_state: next_state_to_value_notes[next_state][0] for next_state in joint_action_to_next_state.values()}
-#             next_state_to_notes = {next_state: next_state_to_value_notes[next_state][1] for next_state in joint_action_to_next_state.values()}
-        
-#         notes['next_state_to_heuristic_notes'] = next_state_to_notes
-#         return actor_to_action_to_probs, next_state_to_value, joint_action_to_rewards, joint_action_to_next_state, notes
+        Args:
+            state: current state
+            actor: actor to enumerate actions for
+
+        Returns:
+            actions: list of actions
+        '''
+        pass
+
+class ActorEnumerator(ABC):
+    '''
+    Abstract class for an actor enumerator
+
+    Some conventions on actor names:
+        -1: environment
+        0: player 1, the main player who is trying to maximize reward
+        1: player 2, usually the opponent player who is trying to minimize reward
+        2+: other adaptive actors
+    '''
+    def __init__(self):
+        pass
+    
+    def enumerate(self, state)->set:
+        '''
+        Enumerates the actors that may take actions at the state
+
+        Args:
+            state: current state
+
+        Returns:
+            actors: set of actors that may take actions at the state
+        '''
+        return self._enumerate(state)
+
+    @abstractmethod
+    def _enumerate(self, state)->set:
+        '''
+        Enumerates the actors that may take actions at the state
+
+        Args:
+            state: current state
+
+        Returns:
+            actors: set of actors that may take actions at the state
+        '''
+        pass
+
+
+class InitialInferencer2(ABC):
+    '''
+    Abstract class for an initial inferencer 2.0, updated to reduce redundancy
+    '''
+
+    def __init__(self, sanity_check = False):
+        pass
+    
+    def predict(self, state) -> tuple[dict, dict, dict[tuple[tuple[Any, Any],...],Any], dict[tuple[tuple[Any, Any],...],Any], dict]:
+        # TODO: finish type hinting for this function
+        # TODO: add 'done' to the return value
+        # TODO: add sanity check?
+        '''
+        Conducts initial inference for algorithms like MCTS
+
+        Args:
+            state: current state
+
+        Returns:
+            policies: dict from actors to dict of action to probability
+            next_state_values: dict from next_state to actors to expected value for the actor of the next state
+            intermediate_rewards: dict from (joint) actions to actor to intermediate rewards
+            transitions: dict from (joint) actions to next states
+            notes: dict of state to notes
+
+        None if the state is terminal
+        '''
+        policies, next_state_values, intermediate_rewards, transitions, notes = self._predict(state)
+        # assert that each actor has at least 1 action (i.e. policies[actor] is not empty for each actor)
+        if not all(policies.values()):
+            raise ValueError('Each actor must have at least 1 possible action')
+        # assert intermediate_rewards and transitions have the same keys
+        if not set(intermediate_rewards.keys()) == set(transitions.keys()):
+            raise ValueError('Intermediate rewards and transitions must have the same keys (joint actions)')
+        # TODO: add more checks
+        return policies, next_state_values, intermediate_rewards, transitions, notes
+    
+    @abstractmethod
+    def _predict(self, state) -> tuple[dict, dict, dict[tuple[tuple[Any, Any],...],Any], dict[tuple[tuple[Any, Any],...],Any], dict]:
+        '''
+        Conducts initial inference for algorithms like MCTS
+
+        Args:
+            state: current state
+
+        Returns:
+            policies: dict from actors to dict of action to probability
+            next_state_values: dict from next_state to actors to expected value for the actor of the next state
+            intermediate_rewards: dict from (joint) actions to actor to intermediate rewards
+            transitions: dict from (joint) actions to next states
+            notes: dict of state to notes
+
+        None if the state is terminal
+        '''
+        pass
+    
+
+class PackageInitialInferencer(InitialInferencer2):
+
+    def __init__(self, transitor: ForwardTransitor, action_enumerator: ActionEnumerator, 
+                 action_predictor: PolicyPredictor, actor_enumerator: ActorEnumerator,
+                 value_heuristic: ValueHeuristic):
+        super().__init__()
+        self.transitor = transitor
+        self.action_enumerator = action_enumerator
+        self.action_predictor = action_predictor
+        self.actor_enumerator = actor_enumerator
+        self.value_heuristic = value_heuristic
+
+    def _predict(self, state) -> tuple[dict, dict, dict[tuple[tuple[Any, Any],...],Any], dict[tuple[tuple[Any, Any],...],Any], dict[Any,dict]]:
+        # predict actors using actor_enumerator
+        actors = self.actor_enumerator.enumerate(state)
+        # predict actions using action_enumerator for each actor
+        actor_to_actions = {actor: self.action_enumerator.enumerate(state, actor) for actor in actors}
+        # predict probs using action_predictor for each actor
+        actor_to_action_to_probs = {actor: self.action_predictor.predict(state, actor_to_actions[actor], actor) for actor in actors}
+        # get joint actions from actor_to_actions. joint actions should be tuples of tuples (actor, action), i.e. joint_action1 = ((actor1, action1), (actor2, action2))
+        # joint actions should contain cartesian product of actions for each actor
+        joint_actions = dict_to_set_of_cartesian_products(actor_to_actions)
+
+        notes = dict()
+
+        if (actors is None) or (not actors):
+            joint_action_to_next_state = dict()
+            next_state_to_value = dict()
+            joint_action_to_rewards = dict()
+            next_state_to_notes = dict()
+        else:
+            # get transitioned states from transitor for each joint action
+            joint_action_to_next_state_rewards_notes = {joint_action: self.transitor.transition(state, {actor: action for actor, action in joint_action}) for joint_action in joint_actions}
+            joint_action_to_next_state = {joint_action: joint_action_to_next_state_rewards_notes[joint_action][0] for joint_action in joint_actions}
+            joint_action_to_rewards = {joint_action: joint_action_to_next_state_rewards_notes[joint_action][1] for joint_action in joint_actions}
+            # get value of each next state using value_heuristic
+            next_state_to_value_notes = {next_state: self.value_heuristic.evaluate(next_state) for next_state in joint_action_to_next_state.values()}
+            next_state_to_value = {next_state: next_state_to_value_notes[next_state][0] for next_state in joint_action_to_next_state.values()}
+            next_state_to_notes = {next_state: next_state_to_value_notes[next_state][1] for next_state in joint_action_to_next_state.values()}
+        notes['next_state_to_heuristic_notes'] = next_state_to_notes
+        return actor_to_action_to_probs, next_state_to_value, joint_action_to_rewards, joint_action_to_next_state, notes
     
 class Search(ABC):
     '''

@@ -5,6 +5,7 @@ This is the official code of **AvalonBench** for paper [AvalonBench: Evaluating 
 
 ## News
 
+- [2024/08] 🔥Try out our new agent, **Strategist**, by using the `avalon-dev-single-discuss` config, and find more details at [Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search](https://arxiv.org/pdf/2408.10635)!
 - [2024/07] Our new agent `SearchlightLLMAgentWithDiscussion` is available at `src/server/tasks/avalon/agents/search_agent.py`. The academic paper will be coming soon.
 - [2023/11] 🎶Multi-LLM setting with AgentBench v0.2 is ready to roll! Details of the multi-agent submodule can be found [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/multi_agent)
 - [2023/11] ♠️We've added a new game called GOPS (Game of Pure Strategy [[Wiki](https://en.wikipedia.org/wiki/Goofspiel)]). For more details of the code, please refer to [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/src/server/tasks/GOPS).

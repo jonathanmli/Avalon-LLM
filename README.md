@@ -9,6 +9,8 @@ This is the official code of **AvalonBench** and the Avalon agent **Strategist**
 
 Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
 
+Read the instructions below for how to run AvalonBench!
+
 ## Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search
 
 [![Strategist](https://img.shields.io/badge/Home-Access-brightgreen?style=flat)](https://llm-strategist.github.io)

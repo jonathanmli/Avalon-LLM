@@ -1,8 +1,20 @@
-# AvalonBench: Evaluating LLMs Playing the Game of Avalon
+# LLMs Playing Avalon: Benchmark and Agents
 
 This is the official code of **AvalonBench** and the Avalon agent **Strategist**. The corresponding papers are [AvalonBench: Evaluating LLMs Playing the Game of Avalon](https://browse.arxiv.org/pdf/2310.05036.pdf) and [Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search](https://arxiv.org/pdf/2408.10635).
 
-Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*. [🏠Homepage](https://avalonbench.github.io)
+## AvalonBench: Evaluating LLMs Playing the Game of Avalon
+
+[![AvalonBench](https://img.shields.io/badge/Home-Access-brightgreen?style=flat)](https://avalonbench.github.io)
+[![arXiv](https://img.shields.io/badge/arXiv-2310.05036-B31B1B.svg)](https://arxiv.org/abs/2310.05036)
+
+Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*.
+
+## Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search
+
+[![Strategist](https://img.shields.io/badge/Home-Access-brightgreen?style=flat)](https://llm-strategist.github.io)
+[![arXiv](https://img.shields.io/badge/arXiv-2408.10635-B31B1B.svg)](https://www.arxiv.org/abs/2408.10635)
+
+In this work, we propose **Strategist**, which utilizes LLMs to acquire new skills for playing multi-agent games through a self-improvement process. Our method gathers quality feedback through self-play simulations with Monte Carlo tree search and LLM-based reflection, which can then be used to learn **high-level strategic skills** such as how to evaluate states that guide the **low-level execution**.
 
 <!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
 

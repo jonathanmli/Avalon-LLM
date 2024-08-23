@@ -16,7 +16,7 @@ Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-A
 
 In this work, we propose **Strategist**, which utilizes LLMs to acquire new skills for playing multi-agent games through a self-improvement process. Our method gathers quality feedback through self-play simulations with Monte Carlo tree search and LLM-based reflection, which can then be used to learn **high-level strategic skills** such as how to evaluate states that guide the **low-level execution**.
 
-You can learn how to play with Strategist on AvalonBench at [here](#play-with-strategist)!
+You can learn how to play with Strategist on AvalonBench at [here](#play-with-strategist), and the code/usage for bi-level tree search of **Strategist** can be found at the `strategist` folder.
 
 ## Table of Contents
 <!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->

@@ -719,4 +719,4 @@ if __name__ == "__main__":
     router_ = APIRouter()
     controller = TaskController(router_)
     app.include_router(router_, prefix="/api")
-    uvicorn.run(app, host="0.0.0.0", port=cmd_args.port, log_level=logging.WARNING)
+    uvicorn.run(app, host="0.0.0.0", port=cmd_args.port, log_level=logging.DEBUG)

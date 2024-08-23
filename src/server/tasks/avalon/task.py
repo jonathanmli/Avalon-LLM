@@ -25,8 +25,8 @@ from .avalon_exception import AvalonAgentActionException
 
 from multi_agent.proxy import MultiAgentProxy
 import logging
-from search_src.dialogue_improve.data_loader import DataLoader
-from search_src.Avalon.baseline_models_Avalon import AvalonState
+from strategist.dialogue_improve.data_loader import DataLoader
+from strategist.Avalon.baseline_models_Avalon import AvalonState
 from good_examples.Avalon.value_heuristics.list import functions as avalon_func
 from .dialogue import AvalonDiagloue
 
@@ -111,6 +111,7 @@ class AvalonBench(Task):
         
         dialogue_history = AvalonDiagloue()
 
+        print("Check initialization")
         # Initialize players. Please remember to let Merlin and Evil players see the sides of all players.
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
             if self.agent_list[i] == 'search':
@@ -275,7 +276,7 @@ class AvalonBench(Task):
                     # self.data_loader.save_data(self.FILE_PATH)
                 # Choose a team
                 # print(player_list[leader].propose_team)
-                print(ColorMessage.cyan(f"##### Discussion Ends #####"))
+                    print(ColorMessage.cyan(f"##### Discussion Ends #####"))
                 proxy.set_current_agent(leader)
                 team = await player_list[leader].propose_team(
                     team_size           =   env.get_team_size(),

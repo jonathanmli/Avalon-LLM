@@ -4,7 +4,7 @@ Repo for commonly used search techniques in gameplay and reasoning
 ## File structure
 
 - **outputs**: This is where experimental outputs will be saved to using Hydra.
-- **src**: The source code
+- **strategist**: The source code
     - **searchlight**: Module for search algorithms
         - **headers**: This is where you will find all the relevant information about the various modules for search.
     - **searchlightimprove**: Module for using LLMS to self-improve with search
@@ -47,13 +47,13 @@ pip install .
 To run a value heuristic improvement experiment, run the following to generate seed functions first:
 
 ```{shell}
-python3 -m src.experiment.run_generate_seed_functions evolver_name=ImprovementLibrary preset_modular_improve.generate_new_seed_functions=False env_preset=gops_three_card preset_modular_improve=evolver_comp_gops_new model="gpt-4"
+python3 -m strategist.experiment.run_generate_seed_functions evolver_name=ImprovementLibrary preset_modular_improve.generate_new_seed_functions=False env_preset=gops_three_card preset_modular_improve=evolver_comp_gops_new model="gpt-4"
 ```
 
 Your seed functions will be generate in the `outputs` directory. Get the path to your seed functions `<seed_function_directory_path>`. For example, your seed functions might be stored in `outputs/2024-05-16/22-19-43`. Then run the following to run the experiment:
 
 ```{shell}
-python3 -m src.experiment.run_function_improve evolver_name=ImprovementLibrary preset_modular_improve.generate_new_seed_functions=False env_preset=gops_three_card preset_modular_improve=evolver_comp_gops_new preset_modular_improve.seed_function_file_directory=<seed_function_directory_path>
+python3 -m strategist.experiment.run_function_improve evolver_name=ImprovementLibrary preset_modular_improve.generate_new_seed_functions=False env_preset=gops_three_card preset_modular_improve=evolver_comp_gops_new preset_modular_improve.seed_function_file_directory=<seed_function_directory_path>
 ```
 
 You can change the evolver_name to any of `Beam`, `ThoughtBeam`, `Line`, and `Greedy` for different improvement methods. `ImprovementLibrary` is our method. 
@@ -61,7 +61,7 @@ You can also change the `env_preset` and the other configs in `preset_modular_im
 
 <!-- 
 ```{shell}
-python -m src.experiment.run_llm_mcts     
+python -m strategist.experiment.run_llm_mcts     
 ``` -->
 
 ### Dialogue Guide Improve
@@ -69,13 +69,13 @@ python -m src.experiment.run_llm_mcts
 Similarly, first generate seed guides as follows:
 
 ```{shell}
-python3 -m src.experiment.run_generate_seed_guide evolver_name=Beam preset_modular_improve.generate_new_seed_functions=False env_preset=avalon_five_players preset_modular_improve=evolver_comp_gops_new model="gpt-4" preset_modular_improve.num_search_budget=1 preset_modular_improve.num_random_rollouts=1 preset_modular_improve.num_batch_runs=1 preset_modular_improve.batch_size=1
+python3 -m strategist.experiment.run_generate_seed_guide evolver_name=Beam preset_modular_improve.generate_new_seed_functions=False env_preset=avalon_five_players preset_modular_improve=evolver_comp_gops_new model="gpt-4" preset_modular_improve.num_search_budget=1 preset_modular_improve.num_random_rollouts=1 preset_modular_improve.num_batch_runs=1 preset_modular_improve.batch_size=1
 ```
 
 Then to run experiments run:
 
 ```{shell}
-python3 -m src.experiment.run_dialogue_improve preset_modular_improve.generate_new_seed_functions=False env_preset=avalon_five_players preset_modular_improve=evolver_comp_avalon_dialogue_new preset_modular_improve.seed_function_file_directory=<seed_guide_directory> evolver_name=ImprovementLibrary
+python3 -m strategist.experiment.run_dialogue_improve preset_modular_improve.generate_new_seed_functions=False env_preset=avalon_five_players preset_modular_improve=evolver_comp_avalon_dialogue_new preset_modular_improve.seed_function_file_directory=<seed_guide_directory> evolver_name=ImprovementLibrary
 ```
 
 ## Adapting searchlight

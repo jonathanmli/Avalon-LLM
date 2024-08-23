@@ -4,6 +4,29 @@ This is the official code of **AvalonBench** and the Avalon agent **Strategist**
 
 Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-Agent** play of **The Resistance: Avalon**, a popular board game that requires the ability of *deductive reasoning*, *coordinate and collaborate*, and *skill of deception*. [🏠Homepage](https://avalonbench.github.io)
 
+<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
+
+   * [News](#news)
+   * [Video Demos](#video-demos)
+   * [Initial Results](#initial-results)
+      + [LLMs Play Against Baseline Bots](#llms-play-against-baseline-bots)
+      + [Multi-LLMs Self-Play](#multi-llms-self-play)
+   * [Getting Started](#getting-started)
+      + [Prerequisites](#prerequisites)
+      + [OpenAI API Key](#openai-api-key)
+      + [Start the task server and the assigner](#start-the-task-server-and-the-assigner)
+      + [Customize configurations and data](#customize-configurations-and-data)
+      + [Naive experiment](#naive-experiment)
+      + [Play with Multi-LLM](#play-with-multi-llm)
+      + [Play with **Strategist**](#play-with-strategist)
+   * [Prompts](#prompts)
+   * [Using game engines](#using-game-engines)
+   * [Citation](#citation)
+   * [License](#license)
+
+<!-- TOC end -->
+
+<!-- TOC --><a name="avalonbench-evaluating-llms-playing-the-game-of-avalon"></a>
 
 ## News
 
@@ -128,6 +151,14 @@ You can also start a Multi-LLM experiment using:
 python -m src.start_task -a --start avalon-dev-multi 3
 ```
 where all the agents will be Large Language Models.
+
+### Play with Strategist
+
+Our agent, Strategist, is also available in this repo. You can start the experiment using:
+```bash
+# Strategist playing against naive baselines
+python -m src.start_task -a --start avalon avalon-dev-single-search 1
+```
 
 ## Prompts
 

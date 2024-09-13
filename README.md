@@ -174,7 +174,7 @@ where all the agents will be Large Language Models.
 Our agent, Strategist, is also available in this repo. You can start the experiment using:
 ```bash
 # Strategist playing against naive baselines
-python -m src.start_task -a --start avalon avalon-dev-single-search 1
+python -m src.start_task -a --start avalon-dev-single-search 1
 ```
 
 ## Prompts

@@ -29,6 +29,8 @@ from strategist.dialogue_improve.data_loader import DataLoader
 from strategist.Avalon.baseline_models_Avalon import AvalonState
 from good_examples.Avalon.value_heuristics.list import functions as avalon_func
 from .dialogue import AvalonDiagloue
+from good_examples.Avalon.english import role_to_guide as search_guide
+from good_examples.Avalon.recon import role_to_guide as recon_guide
 
 AGENT_FINDER = {
     'naive': find_naive_agent,
@@ -36,6 +38,10 @@ AGENT_FINDER = {
     'llm': LLMAgentWithDiscussion,
     'search': SearchlightLLMAgentWithDiscussion,
     'recon': SearchlightLLMAgentWithDiscussion
+}
+dialogue_guides = {
+    'recon': recon_guide,
+    'search': search_guide
 }
 
 class AvalonBench(Task):
@@ -115,7 +121,7 @@ class AvalonBench(Task):
         print("Check initialization")
         # Initialize players. Please remember to let Merlin and Evil players see the sides of all players.
         for i, (role_i, role_name, side) in enumerate(env.get_roles()):
-            if self.agent_list[i] == 'search':
+            if self.agent_list[i] == 'search' or self.agent_list[i] == 'recon':
                 player_list.append(AGENT_FINDER[self.agent_list[i]](
                                         id          =   i,
                                         name        =   f"Player {i}",
@@ -134,7 +140,8 @@ class AvalonBench(Task):
                                         num_good    =   env.config.num_good,
                                         num_evil    =   env.config.num_evil,
                                         discussion  =   self.discussion,
-                                        seed        =   self.seed # TODO: seed
+                                        seed        =   self.seed,
+                                        guides      =   dialogue_guides[self.agent_list[i]] # TODO: seed
                                         ))
             else:
                 player_list.append(AGENT_FINDER[self.agent_list[i]](

@@ -11,7 +11,6 @@ from ..prompts import *
 from ..engine import *
 
 from good_examples.Avalon.value_heuristics.list import functions as value_heuristics
-from good_examples.Avalon.dialogue_guide.list import guides as dialogue_guides
 
 from ..utils import slice_out_new_dialogue
 from ..utils import verbalize_team_result
@@ -37,6 +36,9 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
             **kwargs
         )
         self.func_str = func_str
+        self.guides = kwargs.get("guides", None)
+        if self.guides is None:
+            raise ValueError("guides must be provided")
         print("Check Agent Initialization")
         # self.prompt_generator = PromptGenerator(config=self.config)
 
@@ -113,8 +115,9 @@ class SearchlightLLMAgentWithDiscussion(LLMAgentWithDiscussion):
         print("Check Agent Initialization Game Info")
         known_sides = AvalonState.get_known_sides(self.id, [role[0] for role in player_list])
         print("Checkpoint 1")
-        dialogue_guide = dialogue_guides[self.id % len(dialogue_guides)] # I guess the id should just be an arbitrary number?
-        role_to_dialogue_guide = {role: dialogue_guide for role in env.roles}
+        # dialogue_guide = dialogue_guides[self.id % len(dialogue_guides)] # I guess the id should just be an arbitrary number?
+        # role_to_dialogue_guide = {role: dialogue_guide for role in env.roles}
+        role_to_dialogue_guide = self.guides
         # self.action_planner = AvalonActionPlannerAgent(
         avalon_config = AvalonBasicConfig.from_num_players(5)
         print("Checkpoint 2")

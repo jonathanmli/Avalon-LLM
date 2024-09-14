@@ -34,7 +34,8 @@ AGENT_FINDER = {
     'naive': find_naive_agent,
     'speak_naive': find_naive_speakable_agent,
     'llm': LLMAgentWithDiscussion,
-    'search': SearchlightLLMAgentWithDiscussion
+    'search': SearchlightLLMAgentWithDiscussion,
+    'recon': SearchlightLLMAgentWithDiscussion
 }
 
 class AvalonBench(Task):

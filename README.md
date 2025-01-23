@@ -11,7 +11,7 @@ Based on [AgentBench](https://github.com/THUDM/AgentBench), we support **Multi-A
 
 Read the instructions below for how to run AvalonBench!
 
-## Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search
+## Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search (ICLR 2025)
 
 [![Strategist](https://img.shields.io/badge/Home-Access-brightgreen?style=flat)](https://llm-strategist.github.io)
 [![arXiv](https://img.shields.io/badge/arXiv-2408.10635-B31B1B.svg)](https://www.arxiv.org/abs/2408.10635)
@@ -47,6 +47,7 @@ You can learn how to play with Strategist on AvalonBench at [here](#play-with-st
 
 ## News
 
+- [2025/01] 🎯**Strategist** has been accepted to ICLR 2025!
 - [2024/08] 🔥Try out our new agent, **Strategist**, by using the `avalon-dev-single-discuss` config, and find more details at [Strategist: Learning Strategic Skills by LLMs via Bi-Level Tree Search](https://arxiv.org/pdf/2408.10635)!
 - [2024/07] Our new agent `SearchlightLLMAgentWithDiscussion` is available at `src/server/tasks/avalon/agents/search_agent.py`. The academic paper will be coming soon.
 - [2023/11] 🎶Multi-LLM setting with AgentBench v0.2 is ready to roll! Details of the multi-agent submodule can be found [here](https://github.com/jonathanmli/Avalon-LLM/tree/main/multi_agent)

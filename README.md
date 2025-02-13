@@ -200,13 +200,24 @@ For an example of how to use the game engine, see `avalonbench_dev/avalon/test_e
 
 ```
 @inproceedings{
+      light2025strategist,
+      title={Strategist: Self-improvement of {LLM} Decision Making via Bi-Level Tree Search},
+      author={Jonathan Light and Min Cai and Weiqin Chen and Guanzhi Wang and Xiusi Chen and Wei Cheng and Yisong Yue and Ziniu Hu},
+      booktitle={The Thirteenth International Conference on Learning Representations},
+      year={2025},
+      url={https://openreview.net/forum?id=gfI9v7AbFg}
+}
+```
+
+```
+@inproceedings{
       light2023from,
       title={AvalonBench: Evaluating {LLM}s Playing the Game of Avalon},
       author={Jonathan Light and Min Cai and Sheng Shen and Ziniu Hu},
       booktitle={NeurIPS 2023 Foundation Models for Decision Making Workshop},
       year={2023},
       url={https://openreview.net/forum?id=ltUrSryS0K}
-  }
+}
 ```
 
 ## License
